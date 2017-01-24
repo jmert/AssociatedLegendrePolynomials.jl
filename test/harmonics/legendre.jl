@@ -16,8 +16,8 @@ module Legendre
     $P_0$ is a constant. Verify the output is invariant.
     """
     function Pl_00_invariance()
-        pl = Harmonics.Pl(0, 2*rand()-1);
-        @test pl[1] == 1.0
+        pl = Harmonics.Pl(0, 2*rand(10)-1)
+        @test all(pl[:,1] .== 1.0)
     end
 
     ################################
@@ -28,9 +28,9 @@ module Legendre
     $P_0^0$ is constant. Verify the output is invariant for several inputs.
     """
     function Plm_00_invariance()
-        pp = Harmonics.PlmPlan(Float64, 1);
-        plm = Harmonics.Plm(pp, 2*rand()-1);
-        @test plm[1,1] == 1.0
+        pp = Harmonics.PlmPlan(Float64, 0)
+        plm = Harmonics.Plm(pp, 2*rand(10)-1)
+        @test all(plm[:,1,1] .== 1.0)
     end
 
     doc"""
@@ -39,16 +39,16 @@ module Legendre
     """
     function Plm_l0_analytic()
         pp = Harmonics.PlmPlan(Float64,10)
-        plm = Harmonics.Plm(pp, 0.5*sqrt(2));
-        @test plm[2,1]  ≈  sqrt(2)/2
-        @test plm[3,1]  ≈  1/4
-        @test plm[4,1]  ≈ -sqrt(2)/8
-        @test plm[5,1]  ≈ -13/32
-        @test plm[6,1]  ≈ -17sqrt(2)/64
-        @test plm[7,1]  ≈ -19/128
-        @test plm[8,1]  ≈  23sqrt(2)/256
-        @test plm[9,1]  ≈  611/2048
-        @test plm[10,1]  ≈  827sqrt(2)/4096
+        plm = Harmonics.Plm(pp, 0.5*sqrt(2))
+        @test plm[1,2]  ≈  sqrt(2)/2
+        @test plm[1,3]  ≈  1/4
+        @test plm[1,4]  ≈ -sqrt(2)/8
+        @test plm[1,5]  ≈ -13/32
+        @test plm[1,6]  ≈ -17sqrt(2)/64
+        @test plm[1,7]  ≈ -19/128
+        @test plm[1,8]  ≈  23sqrt(2)/256
+        @test plm[1,9]  ≈  611/2048
+        @test plm[1,10]  ≈  827sqrt(2)/4096
     end
 
     doc"""
@@ -56,11 +56,12 @@ module Legendre
     polynomials $P_ℓ$ for $m=0$, so check this is true.
     """
     function Plm_l0_equals_Pl_l()
-        const LMAX = 10;
-        pl  = Harmonics.Pl(LMAX, cosd(-57.5));
-        pp  = Harmonics.PlmPlan(LMAX);
-        plm = Harmonics.Plm(pp, cosd(-57.5));
-        @test all(pl .≈ plm[:,1])
+        const LMAX = 10
+        const x = 2.*rand(10) .- 1
+        pl  = Harmonics.Pl(LMAX, x)
+        pp  = Harmonics.PlmPlan(LMAX)
+        plm = Harmonics.Plm(pp, x)
+        @test all(pl .≈ plm[:,1,:])
     end
 
     ##############################################################
@@ -95,13 +96,13 @@ module Legendre
     function Plm_ll_spotchecks()
 
         function SphericalPll_coeff(T, ℓ)
-            factorials = mapreduce(x->sqrt((2x+1)/(2x)), *, 1.0, 1:ℓ);
-            sign = (ℓ % 2 == 0) ? 1 : -1;
-            return sign * sqrt(1/2π) * factorials;
+            factorials = mapreduce(x->sqrt((2x+1)/(2x)), *, 1.0, 1:ℓ)
+            sign = (ℓ % 2 == 0) ? 1 : -1
+            return sign * sqrt(1/2π) * factorials
         end
 
-        pp = Harmonics.PlmSphericalPlan(Float64, 99);
-        plm = Harmonics.Plm(pp, cosd(45.0));
+        pp = Harmonics.PlmSphericalPlan(Float64, 99)
+        plm = Harmonics.Plm(pp, cosd(45.0))
 
         @test plm[3,3]   ≈ SphericalPll_coeff(Float64,2)  / (2^1)
         @test plm[4,4]   ≈ SphericalPll_coeff(Float64,3)  / (2^1 * sqrt(2))
@@ -116,16 +117,17 @@ module Legendre
     $\bar{P}_ℓ^m$ if we manually normalize them.
     """
     function NormPlm_equals_SphericalPlm()
-        const LMAX = 5;
-        pp_norm = Harmonics.PlmPlan(LMAX);
-        pp_sphr = Harmonics.PlmSphericalPlan(LMAX);
-        plm_norm = Harmonics.Plm(pp_norm, cosd(-57.5));
-        plm_sphr = Harmonics.Plm(pp_sphr, cosd(-57.5));
+        const LMAX = 5
+        pp_norm = Harmonics.PlmPlan(LMAX)
+        pp_sphr = Harmonics.PlmSphericalPlan(LMAX)
+        x = 2.*rand(10) .- 1
+        plm_norm = Harmonics.Plm(pp_norm, x)
+        plm_sphr = Harmonics.Plm(pp_sphr, x)
         for ℓ=1:LMAX
             for m=0:(ℓ-1)
-                factorials = mapreduce(x->1/sqrt(x), *, 1.0, (ℓ-m+1):(ℓ+m));
-                norm = sqrt((2ℓ+1)/(2π)) * factorials;
-                @test norm*plm_norm[ℓ+1,m+1] ≈ plm_sphr[ℓ+1,m+1]
+                factorials = mapreduce(x->1/sqrt(x), *, 1.0, (ℓ-m+1):(ℓ+m))
+                norm = sqrt((2ℓ+1)/(2π)) * factorials
+                @test all(norm.*plm_norm[:,m+1,ℓ+1] .≈ plm_sphr[:,m+1,ℓ+1])
             end
         end
     end
