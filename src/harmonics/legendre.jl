@@ -20,8 +20,7 @@ module Legendre
     doc"""
         Pl(lmax, x)
 
-    Returns a vector of Legendre polynomials up to degree `lmax` evaluated
-    at `x`.
+    Returns the Legendre polynomials up to degree `lmax` evaluated at `x`.
     """
     function Pl end
 
@@ -197,7 +196,7 @@ module Legendre
     PlmSphericalPlan(lmax::Integer) = PlmSphericalPlan(Float64, lmax)
 
     doc"""
-        Plm(pp::PlmPlan, x)
+        Plm{L}(pp::PlmPlan{T,L} where T, x)
 
     Computes normalized associated Legendre function values at `x` for all
     $0 \le \ell \le L$, $0 \le m \le l$. `pp` is a design structure containing
@@ -219,11 +218,11 @@ module Legendre
 
     @inline function _chkbounds_Plm(plm, lmax, x)
         lmax >= 0 || throw(DimensionMismatch("lmax must be non-negative"))
-        size(pl) >= (length(x),lmax+1,lmax+1) || throw(DimensionMismatch())
+        size(plm) >= (length(x),lmax+1,lmax+1) || throw(DimensionMismatch())
     end
 
     doc"""
-        Plm!(plm, pp::PlmPlan{T,L}, x)
+        Plm!{L}(plm, pp::PlmPlan{T,L} where T, x)
 
     Computes normalized associated Legendre function values at `x` for all
     $0 \le \ell \le L$, $0 \le m \le l$. The answer is stored in `plm`.
@@ -276,6 +275,5 @@ module Legendre
 
         return plm
     end
-
 end
 
