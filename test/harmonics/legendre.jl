@@ -12,10 +12,8 @@ module Legendre
     # LEGENDRE POLYNOMIALS
     #######################
 
-    doc"""
-    $P_0$ is a constant. Verify the output is invariant.
-    """
-    function Pl_00_invariance()
+    # P_0 is a constant. Verify the output is invariant.
+    @testset "Constant P_0" begin
         pl = Harmonics.Pl(0, 2*rand(10)-1)
         @test all(pl[:,1] .== 1.0)
     end
@@ -24,20 +22,16 @@ module Legendre
     # ASSOCIATED LEGENDRE FUNCTIONS
     ################################
 
-    doc"""
-    $P_0^0$ is constant. Verify the output is invariant for several inputs.
-    """
-    function Plm_00_invariance()
+    # P_0^0 is constant. Verify the output is invariant for several inputs.
+    @testset "Constant P_0^0" begin
         pp = Harmonics.PlmPlan(Float64, 0)
         plm = Harmonics.Plm(pp, 2*rand(10)-1)
         @test all(plm[:,1,1] .== 1.0)
     end
 
-    doc"""
-    Match $P_ℓ^{m=0}$ terms for $\ell=1...9$ where the analytical expressions
-    have been taken from a table of equations, assuming $x= \cos(\pi/4)$.
-    """
-    function Plm_l0_analytic()
+    # Match P_ℓ^{m=0} terms for ℓ=1...9 where the analytical expressions
+    # have been taken from a table of equations, assuming x = cos(π/4).
+    @testset "Analytic checks for P_ℓ^0(cos(π/4))" begin
         pp = Harmonics.PlmPlan(Float64,10)
         plm = Harmonics.Plm(pp, 0.5*sqrt(2))
         @test plm[1,2]  ≈  sqrt(2)/2
@@ -48,16 +42,14 @@ module Legendre
         @test plm[1,7]  ≈ -19/128
         @test plm[1,8]  ≈  23sqrt(2)/256
         @test plm[1,9]  ≈  611/2048
-        @test plm[1,10]  ≈  827sqrt(2)/4096
+        @test plm[1,10] ≈  827sqrt(2)/4096
     end
 
-    doc"""
-    The associated Legendre functions $P_ℓ^m$ should equate to the Legendre
-    polynomials $P_ℓ$ for $m=0$, so check this is true.
-    """
-    function Plm_l0_equals_Pl_l()
-        const LMAX = 10
-        const x = 2.*rand(10) .- 1
+    # The associated Legendre functions P_ℓ^m should equate to the Legendre
+    # polynomials P_ℓ for m=0, so check this is true.
+    @testset "Equality of P_ℓ and P_ℓ^0" begin
+        LMAX = 10
+        x = 2.*rand(10) .- 1
         pl  = Harmonics.Pl(LMAX, x)
         pp  = Harmonics.PlmPlan(LMAX)
         plm = Harmonics.Plm(pp, x)
@@ -68,33 +60,30 @@ module Legendre
     # SPHERICAL HARMONIC NORMALIZED ASSOCIATED LEGENDRE FUNCTIONS
     ##############################################################
 
-    doc"""
-    The initialization condition
-
-    $P_ℓ^ℓ(x) = (-1)^ℓ (2ℓ-1)!! (1-x^2)^(ℓ/2)$
-
-    can be used with extended-precision computations for special values
-    of $ℓ$ and $m$. To account for the spherical harmonic normalization,
-    the formula can be simplified to
-
-    $\bar{P}_ℓ^ℓ(x) = (-1)^ℓ \frac{1}{\sqrt{2π}} \sqrt{\frac{(2ℓ+1)!!}{(2ℓ)!!} (1-x^2)^(ℓ/2)$
-
-    We'll compute the coefficient separately since it's "easy", and then
-    we can use convenient angles that also expand to an exact analytic
-    value for $(1-x^2)^(ℓ/2)$.
-
-    Assuming $x = \cos(θ)$, the $(1-x^2)^(ℓ/2)$ term simplifies to an
-    expression of $\sin(θ)$:
-
-    $(1-x^2)^(ℓ/2) = (\sin^2 θ)^(ℓ/2) = (\sin θ)^ℓ$
-
-    For $θ = π/4$:
-
-    * even $ℓ$ => $\frac{1}{2^(ℓ/2)}$
-    * odd $ℓ$ => $\frac{1}{2^(k/2) \sqrt{2}}$ where $k=\lfloor ℓ/2\rfloor$.
-    """
-    function Plm_ll_spotchecks()
-
+    # The initialization condition
+    #
+    #   P_ℓ^ℓ(x) = (-1)^ℓ (2ℓ-1)!! (1-x^2)^(ℓ/2)
+    #
+    # can be used with extended-precision computations for special values
+    # of ℓ and m. To account for the spherical harmonic normalization,
+    # the formula can be simplified to
+    #
+    #   λ_ℓ^ℓ(x) = (-1)^ℓ 1/sqrt(2π) sqrt((2ℓ+1)!!/(2ℓ)!!) (1-x^2)^(ℓ/2)
+    #
+    # We'll compute the coefficient separately since it's "easy", and then
+    # we can use convenient angles that also expand to an exact analytic
+    # value for (1-x^2)^(ℓ/2).
+    #
+    # Assuming x = cos(θ), the (1-x^2)^(ℓ/2) term simplifies to an
+    # expression of \sin(θ):
+    #
+    #   (1-x^2)^(ℓ/2) = (sin^2 θ)^(ℓ/2) = (sin θ)^ℓ
+    #
+    # For θ = π/4:
+    #
+    #   * even ℓ => 1 / 2^(ℓ/2)
+    #   * odd ℓ => 1 / (2^(k/2) sqrt(2)) where k=floor(ℓ/2).
+    @testset "Analytic checks for λ_ℓ^m(cos(π/4))" begin
         function SphericalPll_coeff(T, ℓ)
             factorials = mapreduce(x->sqrt((2x+1)/(2x)), *, 1.0, 1:ℓ)
             sign = (ℓ % 2 == 0) ? 1 : -1
@@ -112,11 +101,9 @@ module Legendre
         @test plm[100,100] ≈ SphericalPll_coeff(Float64,99) / (2^49 * sqrt(2))
     end
 
-    doc"""
-    The normal $P_ℓ^m$ should be equal to the spherical harmonic normalized
-    $\bar{P}_ℓ^m$ if we manually normalize them.
-    """
-    function NormPlm_equals_SphericalPlm()
+    # The normal P_ℓ^m should be equal to the spherical harmonic normalized
+    # λ_ℓ^m if we manually normalize them.
+    @testset "Equality of N_ℓ^m*P_ℓ^m and λ_ℓ^m" begin
         const LMAX = 5
         pp_norm = Harmonics.PlmPlan(LMAX)
         pp_sphr = Harmonics.PlmSphericalPlan(LMAX)
@@ -130,18 +117,6 @@ module Legendre
                 @test all(norm.*plm_norm[:,m+1,ℓ+1] .≈ plm_sphr[:,m+1,ℓ+1])
             end
         end
-    end
-
-    function runtests()
-        # LEGENDRE POLYNOMIALS
-        Pl_00_invariance()
-        # ASSOCIATED LEGENDGRE FUNCTIONS
-        Plm_00_invariance()
-        Plm_l0_equals_Pl_l()
-        # SPHERICAL HARMONIC NORMALIZED ASSOCIATED LEGENDRE FUNCTIONS
-        Plm_l0_analytic()
-        Plm_ll_spotchecks()
-        NormPlm_equals_SphericalPlm()
     end
 end
 

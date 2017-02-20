@@ -1,12 +1,8 @@
 module Harmonics
     using Base.Test
 
-    include("harmonics/legendre.jl")
-
-    function runtests()
-        @testset "legendre" begin
-            Legendre.runtests()
-        end
+    @testset "Legendre" begin
+        include("harmonics/legendre.jl")
     end
 end
 
