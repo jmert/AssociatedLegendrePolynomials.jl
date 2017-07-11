@@ -1,5 +1,5 @@
 module Legendre
-    using CMB.Harmonics
+    using CMB.Legendre
     using Base.Test
 
     # In general, all analytically-defined answers are computed using
