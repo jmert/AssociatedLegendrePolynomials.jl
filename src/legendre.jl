@@ -308,28 +308,28 @@ module Legendre
     end
 
     @noinline function
-    _chkbounds_Pl!(norm::N, Λ::Vector{T}, lmax::Integer, m::Integer, x::T
+    _chkbounds_Pl!(norm::N, Λ::AbstractVector{T}, lmax::Integer, m::Integer, x::T
             ) where {N<:AbstractLegendreNorm, T<:Real}
         (0 ≤ lmax && 0 ≤ m ≤ lmax) || throw(DomainError())
         (size(Λ,1)≥lmax+1) || throw(DimensionMismatch())
     end
     @noinline function
-    _chkbounds_Pl!(norm::LegendreNormCoeff{N,T}, Λ::Vector{T}, lmax::Integer, m::Integer,
-            x::T) where {N<:AbstractLegendreNorm, T<:Real}
+    _chkbounds_Pl!(norm::LegendreNormCoeff{N,T}, Λ::AbstractVector{T}, lmax::Integer,
+            m::Integer, x::T) where {N<:AbstractLegendreNorm, T<:Real}
         (0 ≤ lmax && 0 ≤ m ≤ lmax) || throw(DomainError())
         (lmax ≤ length(norm.μ)) || throw(BoundsError())
         (size(Λ,1)≥lmax+1) || throw(DimensionMismatch())
     end
 
     @noinline function
-    _chkbounds_Plm!(norm::N, Λ::Matrix{T}, lmax::Integer, x::T
+    _chkbounds_Plm!(norm::N, Λ::AbstractMatrix{T}, lmax::Integer, x::T
             ) where {N<:AbstractLegendreNorm, T<:Real}
         (0 ≤ lmax) || throw(DomainError())
         (size(Λ,1)≥lmax+1 && size(Λ,2)≥lmax+1) || throw(DimensionMismatch())
     end
     @noinline function
-    _chkbounds_Plm!(norm::LegendreNormCoeff{N,T}, Λ::Matrix{T}, lmax::Integer, x::T
-            ) where {N<:AbstractLegendreNorm, T<:Real}
+    _chkbounds_Plm!(norm::LegendreNormCoeff{N,T}, Λ::AbstractMatrix{T}, lmax::Integer,
+            x::T) where {N<:AbstractLegendreNorm, T<:Real}
         (0 ≤ lmax) || throw(DomainError())
         (lmax ≤ length(norm.μ)) || throw(BoundsError())
         (size(Λ,1)≥lmax+1 && size(Λ,2)≥lmax+1) || throw(DimensionMismatch())
@@ -369,7 +369,7 @@ module Legendre
         end
     end
 
-    function LegendreP!(norm::N, P::Vector{T}, lmax::Integer, m::Integer, x::T
+    function LegendreP!(norm::N, P::AbstractVector{T}, lmax::Integer, m::Integer, x::T
                        ) where {N<:AbstractLegendreNorm, T<:Real}
         @boundscheck _chkbounds_Pl!(norm, P, lmax, m, x)
         @inbounds begin
@@ -437,7 +437,7 @@ module Legendre
         end
     end
 
-    function LegendreP!(norm::N, Λ::Matrix{T}, lmax::Integer, x::T
+    function LegendreP!(norm::N, Λ::AbstractMatrix{T}, lmax::Integer, x::T
                        ) where {N<:AbstractLegendreNorm, T<:Real}
         @boundscheck _chkbounds_Plm!(norm, Λ, lmax, x)
         @inbounds begin
@@ -504,7 +504,7 @@ module Legendre
     function λlm end, function λlm! end
 
     @inline Pl(l::Integer, x::T) where {T<:Real} = LegendreP(LegendreUnitNorm(), l, x)
-    @inline Pl!(P::Vector{T}, lmax::Integer, x::T) where {T<:Real} =
+    @inline Pl!(P::AbstractVector{T}, lmax::Integer, x::T) where {T<:Real} =
         LegendreP!(LegendreUnitNorm(), P, lmax, 0, x)
 
     @inline Plm(l::Integer, m::Integer, x::T) where {T<:Real} =
@@ -512,9 +512,9 @@ module Legendre
     @inline λlm(l::Integer, m::Integer, x::T) where {T<:Real} =
         LegendreP(LegendreSphereNorm(), l, m, x)
 
-    @inline Plm!(P::Matrix{T}, lmax::Integer, x::T) where {T<:Real} =
+    @inline Plm!(P::AbstractMatrix{T}, lmax::Integer, x::T) where {T<:Real} =
         LegendreP!(LegendreUnitNorm(), P, lmax, x)
-    @inline λlm!(Λ::Matrix{T}, lmax::Integer, x::T) where {T<:Real} =
+    @inline λlm!(Λ::AbstractMatrix{T}, lmax::Integer, x::T) where {T<:Real} =
         LegendreP!(LegendreSphereNorm(), Λ, lmax, x)
 
     """
