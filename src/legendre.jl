@@ -48,7 +48,7 @@ module Legendre
     # Example
     ```jldoctest
     julia> LegendreNormCoeff{LegendreSphereNorm,Float64}(1)
-    CMB.Harmonics.Legendre.LegendreNormCoeff{CMB.Harmonics.Legendre.LegendreSphereNorm,Float64} for lmax = 1 with coefficients:
+    CMB.Legendre.LegendreNormCoeff{CMB.Legendre.LegendreSphereNorm,Float64} for lmax = 1 with coefficients:
         μ: [0.0, 1.22474]
         ν: [0.0, 1.73205]
         α: [0.0 1.93649; 1.73205 0.0]
