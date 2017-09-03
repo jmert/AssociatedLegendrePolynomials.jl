@@ -41,7 +41,7 @@ struct LegendreUnitNorm <: AbstractLegendreNorm end
 struct LegendreSphereNorm <: AbstractLegendreNorm end
 
 """
-    type LegendreNormCoeff{N<:AbstractLegendreNorm,T<:Real} <: AbstractLegendreNorm
+    struct LegendreNormCoeff{N<:AbstractLegendreNorm,T<:Real} <: AbstractLegendreNorm
 
 Precomputed recursion relation coefficients for the normalization `N` and value type
 `T`.
