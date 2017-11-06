@@ -1,6 +1,9 @@
 module Legendre
-    using CMB.Legendre
     using Compat.Test
+    using ..CMBTests: NumTypes
+    using CMB.Legendre
+
+    srand(2222)
 
     # In general, all analytically-defined answers are computed using
     # extended-precision ("big") floats and ints. This provides *some* testing
@@ -13,9 +16,10 @@ module Legendre
     #######################
 
     # P_0 is a constant. Verify the output is invariant.
-    @testset "Constant P_0" begin
-        pl = Pl.(0, 2 .* rand(10) .- 1)
-        @test all(pl[:,1] .== 1.0)
+    @testset "Constant P_0 ($T)" for T in NumTypes
+        @test @inferred(Pl(0, T(0.1))) isa T
+        pl = Pl.(0, 2 .* T.(rand(10)) .- 1)
+        @test all(pl[:,1] .== T(1.0))
     end
 
     ################################
@@ -23,38 +27,39 @@ module Legendre
     ################################
 
     # P_0^0 is constant. Verify the output is invariant for several inputs.
-    @testset "Constant P_0^0" begin
-        plm = Plm.(0, 0, 2 .* rand(10) .- 1)
-        @test all(plm .== 1.0)
+    @testset "Constant P_0^0 ($T)" for T in NumTypes
+        @test @inferred(Plm(0, 0, T(0.1))) isa T
+        plm = Plm.(0, 0, 2 .* T.(rand(10)) .- 1)
+        @test all(plm .== T(1.0))
     end
 
     # Match P_ℓ^{m=0} terms for ℓ=1...9 where the analytical expressions
     # have been taken from a table of equations, assuming x = cos(π/4).
-    @testset "Analytic checks for P_ℓ^0(cos(π/4))" begin
+    @testset "Analytic checks for P_ℓ^0(cos(π/4)) ($T)" for T in NumTypes
         LMAX = 9
-        ctab = LegendreUnitCoeff{Float64}(LMAX)
-        plm = Matrix{Float64}(LMAX+1, LMAX+1)
-        LegendreP!(ctab, plm, LMAX, 0.5*sqrt(2))
-        @test plm[2, 1] ≈  sqrt(2)/2
-        @test plm[3, 1] ≈  1/4
-        @test plm[4, 1] ≈ -sqrt(2)/8
-        @test plm[5, 1] ≈ -13/32
-        @test plm[6, 1] ≈ -17sqrt(2)/64
-        @test plm[7, 1] ≈ -19/128
-        @test plm[8, 1] ≈  23sqrt(2)/256
-        @test plm[9, 1] ≈  611/2048
-        @test plm[10,1] ≈  827sqrt(2)/4096
+        ctab = LegendreUnitCoeff{T}(LMAX)
+        plm = Matrix{T}(LMAX+1, LMAX+1)
+        LegendreP!(ctab, plm, LMAX, sqrt(T(2))/2)
+        @test plm[2, 1] ≈  sqrt(T(2))/2
+        @test plm[3, 1] ≈  T(1)/4
+        @test plm[4, 1] ≈ -sqrt(T(2))/8
+        @test plm[5, 1] ≈ -T(13)/32
+        @test plm[6, 1] ≈ -17sqrt(T(2))/64
+        @test plm[7, 1] ≈ -T(19)/128
+        @test plm[8, 1] ≈  23sqrt(T(2))/256
+        @test plm[9, 1] ≈  T(611)/2048
+        @test plm[10,1] ≈  827sqrt(T(2))/4096
     end
 
     # The associated Legendre functions P_ℓ^m should equate to the Legendre
     # polynomials P_ℓ for m=0, so check this is true.
-    @testset "Equality of P_ℓ and P_ℓ^0" begin
+    @testset "Equality of P_ℓ and P_ℓ^0 ($T)" for T in NumTypes
         LMAX = 10
-        ctab = LegendreUnitCoeff{Float64}(LMAX)
-        pl  = Vector{Float64}(LMAX+1)
-        plm = Matrix{Float64}(LMAX+1, LMAX+1)
+        ctab = LegendreUnitCoeff{T}(LMAX)
+        pl  = Vector{T}(LMAX+1)
+        plm = Matrix{T}(LMAX+1, LMAX+1)
         for ii in 1:10
-            x = 2*rand() - 1
+            x = 2T(rand()) - 1
             Pl!(pl, LMAX, x)
             LegendreP!(ctab, plm, LMAX, x)
             @test all(pl .≈ plm[:,1])
