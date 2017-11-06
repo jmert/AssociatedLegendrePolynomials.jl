@@ -1,6 +1,6 @@
 module Legendre
     using CMB.Legendre
-    using Base.Test
+    using Compat.Test
 
     # In general, all analytically-defined answers are computed using
     # extended-precision ("big") floats and ints. This provides *some* testing

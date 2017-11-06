@@ -1,4 +1,4 @@
 module Harmonics
-    using Base.Test
+    using Compat.Test
 end
 
