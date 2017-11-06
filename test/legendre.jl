@@ -14,7 +14,7 @@ module Legendre
 
     # P_0 is a constant. Verify the output is invariant.
     @testset "Constant P_0" begin
-        pl = Pl.(0, 2.*rand(10).-1)
+        pl = Pl.(0, 2 .* rand(10) .- 1)
         @test all(pl[:,1] .== 1.0)
     end
 
@@ -24,7 +24,7 @@ module Legendre
 
     # P_0^0 is constant. Verify the output is invariant for several inputs.
     @testset "Constant P_0^0" begin
-        plm = Plm.(0, 0, 2.*rand(10).-1)
+        plm = Plm.(0, 0, 2 .* rand(10) .- 1)
         @test all(plm .== 1.0)
     end
 
