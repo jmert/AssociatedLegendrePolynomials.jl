@@ -52,8 +52,8 @@ julia> LegendreNormCoeff{LegendreSphereNorm,Float64}(1)
 CMB.Legendre.LegendreNormCoeff{CMB.Legendre.LegendreSphereNorm,Float64} for lmax = 1 with coefficients:
     μ: [0.0, 1.22474]
     ν: [0.0, 1.73205]
-    α: [0.0 1.93649; 1.73205 0.0]
-    β: [0.0 1.11803; -0.0 0.0]
+    α: [0.0 0.0; 1.73205 0.0]
+    β: [0.0 0.0; -0.0 0.0]
 ```
 """
 struct LegendreNormCoeff{N<:AbstractLegendreNorm,T<:Real} <: AbstractLegendreNorm
@@ -70,13 +70,13 @@ struct LegendreNormCoeff{N<:AbstractLegendreNorm,T<:Real} <: AbstractLegendreNor
         α = zeros(T, lmax+1, lmax+1)
         β = zeros(T, lmax+1, lmax+1)
 
-        @inbounds for l in 0:lmax
-            μ[l+2] = Plm_μ(N(), T, l+1)
-            ν[l+2] = Plm_ν(N(), T, l+1)
+        @inbounds for l in 1:lmax
+            μ[l+1] = Plm_μ(N(), T, l)
+            ν[l+1] = Plm_ν(N(), T, l)
 
-            for m in 0:l
-                α[l+2,m+1] = Plm_α(N(), T, l+1, m)
-                β[l+2,m+1] = Plm_β(N(), T, l+1, m)
+            for m in 0:l-1
+                α[l+1,m+1] = Plm_α(N(), T, l, m)
+                β[l+1,m+1] = Plm_β(N(), T, l, m)
             end
         end
 
@@ -455,7 +455,7 @@ function LegendreP!(norm::N, Λ::AbstractMatrix{T}, lmax::Integer, x::T
         end
 
         # Outer loop runs over the m's
-        for m in 0:lmax
+        for m in 0:(lmax-1)
             # First step is to boost one in l to P_{m+1}^m using a single-term
             # recurrence
             pl = Λ[m+1,m+1]
