@@ -115,21 +115,22 @@ module Legendre
 
     # The normal P_ℓ^m should be equal to the spherical harmonic normalized
     # λ_ℓ^m if we manually normalize them.
-    @testset "Equality of N_ℓ^m*P_ℓ^m and λ_ℓ^m" begin
+    @testset "Equality of N_ℓ^m*P_ℓ^m and λ_ℓ^m ($T)" for T in NumTypes
         LMAX = 5
-        ctab_norm = LegendreUnitCoeff{Float64}(LMAX)
-        ctab_sphr = LegendreSphereCoeff{Float64}(LMAX)
-        plm_norm = zeros(Float64, LMAX+1, LMAX+1)
-        plm_sphr = zeros(Float64, LMAX+1, LMAX+1)
+        atol = max(eps(T(100)), eps(100.0)) # maximum(plm_norm) is of order 10²
+        ctab_norm = LegendreUnitCoeff{T}(LMAX)
+        ctab_sphr = LegendreSphereCoeff{T}(LMAX)
+        plm_norm = zeros(T, LMAX+1, LMAX+1)
+        plm_sphr = zeros(T, LMAX+1, LMAX+1)
 
         lmat = tril(repmat(collect(0:LMAX), 1, LMAX+1))
         mmat = tril(repmat(collect(0:LMAX)', LMAX+1, 1))
-        nlm = tril(Nlm.(Float64, lmat, mmat))
+        nlm = tril(Nlm.(T, lmat, mmat))
         for ii in 1:10
-            x = 2*rand() - 1
+            x = 2*T(rand()) - 1
             LegendreP!(ctab_norm, plm_norm, LMAX, x)
             LegendreP!(ctab_sphr, plm_sphr, LMAX, x)
-            @test all(nlm.*plm_norm .≈ plm_sphr)
+            @test all(isapprox.(nlm.*plm_norm, plm_sphr, atol=atol))
         end
     end
 end
