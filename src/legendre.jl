@@ -27,6 +27,15 @@ import Base.@boundscheck, Base.@propagate_inbounds
     abstract type AbstractLegendreNorm end
 
 Abstract supertype for normalization conditions of the Associated Legendre polynomials.
+
+# Example
+```jldoctest
+julia> subtypes(AbstractLegendreNorm)
+3-element Array{Union{DataType, UnionAll},1}:
+ CMB.Legendre.LegendreNormCoeff
+ CMB.Legendre.LegendreSphereNorm
+ CMB.Legendre.LegendreUnitNorm
+```
 """
 abstract type AbstractLegendreNorm end
 
