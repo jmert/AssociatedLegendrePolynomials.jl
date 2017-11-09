@@ -39,7 +39,7 @@ module Legendre
         LMAX = 9
         ctab = LegendreUnitCoeff{T}(LMAX)
         plm = Matrix{T}(LMAX+1, LMAX+1)
-        LegendreP!(ctab, plm, LMAX, sqrt(T(2))/2)
+        legendre!(ctab, plm, LMAX, sqrt(T(2))/2)
         @test plm[2, 1] ≈  sqrt(T(2))/2
         @test plm[3, 1] ≈  T(1)/4
         @test plm[4, 1] ≈ -sqrt(T(2))/8
@@ -61,7 +61,7 @@ module Legendre
         for ii in 1:10
             x = 2T(rand()) - 1
             Pl!(pl, LMAX, x)
-            LegendreP!(ctab, plm, LMAX, x)
+            legendre!(ctab, plm, LMAX, x)
             @test all(pl .≈ plm[:,1])
         end
     end
@@ -103,7 +103,7 @@ module Legendre
         LMAX = 99
         ctab = LegendreSphereCoeff{Float64}(LMAX)
         Λ = Matrix{Float64}(LMAX+1, LMAX+1)
-        Λ = LegendreP!(ctab, Λ, LMAX, cosd(45.0))
+        Λ = legendre!(ctab, Λ, LMAX, cosd(45.0))
 
         @test Λ[3,3]   ≈ SphericalPll_coeff(Float64,2)  / (2^1)
         @test Λ[4,4]   ≈ SphericalPll_coeff(Float64,3)  / (2^1 * sqrt(2))
@@ -128,8 +128,8 @@ module Legendre
         nlm = tril(Nlm.(T, lmat, mmat))
         for ii in 1:10
             x = 2*T(rand()) - 1
-            LegendreP!(ctab_norm, plm_norm, LMAX, x)
-            LegendreP!(ctab_sphr, plm_sphr, LMAX, x)
+            legendre!(ctab_norm, plm_norm, LMAX, x)
+            legendre!(ctab_sphr, plm_sphr, LMAX, x)
             @test all(isapprox.(nlm.*plm_norm, plm_sphr, atol=atol))
         end
     end
