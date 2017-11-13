@@ -530,17 +530,19 @@ Legendre polynomial values ``P_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` a
     legendre!(LegendreSphereNorm(), Λ, lmax, x)
 
 """
-    N = Nlm(::Type{<:Real}, l, m)
+    N = Nlm([T=Float64], l, m)
 
 Computes the normalization constant
 ```math
     N_ℓ^m ≡ \\sqrt{\\frac{2ℓ+1}{4π} \\frac{(ℓ-m)!}{(ℓ+m)!}}
 ```
 which defines the Spherical Harmonic normalized functions ``λ_ℓ^m(x)`` in
-terms of the standard normalized ``P_ℓ^m(x)``:
+terms of the standard unit normalized ``P_ℓ^m(x)``
 ```math
     λ_ℓ^m(x) ≡ N_ℓ^m P_ℓ^m(x)
 ```
+using numbers of type `T`.
+
 See also [`Plm`](@ref) and [`λlm`](@ref).
 """
 function Nlm(::Type{T}, l::Integer, m::Integer) where T<:Real
@@ -548,9 +550,10 @@ function Nlm(::Type{T}, l::Integer, m::Integer) where T<:Real
     for ii in (l-m+1):(l+m)
         fac1 *= convert(T, ii)
     end
-    num = convert(T, 2l+1)
-    den = convert(T, 4π)
+    num = 2*convert(T, l) + 1
+    den = 4*convert(T, π)
     return sqrt( num * inv(den) * inv(fac1) )
 end
+Nlm(l::Integer, m::Integer) = Nlm(Float64, l, m)
 
 end # module Legendre
