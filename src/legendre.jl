@@ -345,6 +345,12 @@ _chkbounds_Plm!(norm::LegendreNormCoeff{N,T}, Λ::AbstractMatrix{T}, lmax::Integ
     (size(Λ,1)≥lmax+1 && size(Λ,2)≥lmax+1) || throw(DimensionMismatch())
 end
 
+"""
+    p = legendre(norm::AbstractLegendreNorm, l::Integer, x::Real)
+
+Computes the scalar value ``p = N_ℓ P_ℓ(x)``, where ``P_ℓ(x)`` is the Legendre
+polynomial of degree `l` at `x` and ``N_ℓ`` is the normalization scheme `norm`.
+"""
 function legendre(norm::N, l::Integer, x::T
                   ) where {N<:AbstractLegendreNorm, T<:Real}
     @boundscheck _chkbounds_Pl(norm, l, x)
@@ -368,42 +374,57 @@ function legendre(norm::N, l::Integer, x::T
     end
 end
 
-function legendre!(norm::N, P::AbstractVector{T}, lmax::Integer, m::Integer, x::T
+"""
+    legendre!(norm::AbstractLegendreNorm, Λ::AbstractVecotr, lmax::Integer, m::Integer,
+              x::Real)
+
+Fills the vector `Λ` with the pre-normalized Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``
+for all degrees `0 ≤ ℓ ≤ lmax` and constant order `m` at `x`, where ``N_ℓ^m`` is the
+normalization scheme `norm`.
+"""
+function legendre!(norm::N, Λ::AbstractVector{T}, lmax::Integer, m::Integer, x::T
                    ) where {N<:AbstractLegendreNorm, T<:Real}
-    @boundscheck _chkbounds_Pl!(norm, P, lmax, m, x)
+    @boundscheck _chkbounds_Pl!(norm, Λ, lmax, m, x)
     @inbounds begin
         pl = Plm_00(norm, T)
-        P[1] = pl
-        lmax == 0 && return P
+        Λ[1] = pl
+        lmax == 0 && return Λ
 
         # Iterate along the main diagonal until we reach the target m
         y = sqrt(one(T) - x*x)
         for n in 0:(m-1)
             plp1 = _1term_raise_lm(norm, n, x, y, pl)
             pl = plp1
-            P[n+1] = zero(T)
+            Λ[n+1] = zero(T)
         end
-        P[m+1] = pl
+        Λ[m+1] = pl
 
         # First step is to boost one in l to P_{m+1}^m using a single-term
         # recurrence
         plp1 = _1term_raise_l(norm, m, x, pl)
-        P[m+2] = plp1
+        Λ[m+2] = plp1
         plm1 = pl
         pl = plp1
 
         # Then finish by iterating to P_lmax^m using the two-term recurrence
         for l in (m+1):(lmax-1)
             plp1 = _2term_raise_l(norm, l, m, x, pl, plm1)
-            P[l+2] = plp1
+            Λ[l+2] = plp1
             plm1 = pl
             pl = plp1
         end # for l
 
-        return P
+        return Λ
     end
 end
 
+"""
+    p = legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Real)
+
+Computes the scalar value ``p = N_ℓ^m P_ℓ^m(x)``, where ``P_ℓ^m(x)`` is the associated
+Legendre polynomial of degree `l` and order `m` at `x` and ``N_ℓ^m`` the normalization
+scheme `norm`.
+"""
 function legendre(norm::N, l::Integer, m::Integer, x::T
                   ) where {N<:AbstractLegendreNorm, T<:Real}
     @boundscheck _chkbounds_Plm(norm, l, m, x)
@@ -436,6 +457,13 @@ function legendre(norm::N, l::Integer, m::Integer, x::T
     end
 end
 
+"""
+    legendre!(norm::AbstractLegendreNorm, P::AbstractMatrix, lmax::Integer, x::Real)
+
+Fills the matrix `Λ` with the pre-normalized Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``
+for all degrees `0 ≤ ℓ ≤ lmax` and all orders `0 ≤ m ≤ ℓ` at `x`, where ``N_ℓ^m`` is the
+normalization scheme `norm`.
+"""
 function legendre!(norm::N, Λ::AbstractMatrix{T}, lmax::Integer, x::T
                    ) where {N<:AbstractLegendreNorm, T<:Real}
     @boundscheck _chkbounds_Plm!(norm, Λ, lmax, x)
