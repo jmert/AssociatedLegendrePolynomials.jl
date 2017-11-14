@@ -70,6 +70,8 @@ mechanics and obeys the following properties:
 
 ## [Usage](@id legendre_usage)
 
+### Calculating scalar values
+
 At the most basic, the associated Legendre polynomial ``P_ℓ^m(x)`` is computed by calling
 [`CMB.Legendre.Plm`](@ref). For example, to compute ``P_2^1(0.5)``,
 ```jldoctest PlmUsage
@@ -162,6 +164,8 @@ julia> λlm(157, 150, 0.5)
     information on implementing custom Legendre normalizations, see the [Custom
     normalizations](@ref legendre_customnorm) section.
 
+### Calculating all values up to a given ``ℓ_\mathrm{max}``
+
 Because calculating a particular Legendre polynomial value is the end result of running
 a recurrence relation, using Julia's dot broadcasting to compute ``P_ℓ^m(x)``
 for all ``ℓ`` is inefficient and redoes a lot of work:
@@ -183,7 +187,7 @@ julia> @time λlm!(Λ, 700, 2, 0.5);
 ```
 On my machine, this ends up being roughly 1000 times faster!
 
-Finally, if all Legendre polynomial values for some ``x`` over all
+If all Legendre polynomial values for some ``x`` over all
 ``ℓ ∈ [0,ℓ_\mathrm{max}]`` and ``m ∈ [0,ℓ]`` are required, there are also methods of
 [`Plm!`](@ref Plm!(::AbstractMatrix, ::Integer, ::Real)) and
 [`λlm!`](@ref λlm!(::AbstractMatrix, ::Integer, ::Real))
@@ -195,6 +199,40 @@ julia> λlm!(Λ, 700, 0.5);
 
 julia> Λ[701,3] == λlm(700, 2, 0.5)   # N.B. 1-based indexing of the array!
 true
+```
+
+### Precomputed recursion factors
+
+A final trick to accelerating calculation of any normalization of the associated
+Legendre polynomials is to pre-compute the appropriate recursion relation coefficients.
+
+At a low level, `Plm`/`Plm!` and `λlm`/`λlm!` are simple wrappers around the general
+[`legendre`](@ref)/[`legendre!`](@ref) functions.
+The trait type [`LegendreUnitNorm`](@ref) dispatches internal functions to compute
+``P_ℓ^m(x)``:
+```jldoctest PlmUsage
+julia> legendre(LegendreUnitNorm(), 5, 2, 0.5) == Plm(5, 2, 0.5)
+true
+```
+ and [`LegendreSphereNorm`](@ref) does the same for ``λ_ℓ^m(x)``:
+```jldoctest PlmUsage
+julia> legendre(LegendreSphereNorm(), 5, 2, 0.5) == λlm(5, 2, 0.5)
+true
+```
+
+The type [`LegendreNormCoeff`](@ref) stores the coefficients for a particular
+normalization (and value type) so that the coefficients must only be calculated once.
+```jldoctest PlmUsage
+julia> coeff = LegendreNormCoeff{LegendreSphereNorm, Float64}(700);
+
+julia> legendre(coeff, 5, 2, 0.5)
+-0.15888479843070935
+```
+On my machine, this results in a further ~50% decrease in computation time compared to
+`λlm!`:
+```julia
+julia> @time legendre!(coeff, Λ, 700, 2, 0.5);
+  0.000020 seconds (4 allocations: 160 bytes)
 ```
 
 ## [Custom normalizations](@id legendre_customnorm)
