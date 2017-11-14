@@ -511,6 +511,16 @@ Fills the vector `P` with the Legendre polynomial values ``P_ℓ(x)`` for all de
     legendre!(LegendreUnitNorm(), P, lmax, 0, x)
 
 """
+    Plm!(P::AbstractVector, lmax::Integer, m::Integer, x::Real)
+
+Fills the vector `P` with the Legendre polynomial values ``P_ℓ^m(x)`` for all degrees
+`0 ≤ ℓ ≤ lmax` and constant order `m` at `x`.
+"""
+@inline Plm!(P::AbstractVector{T}, lmax::Integer, m::Integer, x::T) where {T<:Real} =
+    legendre!(LegendreUnitNorm(), P, lmax, m, x)
+
+
+"""
     Plm!(P::AbstractMatrix, lmax::Integer, x::Real)
 
 Fills the lower triangle of the matrix `P` with the associated Legendre polynomial values
@@ -520,10 +530,19 @@ Fills the lower triangle of the matrix `P` with the associated Legendre polynomi
     legendre!(LegendreUnitNorm(), P, lmax, x)
 
 """
-    λlm!(P::AbstractMatrix, lmax::Integer, x::Real)
+    λlm!(Λ::AbstractVector, lmax::Integer, m::Integer, x::Real)
 
-Fills the lower triangle of the matrix `P` with the spherical harmonic normalized associated
-Legendre polynomial values ``P_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and all orders
+Fills the vector `Λ` with the spherical harmonic normalized associated Legendre polynomial
+values ``λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and constant order `m` at `x`.
+"""
+@inline λlm!(Λ::AbstractVector{T}, lmax::Integer, m::Integer, x::T) where {T<:Real} =
+    legendre!(LegendreSphereNorm(), Λ, lmax, m, x)
+
+"""
+    λlm!(Λ::AbstractMatrix, lmax::Integer, x::Real)
+
+Fills the lower triangle of the matrix `Λ` with the spherical harmonic normalized associated
+Legendre polynomial values ``Λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and all orders
 `0 ≤ m ≤ ℓ` at `x`.
 """
 @inline λlm!(Λ::AbstractMatrix{T}, lmax::Integer, x::T) where {T<:Real} =
