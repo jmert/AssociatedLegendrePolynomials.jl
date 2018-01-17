@@ -3,6 +3,30 @@ module Legendre
     using ..CMBTests: NumTypes
     using CMB.Legendre
 
+    @testset "Domain and bounds checking" begin
+        LMAX = 10
+        ctab = LegendreUnitCoeff{Float64}(LMAX)
+
+        # Mathematical domain errors:
+        @test_throws DomainError Plm(-1, 0, 0.5)
+        @test_throws DomainError Plm(LMAX, -1, 0.5)
+        @test_throws DomainError Plm(LMAX, LMAX+1, 0.5)
+        @test_throws DomainError legendre(ctab, -1, 0, 0.5)
+        @test_throws DomainError legendre(ctab, LMAX, -1, 0.5)
+        @test_throws DomainError legendre(ctab, LMAX, LMAX+1, 0.5)
+
+        # Bounds error for precomputed coefficient tables
+        @test_throws BoundsError legendre(ctab, LMAX+1, 0, 0.5)
+
+        # Bounds error for filling vector or matrix
+        λ = Vector{Float64}(LMAX)
+        Λ₁ = Matrix{Float64}(LMAX, LMAX+1)
+        Λ₂ = Matrix{Float64}(LMAX+1, LMAX)
+        @test_throws DimensionMismatch legendre!(ctab, λ, LMAX, 0, 0.5)
+        @test_throws DimensionMismatch legendre!(ctab, Λ₁, LMAX, 0.5)
+        @test_throws DimensionMismatch legendre!(ctab, Λ₂, LMAX, 0.5)
+    end
+
     srand(2222)
 
     # In general, all analytically-defined answers are computed using

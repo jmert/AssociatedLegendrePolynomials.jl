@@ -303,7 +303,7 @@ end
 _chkbounds_Pl(norm::LegendreNormCoeff{N,T}, l::Integer, x::T
         ) where {N<:AbstractLegendreNorm, T<:Real}
     (0 ≤ l) || throw(DomainError())
-    (l ≤ length(norm.μ)) || throw(BoundsError())
+    (l < length(norm.μ)) || throw(BoundsError())
 end
 @noinline function
 _chkbounds_Plm(norm::N, l::Integer, m::Integer, x::T
@@ -314,7 +314,7 @@ end
 _chkbounds_Plm(norm::LegendreNormCoeff{N,T}, l::Integer, m::Integer, x::T
         ) where {N<:AbstractLegendreNorm, T<:Real}
     (0 ≤ l && 0 ≤ m ≤ l) || throw(DomainError())
-    (l ≤ length(norm.μ)) || throw(BoundsError())
+    (l < length(norm.μ)) || throw(BoundsError())
 end
 
 @noinline function
@@ -327,7 +327,7 @@ end
 _chkbounds_Pl!(norm::LegendreNormCoeff{N,T}, Λ::AbstractVector{T}, lmax::Integer,
         m::Integer, x::T) where {N<:AbstractLegendreNorm, T<:Real}
     (0 ≤ lmax && 0 ≤ m ≤ lmax) || throw(DomainError())
-    (lmax ≤ length(norm.μ)) || throw(BoundsError())
+    (lmax < length(norm.μ)) || throw(BoundsError())
     (size(Λ,1)≥lmax+1) || throw(DimensionMismatch())
 end
 
@@ -341,7 +341,7 @@ end
 _chkbounds_Plm!(norm::LegendreNormCoeff{N,T}, Λ::AbstractMatrix{T}, lmax::Integer,
         x::T) where {N<:AbstractLegendreNorm, T<:Real}
     (0 ≤ lmax) || throw(DomainError())
-    (lmax ≤ length(norm.μ)) || throw(BoundsError())
+    (lmax < length(norm.μ)) || throw(BoundsError())
     (size(Λ,1)≥lmax+1 && size(Λ,2)≥lmax+1) || throw(DimensionMismatch())
 end
 
