@@ -222,8 +222,10 @@ true
 
 The type [`LegendreNormCoeff`](@ref) stores the coefficients for a particular
 normalization (and value type) so that the coefficients must only be calculated once.
+Aliases for the unit and spherical normalizations are provided by default,
+[`LegendreUnitCoeff`](@ref) and [`LegendreSphereCoeff`](@ref) respectively.
 ```jldoctest PlmUsage
-julia> coeff = LegendreNormCoeff{LegendreSphereNorm, Float64}(700);
+julia> coeff = LegendreSphereCoeff{Float64}(700);
 
 julia> legendre(coeff, 5, 2, 0.5)
 -0.15888479843070935
@@ -233,6 +235,45 @@ On my machine, this results in a further ~50% decrease in computation time compa
 ```jldoctest PlmUsage
 julia> @time legendre!(coeff, λ, 700, 2, 0.5);
   0.000020 seconds (4 allocations: 160 bytes)
+```
+
+Notice that due to its flexibility, `legendre!` requires an explicit `lmax` argument
+even though the `LegendreNormCoeff` has an `lmax` set during construction.
+This allows us to pass both a coefficient cache and output array which are larger than the
+computed set of coefficients.
+For example, the output matrix and cache used above each support computing the Legendre
+polynomials up to ``\ell = 700``, but if we only need ``\ell \le 2``, we can avoid
+computing terms beyond our required problem size.
+```jldoctest PlmUsage
+julia> fill!(Λ, 0);
+
+julia> legendre!(coeff, Λ, 2, 0.5);
+
+julia> Λ[1:5, 1:5]
+5×5 Array{Float64,2}:
+  0.282095    0.0       0.0       0.0  0.0
+  0.244301   -0.299207  0.0       0.0  0.0
+ -0.0788479  -0.334523  0.289706  0.0  0.0
+  0.0         0.0       0.0       0.0  0.0
+  0.0         0.0       0.0       0.0  0.0
+```
+In most situations, though, it'll probably be most convenient to use the functor interface
+attached to the coefficient cache object which assumes the `lmax` it was constructed
+with.
+The coefficient table itself is callable with forms similar to `legendre` and `legendre!`
+except that the `norm` and `lmax` arguments are implicit/not necessary.
+```jldoctest PlmUsage
+julia> coeff(20, 0.5)    # == legendre(coeff, 20, 0.5)
+-0.08734916334699527
+
+julia> coeff(20, 2, 0.5) # == legendre(coeff, 20, 2, 0.5)
+0.10617507806374693
+
+julia> leg! = coeff;    # alias to clarify that leg! modifies
+
+julia> leg!(λ, 2, 0.5); # same as legendre!(coeff, λ, length(coeff.μ)-1, 2, 0.5)
+
+julia> leg!(Λ, 0.5);    # same as legendre!(coeff, Λ, length(coeff.μ)-1, 0.5)
 ```
 
 ## [Custom normalizations](@id legendre_customnorm)

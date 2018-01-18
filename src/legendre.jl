@@ -375,7 +375,7 @@ function legendre(norm::N, l::Integer, x::T
 end
 
 """
-    legendre!(norm::AbstractLegendreNorm, Λ::AbstractVecotr, lmax::Integer, m::Integer,
+    legendre!(norm::AbstractLegendreNorm, Λ::AbstractVector, lmax::Integer, m::Integer,
               x::Real)
 
 Fills the vector `Λ` with the pre-normalized Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``
@@ -502,6 +502,23 @@ function legendre!(norm::N, Λ::AbstractMatrix{T}, lmax::Integer, x::T
         return Λ
     end
 end
+
+# Make coefficient cache objects callable with similar syntax as the legendre[!] functions
+@propagate_inbounds function (norm::LegendreNormCoeff)(l::Integer, x::Real)
+    return legendre(norm, l, x)
+end
+@propagate_inbounds function (norm::LegendreNormCoeff)(l::Integer, m::Integer, x::Real)
+    return legendre(norm, l, m, x)
+end
+@propagate_inbounds function (norm::LegendreNormCoeff)(Λ::AbstractVector{T}, m::Integer, x::T) where T
+    lmax = length(norm.μ) - 1
+    return legendre!(norm, Λ, lmax, m, x)
+end
+@propagate_inbounds function (norm::LegendreNormCoeff)(Λ::AbstractMatrix{T}, x::T) where T
+    lmax = length(norm.μ) - 1
+    return legendre!(norm, Λ, lmax, x)
+end
+
 
 """
     p = Pl(l::Integer, x::Real)
