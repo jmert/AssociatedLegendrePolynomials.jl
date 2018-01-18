@@ -169,10 +169,10 @@ julia> λlm(157, 150, 0.5)
 Because calculating a particular Legendre polynomial value is the end result of running
 a recurrence relation, using Julia's dot broadcasting to compute ``P_ℓ^m(x)``
 for all ``ℓ`` is inefficient and redoes a lot of work:
-```julia
-julia> Λ = zeros(701);
+```jldoctest PlmUsage
+julia> λ = zeros(701);
 
-julia> @time Λ[3:701] .= λlm.(2:700, 2, 0.5);
+julia> @time λ[3:701] .= λlm.(2:700, 2, 0.5);
   0.042107 seconds (4.61 k allocations: 257.940 KiB)
 ```
 It's far more efficient to incrementally calculate the ``ℓ+1`` term directly from the
@@ -181,8 +181,8 @@ Both of `Plm` and `λlm` have modifying counterparts,
 [`Plm!`](@ref Plm!(::AbstractVector, ::Integer, ::Integer, ::Real)) and
 [`λlm!`](@ref λlm!(::AbstractVector, ::Integer, ::Integer, ::Real)) respectively,
 which fill an appropriately sized vector for a specified ``ℓ_\mathrm{max}``.
-```julia
-julia> @time λlm!(Λ, 700, 2, 0.5);
+```jldoctest PlmUsage
+julia> @time λlm!(λ, 700, 2, 0.5);
   0.000036 seconds (4 allocations: 160 bytes)
 ```
 On my machine, this ends up being roughly 1000 times faster!
@@ -230,8 +230,8 @@ julia> legendre(coeff, 5, 2, 0.5)
 ```
 On my machine, this results in a further ~50% decrease in computation time compared to
 `λlm!`:
-```julia
-julia> @time legendre!(coeff, Λ, 700, 2, 0.5);
+```jldoctest PlmUsage
+julia> @time legendre!(coeff, λ, 700, 2, 0.5);
   0.000020 seconds (4 allocations: 160 bytes)
 ```
 
