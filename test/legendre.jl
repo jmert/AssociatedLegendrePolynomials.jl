@@ -27,17 +27,24 @@ module Legendre
         @test_throws DimensionMismatch legendre!(ctab, Λ₂, LMAX, 0.5)
     end
 
-    srand(2222)
-
-    # In general, all analytically-defined answers are computed using
-    # extended-precision ("big") floats and ints. This provides *some* testing
-    # for numerical accuracy, but explicit tests of numerical accuracy should
-    # probably also be defined.
-
+    @testset "Functor interface" begin
+        LMAX = 10
+        leg = LegendreSphereCoeff{Float64}(LMAX)
+        λ₁ = fill(0.0, LMAX+1)
+        λ₂ = fill(0.0, LMAX+1)
+        Λ₁ = fill(0.0, LMAX+1, LMAX+1)
+        Λ₂ = fill(0.0, LMAX+1, LMAX+1)
+        @test leg(1, 1, 0.5) == legendre(leg, 1, 1, 0.5)
+        @test leg(1, 0.5) == legendre(leg, 1, 0.5)
+        @test all(leg(λ₁, 2, 0.5) .== legendre!(leg, λ₂, LMAX, 2, 0.5))
+        @test all(leg(Λ₁, 0.5) .== legendre!(leg, Λ₂, LMAX, 0.5))
+    end
 
     #######################
     # LEGENDRE POLYNOMIALS
     #######################
+
+    srand(2222)
 
     # P_0 is a constant. Verify the output is invariant.
     @testset "Constant P_0 ($T)" for T in NumTypes
