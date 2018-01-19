@@ -24,30 +24,50 @@ module Legendre
         @test mmaxtab.ν == @view fulltab.ν[1:(MMAX+1)]
     end
 
-    @testset "Domain and bounds checking" begin
+    @testset "Domain checking" begin
         LMAX = 10
         MMAX = 2
         ctab = LegendreUnitCoeff{Float64}(LMAX)
         mtab = LegendreUnitCoeff{Float64}(LMAX, MMAX)
-        λ = Vector{Float64}(LMAX)
-        Λ₁ = Matrix{Float64}(LMAX, LMAX+1)
-        Λ₂ = Matrix{Float64}(LMAX+1, LMAX)
+        λ = Vector{Float64}(LMAX+1)
+        Λ = Matrix{Float64}(LMAX+1, LMAX+1)
 
         # Mathematical domain errors:
+        @test_throws DomainError Pl(-1, 0.5)
         @test_throws DomainError Plm(-1, 0, 0.5)
         @test_throws DomainError Plm(LMAX, -1, 0.5)
         @test_throws DomainError Plm(LMAX, LMAX+1, 0.5)
+        @test_throws DomainError Pl!(λ, -1, 0.5)
+        @test_throws DomainError Plm!(Λ, -1, 0, 0.5)
+        @test_throws DomainError Plm!(Λ, LMAX, -1, 0.5)
+        @test_throws DomainError Plm!(Λ, LMAX, LMAX+1, 0.5)
         @test_throws DomainError legendre(ctab, -1, 0, 0.5)
         @test_throws DomainError legendre(ctab, LMAX, -1, 0.5)
         @test_throws DomainError legendre(ctab, LMAX, LMAX+1, 0.5)
+        @test_throws DomainError legendre!(ctab, λ, -1, LMAX, 0.5)
+        @test_throws DomainError legendre!(ctab, Λ, -1, LMAX, 0.5)
+        @test_throws DomainError legendre!(ctab, Λ, LMAX, -1, 0.5)
+        @test_throws DomainError legendre!(ctab, Λ, LMAX, LMAX+1, 0.5)
 
         # Bounds error for precomputed coefficient tables
         @test_throws BoundsError legendre(ctab, LMAX+1, 0, 0.5)
         @test_throws BoundsError legendre(mtab, LMAX, MMAX+1, 0.5)
         @test_throws BoundsError legendre!(mtab, λ, LMAX, MMAX+1, 0.5)
-        @test_throws BoundsError legendre!(mtab, Λ₁, LMAX, MMAX+1, 0.5)
+        @test_throws BoundsError legendre!(mtab, Λ, LMAX, MMAX+1, 0.5)
+    end
+
+    @testset "Output array bounds checking" begin
+        LMAX = 10
+        ctab = LegendreUnitCoeff{Float64}(LMAX)
+        λ = Vector{Float64}(LMAX)
+        Λ₁ = Matrix{Float64}(LMAX, LMAX+1)
+        Λ₂ = Matrix{Float64}(LMAX+1, LMAX)
 
         # Bounds error for filling vector or matrix
+        @test_throws DimensionMismatch Pl!(λ, LMAX, 0.5)
+        @test_throws DimensionMismatch Plm!(λ, LMAX, 0, 0.5)
+        @test_throws DimensionMismatch Plm!(Λ₁, LMAX, LMAX, 0.5)
+        @test_throws DimensionMismatch Plm!(Λ₂, LMAX, LMAX, 0.5)
         @test_throws DimensionMismatch legendre!(ctab, λ, LMAX, 0, 0.5)
         @test_throws DimensionMismatch legendre!(ctab, Λ₁, LMAX, LMAX, 0.5)
         @test_throws DimensionMismatch legendre!(ctab, Λ₂, LMAX, LMAX, 0.5)
@@ -64,6 +84,31 @@ module Legendre
         @test leg(1, 0.5) == legendre(leg, 1, 0.5)
         @test all(leg(λ₁, 2, 0.5) .== legendre!(leg, λ₂, LMAX, 2, 0.5))
         @test all(leg(Λ₁, 0.5) .== legendre!(leg, Λ₂, LMAX, LMAX, 0.5))
+    end
+
+    @testset "Equality of legendre[!]" begin
+        LMAX = 10
+        x = 0.5
+        λ₂ = fill(0.0, LMAX+1)
+        Λ₂ = fill(0.0, LMAX+1, LMAX+1)
+
+        # P_l(x) is implemented with its own fast-path for m == 0
+        λ₁ = [Pl(l, x) for l in 0:LMAX]
+        @test λ₁ == Pl!(λ₂, LMAX, x)
+
+        # Use λlm instead of Plm to provide coverage for the convenience wrapper functions,
+        # too
+        leg! = LegendreSphereCoeff{Float64}(LMAX)
+        # Fill lower triangular matrix by hand
+        Λ₁ = [m > l ? 0.0 : λlm(l, m, x) for l in 0:LMAX, m in 0:LMAX]
+
+        # Test full matrix
+        @test Λ₁ == leg!(Λ₂, x)
+        @test Λ₁ == λlm!(Λ₂, LMAX, LMAX, x)
+
+        # Test single columns
+        @test @view(Λ₁[:,2+1]) == leg!(λ₂, 2, x)
+        @test @view(Λ₁[:,2+1]) == λlm!(λ₂, LMAX, 2, x)
     end
 
     #######################
