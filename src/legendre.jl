@@ -58,9 +58,9 @@ Precomputed recursion relation coefficients for the normalization `N` and value 
 # Example
 ```jldoctest
 julia> LegendreNormCoeff{LegendreSphereNorm,Float64}(1)
-CMB.Legendre.LegendreNormCoeff{CMB.Legendre.LegendreSphereNorm,Float64} for lmax = 1 with coefficients:
+CMB.Legendre.LegendreNormCoeff{CMB.Legendre.LegendreSphereNorm,Float64} for lmax = 1, mmax = 1 with coefficients:
     μ: [0.0, 1.22474]
-    ν: [0.0, 1.73205]
+    ν: [1.73205, 2.23607]
     α: [0.0 0.0; 1.73205 0.0]
     β: [0.0 0.0; -0.0 0.0]
 ```
@@ -71,19 +71,19 @@ struct LegendreNormCoeff{N<:AbstractLegendreNorm,T<:Real} <: AbstractLegendreNor
     α::Matrix{T}
     β::Matrix{T}
 
-    function LegendreNormCoeff{N,T}(lmax::Integer) where {N,T}
-        lmax ≥ 0 || throw(DomainError())
+    function LegendreNormCoeff{N,T}(lmax::Integer, mmax::Integer) where {N,T}
+        (lmax ≥ 0 && 0 ≤ mmax ≤ lmax) || throw(DomainError())
 
-        μ = zeros(T, lmax+1)
-        ν = zeros(T, lmax+1)
-        α = zeros(T, lmax+1, lmax+1)
-        β = zeros(T, lmax+1, lmax+1)
+        μ = zeros(T, mmax+1)
+        ν = zeros(T, mmax+1)
+        α = zeros(T, lmax+1, mmax+1)
+        β = zeros(T, lmax+1, mmax+1)
 
-        @inbounds for l in 1:lmax
-            μ[l+1] = Plm_μ(N(), T, l)
-            ν[l+1] = Plm_ν(N(), T, l)
+        @inbounds for m in 0:mmax
+            μ[m+1] = m == 0 ? zero(T) : Plm_μ(N(), T, m)
+            ν[m+1] = Plm_ν(N(), T, m)
 
-            for m in 0:l-1
+            for l in (m+1):lmax
                 α[l+1,m+1] = Plm_α(N(), T, l, m)
                 β[l+1,m+1] = Plm_β(N(), T, l, m)
             end
@@ -92,6 +92,8 @@ struct LegendreNormCoeff{N<:AbstractLegendreNorm,T<:Real} <: AbstractLegendreNor
         return new(μ, ν, α, β)
     end
 end
+
+LegendreNormCoeff{N,T}(lmax::Integer) where {N,T} = LegendreNormCoeff{N,T}(lmax, lmax)
 
 """
     LegendreUnitCoeff{T}
@@ -112,12 +114,13 @@ LegendreSphereCoeff = LegendreNormCoeff{LegendreSphereNorm}
 # Improve printing somewhat
 Base.show(io::IO, norm::LegendreNormCoeff{N,T}) where {N,T} =
     print(io, LegendreNormCoeff, "{$N,$T}")
-function Base.show(io::IO, ::MIME"text/plain", P::LegendreNormCoeff)
-    println(io, P, " for lmax = $(length(P.μ)-1) with coefficients:")
-    println(io, "    μ: ", P.μ)
-    println(io, "    ν: ", P.ν)
-    println(io, "    α: ", P.α)
-    println(io, "    β: ", P.β)
+function Base.show(io::IO, ::MIME"text/plain", N::LegendreNormCoeff)
+    lmax,mmax = size(N.α) .- 1
+    println(io, N, " for lmax = $lmax, mmax = $mmax with coefficients:")
+    println(io, "    μ: ", N.μ)
+    println(io, "    ν: ", N.ν)
+    println(io, "    α: ", N.α)
+    println(io, "    β: ", N.β)
 end
 
 """
@@ -192,33 +195,33 @@ Plm_00(::LegendreNormCoeff{N,T}, ::Type{T}
 end
 
 @inline function
-Plm_μ(::LegendreUnitNorm, ::Type{T}, l::Integer) where {T<:Real}
-    return convert(T, 2l - 1)
+Plm_μ(::LegendreUnitNorm, ::Type{T}, m::Integer) where {T<:Real}
+    return convert(T, 2m - 1)
 end
 
 @inline function
-Plm_μ(::LegendreSphereNorm, ::Type{T}, l::Integer) where {T<:Real}
-    return sqrt(one(T) + inv(convert(T, 2l)))
+Plm_μ(::LegendreSphereNorm, ::Type{T}, m::Integer) where {T<:Real}
+    return sqrt(one(T) + inv(convert(T, 2m)))
 end
 
 @propagate_inbounds function
-Plm_μ(norm::LegendreNormCoeff, ::Type{T}, l::Integer) where {T<:Real}
-    return norm.μ[l+1]
+Plm_μ(norm::LegendreNormCoeff, ::Type{T}, m::Integer) where {T<:Real}
+    return norm.μ[m+1]
 end
 
 @inline function
-Plm_ν(::LegendreUnitNorm, ::Type{T}, l::Integer) where {T<:Real}
-    return convert(T, 2l - 1)
+Plm_ν(::LegendreUnitNorm, ::Type{T}, m::Integer) where {T<:Real}
+    return convert(T, 2m + 1)
 end
 
 @inline function
-Plm_ν(::LegendreSphereNorm, ::Type{T}, l::Integer) where {T<:Real}
-    return sqrt(convert(T, 2l + 1))
+Plm_ν(::LegendreSphereNorm, ::Type{T}, m::Integer) where {T<:Real}
+    return sqrt(convert(T, 2m + 3))
 end
 
 @propagate_inbounds function
-Plm_ν(norm::LegendreNormCoeff, ::Type{T}, l::Integer) where {T<:Real}
-    return norm.ν[l+1]
+Plm_ν(norm::LegendreNormCoeff, ::Type{T}, m::Integer) where {T<:Real}
+    return norm.ν[m+1]
 end
 
 @inline function
@@ -273,15 +276,15 @@ end
 # Named recursion relations
 
 @propagate_inbounds function
-_1term_raise_lm(norm::N, l::Integer, x::T, y::T, plm::T
+_1term_raise_lm(norm::N, m::Integer, x::T, y::T, plm::T
         ) where {N<:AbstractLegendreNorm, T<:Real}
-    μ = Plm_μ(norm, T, l+1)
+    μ = Plm_μ(norm, T, m+1)
     return -μ * y * plm
 end
 @propagate_inbounds function
-_1term_raise_l(norm::N, l::Integer, x::T, plm1m::T
+_1term_raise_l(norm::N, m::Integer, x::T, plm1m::T
         ) where {N<:AbstractLegendreNorm, T<:Real}
-    ν = Plm_ν(norm, T, l+1)
+    ν = Plm_ν(norm, T, m)
     return ν * x * plm1m
 end
 @propagate_inbounds function
@@ -303,7 +306,7 @@ end
 _chkbounds_Pl(norm::LegendreNormCoeff{N,T}, l::Integer, x::T
         ) where {N<:AbstractLegendreNorm, T<:Real}
     (0 ≤ l) || throw(DomainError())
-    (l < length(norm.μ)) || throw(BoundsError())
+    (l < size(norm.α,1)) || throw(BoundsError())
 end
 @noinline function
 _chkbounds_Plm(norm::N, l::Integer, m::Integer, x::T
@@ -314,35 +317,35 @@ end
 _chkbounds_Plm(norm::LegendreNormCoeff{N,T}, l::Integer, m::Integer, x::T
         ) where {N<:AbstractLegendreNorm, T<:Real}
     (0 ≤ l && 0 ≤ m ≤ l) || throw(DomainError())
-    (l < length(norm.μ)) || throw(BoundsError())
+    (l < size(norm.α,1) && m < size(norm.α,2)) || throw(BoundsError())
 end
 
 @noinline function
 _chkbounds_Pl!(norm::N, Λ::AbstractVector{T}, lmax::Integer, m::Integer, x::T
         ) where {N<:AbstractLegendreNorm, T<:Real}
     (0 ≤ lmax && 0 ≤ m ≤ lmax) || throw(DomainError())
-    (size(Λ,1)≥lmax+1) || throw(DimensionMismatch())
+    (size(Λ,1) ≥ lmax+1) || throw(DimensionMismatch())
 end
 @noinline function
 _chkbounds_Pl!(norm::LegendreNormCoeff{N,T}, Λ::AbstractVector{T}, lmax::Integer,
         m::Integer, x::T) where {N<:AbstractLegendreNorm, T<:Real}
     (0 ≤ lmax && 0 ≤ m ≤ lmax) || throw(DomainError())
-    (lmax < length(norm.μ)) || throw(BoundsError())
-    (size(Λ,1)≥lmax+1) || throw(DimensionMismatch())
+    (lmax < size(norm.α,1) && m < size(norm.α,2)) || throw(BoundsError())
+    (size(Λ,1) ≥ lmax+1) || throw(DimensionMismatch())
 end
 
 @noinline function
-_chkbounds_Plm!(norm::N, Λ::AbstractMatrix{T}, lmax::Integer, x::T
+_chkbounds_Plm!(norm::N, Λ::AbstractMatrix{T}, lmax::Integer, mmax::Integer, x::T
         ) where {N<:AbstractLegendreNorm, T<:Real}
-    (0 ≤ lmax) || throw(DomainError())
-    (size(Λ,1)≥lmax+1 && size(Λ,2)≥lmax+1) || throw(DimensionMismatch())
+    (0 ≤ lmax && 0 ≤ mmax ≤ lmax) || throw(DomainError())
+    (size(Λ,1) ≥ lmax+1 && size(Λ,2) ≥ mmax+1) || throw(DimensionMismatch())
 end
 @noinline function
 _chkbounds_Plm!(norm::LegendreNormCoeff{N,T}, Λ::AbstractMatrix{T}, lmax::Integer,
-        x::T) where {N<:AbstractLegendreNorm, T<:Real}
-    (0 ≤ lmax) || throw(DomainError())
-    (lmax < length(norm.μ)) || throw(BoundsError())
-    (size(Λ,1)≥lmax+1 && size(Λ,2)≥lmax+1) || throw(DimensionMismatch())
+        mmax::Integer, x::T) where {N<:AbstractLegendreNorm, T<:Real}
+    (0 ≤ lmax && 0 ≤ mmax ≤ lmax) || throw(DomainError())
+    (lmax < size(norm.α,1) && mmax < size(norm.α,2)) || throw(BoundsError())
+    (size(Λ,1) ≥ lmax+1 && size(Λ,2) ≥ mmax+1) || throw(DimensionMismatch())
 end
 
 """
@@ -458,15 +461,15 @@ function legendre(norm::N, l::Integer, m::Integer, x::T
 end
 
 """
-    legendre!(norm::AbstractLegendreNorm, P::AbstractMatrix, lmax::Integer, x::Real)
+    legendre!(norm::AbstractLegendreNorm, P::AbstractMatrix, lmax::Integer, mmax::Integer, x::Real)
 
 Fills the matrix `Λ` with the pre-normalized Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``
 for all degrees `0 ≤ ℓ ≤ lmax` and all orders `0 ≤ m ≤ ℓ` at `x`, where ``N_ℓ^m`` is the
 normalization scheme `norm`.
 """
-function legendre!(norm::N, Λ::AbstractMatrix{T}, lmax::Integer, x::T
+function legendre!(norm::N, Λ::AbstractMatrix{T}, lmax::Integer, mmax::Integer, x::T
                    ) where {N<:AbstractLegendreNorm, T<:Real}
-    @boundscheck _chkbounds_Plm!(norm, Λ, lmax, x)
+    @boundscheck _chkbounds_Plm!(norm, Λ, lmax, mmax, x)
     @inbounds begin
         Λ[1,1] = Plm_00(norm, T)
         lmax == 0 && return Λ
@@ -474,14 +477,14 @@ function legendre!(norm::N, Λ::AbstractMatrix{T}, lmax::Integer, x::T
         # Fill in the main diagonal first
         y = sqrt(one(T) - x*x)
         pl = Λ[1,1]
-        for l in 0:(lmax-1)
-            plp1 = _1term_raise_lm(norm, l, x, y, pl)
-            Λ[l+2,l+2] = plp1
+        for m in 0:(mmax-1)
+            plp1 = _1term_raise_lm(norm, m, x, y, pl)
+            Λ[m+2,m+2] = plp1
             pl = plp1
         end
 
         # Outer loop runs over the m's
-        for m in 0:(lmax-1)
+        for m in 0:min(mmax, lmax-1)
             # First step is to boost one in l to P_{m+1}^m using a single-term
             # recurrence
             pl = Λ[m+1,m+1]
@@ -511,12 +514,12 @@ end
     return legendre(norm, l, m, x)
 end
 @propagate_inbounds function (norm::LegendreNormCoeff)(Λ::AbstractVector{T}, m::Integer, x::T) where T
-    lmax = length(norm.μ) - 1
+    lmax = size(norm.α,1) - 1
     return legendre!(norm, Λ, lmax, m, x)
 end
 @propagate_inbounds function (norm::LegendreNormCoeff)(Λ::AbstractMatrix{T}, x::T) where T
-    lmax = length(norm.μ) - 1
-    return legendre!(norm, Λ, lmax, x)
+    lmax,mmax = size(norm.α) .- 1
+    return legendre!(norm, Λ, lmax, mmax, x)
 end
 
 
@@ -566,13 +569,13 @@ Fills the vector `P` with the Legendre polynomial values ``P_ℓ^m(x)`` for all 
 
 
 """
-    Plm!(P::AbstractMatrix, lmax::Integer, x::Real)
+    Plm!(P::AbstractMatrix, lmax::Integer, mmax::Integer, x::Real)
 
 Fills the lower triangle of the matrix `P` with the associated Legendre polynomial values
 ``P_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and all orders `0 ≤ m ≤ ℓ` at `x`.
 """
-@inline Plm!(P::AbstractMatrix{T}, lmax::Integer, x::T) where {T<:Real} =
-    legendre!(LegendreUnitNorm(), P, lmax, x)
+@inline Plm!(P::AbstractMatrix{T}, lmax::Integer, mmax::Integer, x::T) where {T<:Real} =
+    legendre!(LegendreUnitNorm(), P, lmax, mmax, x)
 
 """
     λlm!(Λ::AbstractVector, lmax::Integer, m::Integer, x::Real)
@@ -584,14 +587,14 @@ values ``λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and constant order `
     legendre!(LegendreSphereNorm(), Λ, lmax, m, x)
 
 """
-    λlm!(Λ::AbstractMatrix, lmax::Integer, x::Real)
+    λlm!(Λ::AbstractMatrix, lmax::Integer, mmax::Integer, x::Real)
 
 Fills the lower triangle of the matrix `Λ` with the spherical harmonic normalized associated
 Legendre polynomial values ``Λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and all orders
 `0 ≤ m ≤ ℓ` at `x`.
 """
-@inline λlm!(Λ::AbstractMatrix{T}, lmax::Integer, x::T) where {T<:Real} =
-    legendre!(LegendreSphereNorm(), Λ, lmax, x)
+@inline λlm!(Λ::AbstractMatrix{T}, lmax::Integer, mmax::Integer, x::T) where {T<:Real} =
+    legendre!(LegendreSphereNorm(), Λ, lmax, mmax, x)
 
 """
     N = Nlm([T=Float64], l, m)

@@ -3,9 +3,35 @@ module Legendre
     using ..CMBTests: NumTypes
     using CMB.Legendre
 
+    @testset "Setting mmax" begin
+        LMAX = 10
+        MMAX = 2
+        impltab = LegendreUnitCoeff{Float64}(LMAX)
+        fulltab = LegendreUnitCoeff{Float64}(LMAX, LMAX)
+        mmaxtab = LegendreUnitCoeff{Float64}(LMAX, MMAX)
+
+        # Equality of implicit and explicit [maximal] mmax
+        @test impltab.α == fulltab.α
+        @test impltab.α == fulltab.α
+        @test impltab.β == fulltab.β
+        @test impltab.μ == fulltab.μ
+        @test impltab.ν == fulltab.ν
+
+        # Equality of coefficients up to mmax for mmax limited
+        @test mmaxtab.α == @view fulltab.α[:, 1:(MMAX+1)]
+        @test mmaxtab.β == @view fulltab.β[:, 1:(MMAX+1)]
+        @test mmaxtab.μ == @view fulltab.μ[1:(MMAX+1)]
+        @test mmaxtab.ν == @view fulltab.ν[1:(MMAX+1)]
+    end
+
     @testset "Domain and bounds checking" begin
         LMAX = 10
+        MMAX = 2
         ctab = LegendreUnitCoeff{Float64}(LMAX)
+        mtab = LegendreUnitCoeff{Float64}(LMAX, MMAX)
+        λ = Vector{Float64}(LMAX)
+        Λ₁ = Matrix{Float64}(LMAX, LMAX+1)
+        Λ₂ = Matrix{Float64}(LMAX+1, LMAX)
 
         # Mathematical domain errors:
         @test_throws DomainError Plm(-1, 0, 0.5)
@@ -17,14 +43,14 @@ module Legendre
 
         # Bounds error for precomputed coefficient tables
         @test_throws BoundsError legendre(ctab, LMAX+1, 0, 0.5)
+        @test_throws BoundsError legendre(mtab, LMAX, MMAX+1, 0.5)
+        @test_throws BoundsError legendre!(mtab, λ, LMAX, MMAX+1, 0.5)
+        @test_throws BoundsError legendre!(mtab, Λ₁, LMAX, MMAX+1, 0.5)
 
         # Bounds error for filling vector or matrix
-        λ = Vector{Float64}(LMAX)
-        Λ₁ = Matrix{Float64}(LMAX, LMAX+1)
-        Λ₂ = Matrix{Float64}(LMAX+1, LMAX)
         @test_throws DimensionMismatch legendre!(ctab, λ, LMAX, 0, 0.5)
-        @test_throws DimensionMismatch legendre!(ctab, Λ₁, LMAX, 0.5)
-        @test_throws DimensionMismatch legendre!(ctab, Λ₂, LMAX, 0.5)
+        @test_throws DimensionMismatch legendre!(ctab, Λ₁, LMAX, LMAX, 0.5)
+        @test_throws DimensionMismatch legendre!(ctab, Λ₂, LMAX, LMAX, 0.5)
     end
 
     @testset "Functor interface" begin
@@ -37,7 +63,7 @@ module Legendre
         @test leg(1, 1, 0.5) == legendre(leg, 1, 1, 0.5)
         @test leg(1, 0.5) == legendre(leg, 1, 0.5)
         @test all(leg(λ₁, 2, 0.5) .== legendre!(leg, λ₂, LMAX, 2, 0.5))
-        @test all(leg(Λ₁, 0.5) .== legendre!(leg, Λ₂, LMAX, 0.5))
+        @test all(leg(Λ₁, 0.5) .== legendre!(leg, Λ₂, LMAX, LMAX, 0.5))
     end
 
     #######################
@@ -70,7 +96,7 @@ module Legendre
         LMAX = 9
         ctab = LegendreUnitCoeff{T}(LMAX)
         plm = Matrix{T}(LMAX+1, LMAX+1)
-        legendre!(ctab, plm, LMAX, sqrt(T(2))/2)
+        legendre!(ctab, plm, LMAX, LMAX, sqrt(T(2))/2)
         @test plm[2, 1] ≈  sqrt(T(2))/2
         @test plm[3, 1] ≈  T(1)/4
         @test plm[4, 1] ≈ -sqrt(T(2))/8
@@ -92,7 +118,7 @@ module Legendre
         for ii in 1:10
             x = 2T(rand()) - 1
             Pl!(pl, LMAX, x)
-            legendre!(ctab, plm, LMAX, x)
+            legendre!(ctab, plm, LMAX, LMAX, x)
             @test all(pl .≈ plm[:,1])
         end
     end
@@ -134,7 +160,7 @@ module Legendre
         LMAX = 99
         ctab = LegendreSphereCoeff{Float64}(LMAX)
         Λ = Matrix{Float64}(LMAX+1, LMAX+1)
-        Λ = legendre!(ctab, Λ, LMAX, cosd(45.0))
+        Λ = legendre!(ctab, Λ, LMAX, LMAX, cosd(45.0))
 
         @test Λ[3,3]   ≈ SphericalPll_coeff(Float64,2)  / (2^1)
         @test Λ[4,4]   ≈ SphericalPll_coeff(Float64,3)  / (2^1 * sqrt(2))
@@ -159,8 +185,8 @@ module Legendre
         nlm = tril(Nlm.(T, lmat, mmat))
         for ii in 1:10
             x = 2*T(rand()) - 1
-            legendre!(ctab_norm, plm_norm, LMAX, x)
-            legendre!(ctab_sphr, plm_sphr, LMAX, x)
+            legendre!(ctab_norm, plm_norm, LMAX, LMAX, x)
+            legendre!(ctab_sphr, plm_sphr, LMAX, LMAX, x)
             @test all(isapprox.(nlm.*plm_norm, plm_sphr, atol=atol))
         end
     end

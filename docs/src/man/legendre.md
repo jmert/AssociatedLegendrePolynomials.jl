@@ -189,13 +189,13 @@ On my machine, this ends up being roughly 1000 times faster!
 
 If all Legendre polynomial values for some ``x`` over all
 ``ℓ ∈ [0,ℓ_\mathrm{max}]`` and ``m ∈ [0,ℓ]`` are required, there are also methods of
-[`Plm!`](@ref Plm!(::AbstractMatrix, ::Integer, ::Real)) and
-[`λlm!`](@ref λlm!(::AbstractMatrix, ::Integer, ::Real))
+[`Plm!`](@ref Plm!(::AbstractMatrix, ::Integer, ::Integer, ::Real)) and
+[`λlm!`](@ref λlm!(::AbstractMatrix, ::Integer, ::Integer, ::Real))
 which fill the entire [lower triangular] matrix of values:
 ```jldoctest PlmUsage
 julia> Λ = zeros(701, 701);
 
-julia> λlm!(Λ, 700, 0.5);
+julia> λlm!(Λ, 700, 700, 0.5);
 
 julia> Λ[701,3] == λlm(700, 2, 0.5)   # N.B. 1-based indexing of the array!
 true
@@ -237,8 +237,9 @@ julia> @time legendre!(coeff, λ, 700, 2, 0.5);
   0.000020 seconds (4 allocations: 160 bytes)
 ```
 
-Notice that due to its flexibility, `legendre!` requires an explicit `lmax` argument
-even though the `LegendreNormCoeff` has an `lmax` set during construction.
+Notice that due to its flexibility, `legendre!` requires explicit `lmax` and `mmax`
+arguments even though the `LegendreNormCoeff` has a `lmax` and `mmax` set during
+construction.
 This allows us to pass both a coefficient cache and output array which are larger than the
 computed set of coefficients.
 For example, the output matrix and cache used above each support computing the Legendre
@@ -247,7 +248,7 @@ computing terms beyond our required problem size.
 ```jldoctest PlmUsage
 julia> fill!(Λ, 0);
 
-julia> legendre!(coeff, Λ, 2, 0.5);
+julia> legendre!(coeff, Λ, 2, 2, 0.5);
 
 julia> Λ[1:5, 1:5]
 5×5 Array{Float64,2}:
@@ -271,9 +272,9 @@ julia> coeff(20, 2, 0.5) # == legendre(coeff, 20, 2, 0.5)
 
 julia> leg! = coeff;    # alias to clarify that leg! modifies
 
-julia> leg!(λ, 2, 0.5); # same as legendre!(coeff, λ, length(coeff.μ)-1, 2, 0.5)
+julia> leg!(λ, 2, 0.5); # same as legendre!(coeff, λ, size(coeff.α)..., 2, 0.5)
 
-julia> leg!(Λ, 0.5);    # same as legendre!(coeff, Λ, length(coeff.μ)-1, 0.5)
+julia> leg!(Λ, 0.5);    # same as legendre!(coeff, Λ, size(coeff.α)..., 0.5)
 ```
 
 ## [Custom normalizations](@id legendre_customnorm)
@@ -314,23 +315,22 @@ For our purposes, they take on the form:
         - \beta_{\ell+1}^m P_{\ell-1}^m(x)
         \label{eqn:cus_rr_2term}
     \\
-    P_{\ell+1}^{\ell+1}(x) &= \mu_{\ell+1} \sqrt{1-x^2}
-        P_\ell^\ell(x)
+    P_{m+1}^{m+1}(x) &= \mu_{m+1} \sqrt{1-x^2} P_m^m(x)
         \label{eqn:cus_rr_1term_lm}
     \\
-    P_{\ell+1}^\ell(x) &= \nu_{\ell+1} x P_\ell^\ell(x)
+    P_{m+1}^m(x) &= \nu_m x P_m^m(x)
         \label{eqn:cus_rr_1term_l}
 \end{align}
 ```
-The normalization is encoded in the coefficients ``α_ℓ^m``, ``β_ℓ^m``, ``μ_ℓ``, and
-``ν_ℓ``.
+The normalization is encoded in the coefficients ``α_ℓ^m``, ``β_ℓ^m``, ``μ_m``, and
+``ν_m``.
 For the standard (unity) normalization, these take on the values
 ```math
 \begin{align}
     α_ℓ^m &= \frac{2ℓ - 1}{ℓ - m} \\
     β_ℓ^m &= \frac{ℓ + m - 1}{ℓ - m} \\
-    μ_ℓ &= 2ℓ - 1 \\
-    ν_ℓ &= 2ℓ - 1
+    μ_m &= 2ℓ - 1 \\
+    ν_m &= 2ℓ + 1
 \end{align}
 ```
 by simply identifying the coefficients from Eqns.
@@ -372,8 +372,8 @@ Doing so with the other two recurrence relation equations, we obtain:
 \begin{align}
     α_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{4(ℓ-1)^2 - 1}{ℓ^2 - m^2}} \\
     β_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{(ℓ-1)^2 - m^2}{ℓ^2 - m^2}} \\
-    μ_ℓ &= \sqrt{1 + \frac{1}{2ℓ}} \\
-    ν_ℓ &= \sqrt{2ℓ + 1}
+    μ_m &= \sqrt{1 + \frac{1}{2m}} \\
+    ν_m &= \sqrt{2m + 3}
 \end{align}
 ```
 The final math required is to define the initial condition ``λ_0^0(x)``.
@@ -421,10 +421,10 @@ julia> function Plm_β(::λNorm, T::Type, l::Integer, m::Integer)
        end
 Plm_β (generic function with 4 methods)
 
-julia> Plm_μ(::λNorm, T::Type, l::Integer) = sqrt(1 + 1 / 2l)
+julia> Plm_μ(::λNorm, T::Type, m::Integer) = sqrt(1 + 1 / 2m)
 Plm_μ (generic function with 4 methods)
 
-julia> Plm_ν(::λNorm, T::Type, l::Integer) = sqrt(1 + 2l)
+julia> Plm_ν(::λNorm, T::Type, m::Integer) = sqrt(3 + 2m)
 Plm_ν (generic function with 4 methods)
 ```
 
