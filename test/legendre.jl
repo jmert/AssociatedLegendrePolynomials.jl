@@ -1,5 +1,5 @@
 module Legendre
-    using Compat.Test
+    using Test
     using ..CMBTests: NumTypes
     using CMB.Legendre
 
@@ -115,7 +115,7 @@ module Legendre
     # LEGENDRE POLYNOMIALS
     #######################
 
-    srand(2222)
+    Random.seed!(2222)
 
     # P_0 is a constant. Verify the output is invariant.
     @testset "Constant P_0 ($T)" for T in NumTypes
