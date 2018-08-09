@@ -1,5 +1,6 @@
 module Legendre
     using Test
+    using LinearAlgebra, Random
     using ..CMBTests: NumTypes
     using CMB.Legendre
 
@@ -29,8 +30,8 @@ module Legendre
         MMAX = 2
         ctab = LegendreUnitCoeff{Float64}(LMAX)
         mtab = LegendreUnitCoeff{Float64}(LMAX, MMAX)
-        λ = Vector{Float64}(LMAX+1)
-        Λ = Matrix{Float64}(LMAX+1, LMAX+1)
+        λ = Vector{Float64}(undef, LMAX+1)
+        Λ = Matrix{Float64}(undef, LMAX+1, LMAX+1)
 
         # Mathematical domain errors:
         @test_throws DomainError Pl(-1, 0.5)
@@ -59,9 +60,9 @@ module Legendre
     @testset "Output array bounds checking" begin
         LMAX = 10
         ctab = LegendreUnitCoeff{Float64}(LMAX)
-        λ = Vector{Float64}(LMAX)
-        Λ₁ = Matrix{Float64}(LMAX, LMAX+1)
-        Λ₂ = Matrix{Float64}(LMAX+1, LMAX)
+        λ  = Vector{Float64}(undef, LMAX)
+        Λ₁ = Matrix{Float64}(undef, LMAX, LMAX+1)
+        Λ₂ = Matrix{Float64}(undef, LMAX+1, LMAX)
 
         # Bounds error for filling vector or matrix
         @test_throws DimensionMismatch Pl!(λ, LMAX, 0.5)
@@ -140,7 +141,7 @@ module Legendre
     @testset "Analytic checks for P_ℓ^0(cos(π/4)) ($T)" for T in NumTypes
         LMAX = 9
         ctab = LegendreUnitCoeff{T}(LMAX)
-        plm = Matrix{T}(LMAX+1, LMAX+1)
+        plm = Matrix{T}(undef, LMAX+1, LMAX+1)
         legendre!(ctab, plm, LMAX, LMAX, sqrt(T(2))/2)
         @test plm[2, 1] ≈  sqrt(T(2))/2
         @test plm[3, 1] ≈  T(1)/4
@@ -158,8 +159,8 @@ module Legendre
     @testset "Equality of P_ℓ and P_ℓ^0 ($T)" for T in NumTypes
         LMAX = 10
         ctab = LegendreUnitCoeff{T}(LMAX)
-        pl  = Vector{T}(LMAX+1)
-        plm = Matrix{T}(LMAX+1, LMAX+1)
+        pl  = Vector{T}(undef, LMAX+1)
+        plm = Matrix{T}(undef, LMAX+1, LMAX+1)
         for ii in 1:10
             x = 2T(rand()) - 1
             Pl!(pl, LMAX, x)
@@ -197,14 +198,14 @@ module Legendre
     #   * odd ℓ => 1 / (2^(k/2) sqrt(2)) where k=floor(ℓ/2).
     @testset "Analytic checks for λ_ℓ^m(cos(π/4))" begin
         function SphericalPll_coeff(T, ℓ)
-            factorials = mapreduce(x->sqrt((2x+1)/(2x)), *, 1.0, 1:ℓ)
+            factorials = mapreduce(x->sqrt((2x+1)/(2x)), *, 1:ℓ, init=1.0)
             sign = (ℓ % 2 == 0) ? 1 : -1
             return sign * sqrt(1/4π) * factorials
         end
 
         LMAX = 99
         ctab = LegendreSphereCoeff{Float64}(LMAX)
-        Λ = Matrix{Float64}(LMAX+1, LMAX+1)
+        Λ = Matrix{Float64}(undef, LMAX+1, LMAX+1)
         Λ = legendre!(ctab, Λ, LMAX, LMAX, cosd(45.0))
 
         @test Λ[3,3]   ≈ SphericalPll_coeff(Float64,2)  / (2^1)
@@ -225,8 +226,8 @@ module Legendre
         plm_norm = zeros(T, LMAX+1, LMAX+1)
         plm_sphr = zeros(T, LMAX+1, LMAX+1)
 
-        lmat = tril(repmat(collect(0:LMAX), 1, LMAX+1))
-        mmat = tril(repmat(collect(0:LMAX)', LMAX+1, 1))
+        lmat = tril(repeat(collect(0:LMAX), 1, LMAX+1))
+        mmat = tril(repeat(collect(0:LMAX)', LMAX+1, 1))
         nlm = tril(Nlm.(T, lmat, mmat))
         for ii in 1:10
             x = 2*T(rand()) - 1
