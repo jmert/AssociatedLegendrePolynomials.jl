@@ -87,6 +87,31 @@ module Legendre
         @test all(leg(Λ₁, 0.5) .== legendre!(leg, Λ₂, LMAX, LMAX, 0.5))
     end
 
+    @testset "Mixed types" begin
+        LMAX = 10
+        legb! = LegendreUnitCoeff{BigFloat}(LMAX)
+        legd! = LegendreUnitCoeff{Float64}(LMAX)
+        λb = Vector{BigFloat}(undef, LMAX+1)
+        λd = Vector{Float64}(undef, LMAX+1)
+        xb = big"0.5"
+        xd = 5e-1
+
+        # Same table and array, mixed value
+        @test @inferred(legb!(λb, 2, xd)) isa typeof(λb)
+        @test @inferred(legd!(λd, 2, xb)) isa typeof(λd)
+
+        # Same table and value, mixed array
+        @test @inferred(legb!(λd, 2, xb)) isa typeof(λd)
+        @test @inferred(legd!(λb, 2, xd)) isa typeof(λb)
+
+        # Same array and value, mixed table
+        @test @inferred(legb!(λd, 2, xd)) isa typeof(λd)
+        @test @inferred(legd!(λb, 2, xb)) isa typeof(λb)
+
+        # All three mixed
+        @test @inferred(legb!(λd, 2, Float32(xd))) isa typeof(λd)
+    end
+
     @testset "Equality of legendre[!]" begin
         LMAX = 10
         x = 0.5

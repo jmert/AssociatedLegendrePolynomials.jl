@@ -19,7 +19,7 @@ export legendre, legendre!
 # Specific computation functions
 export Pl, Pl!, Plm, Plm!, Nlm, λlm, λlm!
 
-import Base.@boundscheck, Base.@propagate_inbounds
+import Base: @boundscheck, @propagate_inbounds, eltype
 
 
 
@@ -112,6 +112,11 @@ harmonic normalization. Alias for `LegendreNormCoeff{LegendreSphereNorm,T}`.
 """
 LegendreSphereCoeff = LegendreNormCoeff{LegendreSphereNorm}
 
+# Define element types as a way to conveniently promote, even for the trait types.
+# Union{} will always lose out in type promotion.
+eltype(::Type{<:AbstractLegendreNorm}) = Union{}
+eltype(::Type{LegendreNormCoeff{N,T}}) where {N,T} = T
+
 # Improve printing somewhat
 Base.show(io::IO, norm::LegendreNormCoeff{N,T}) where {N,T} =
     print(io, LegendreNormCoeff, "{$N,$T}")
@@ -191,48 +196,47 @@ Plm_00(::LegendreSphereNorm, ::Type{T}) where T
 end
 
 @inline function
-Plm_00(::LegendreNormCoeff{N,T}, ::Type{T}
-                       ) where {N<:AbstractLegendreNorm, T<:Real}
+Plm_00(::LegendreNormCoeff{N}, ::Type{T}) where {N<:AbstractLegendreNorm, T}
     return Plm_00(N(), T)
 end
 
 @inline function
-Plm_μ(::LegendreUnitNorm, ::Type{T}, m::Integer) where {T<:Real}
+Plm_μ(::LegendreUnitNorm, ::Type{T}, m::Integer) where T
     return convert(T, 2m - 1)
 end
 
 @inline function
-Plm_μ(::LegendreSphereNorm, ::Type{T}, m::Integer) where {T<:Real}
+Plm_μ(::LegendreSphereNorm, ::Type{T}, m::Integer) where T
     return sqrt(one(T) + inv(convert(T, 2m)))
 end
 
 @propagate_inbounds function
-Plm_μ(norm::LegendreNormCoeff, ::Type{T}, m::Integer) where {T<:Real}
+Plm_μ(norm::LegendreNormCoeff, ::Type{T}, m::Integer) where T
     return norm.μ[m+1]
 end
 
 @inline function
-Plm_ν(::LegendreUnitNorm, ::Type{T}, m::Integer) where {T<:Real}
+Plm_ν(::LegendreUnitNorm, ::Type{T}, m::Integer) where T
     return convert(T, 2m + 1)
 end
 
 @inline function
-Plm_ν(::LegendreSphereNorm, ::Type{T}, m::Integer) where {T<:Real}
+Plm_ν(::LegendreSphereNorm, ::Type{T}, m::Integer) where T
     return sqrt(convert(T, 2m + 3))
 end
 
 @propagate_inbounds function
-Plm_ν(norm::LegendreNormCoeff, ::Type{T}, m::Integer) where {T<:Real}
+Plm_ν(norm::LegendreNormCoeff, ::Type{T}, m::Integer) where T
     return norm.ν[m+1]
 end
 
 @inline function
-Plm_α(::LegendreUnitNorm, ::Type{T}, l::Integer, m::Integer) where T<:Real
+Plm_α(::LegendreUnitNorm, ::Type{T}, l::Integer, m::Integer) where T
     return convert(T, 2l-1) * inv(convert(T, l-m))
 end
 
 @inline function
-Plm_α(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T<:Real
+Plm_α(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     lT = convert(T, l)
     mT = convert(T, m)
     # Write factors in two pieces to make compiler's job easier. In the case where
@@ -247,19 +251,17 @@ Plm_α(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T<:Real
 end
 
 @propagate_inbounds function
-Plm_α(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer
-        ) where {T<:Real}
+Plm_α(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer) where T
     return norm.α[l+1,m+1]
 end
 
 @inline function
-Plm_β(::LegendreUnitNorm, ::Type{T}, l::Integer, m::Integer
-        ) where T<:Real
+Plm_β(::LegendreUnitNorm, ::Type{T}, l::Integer, m::Integer) where T
     return convert(T, l+m-1) * inv(convert(T, l-m))
 end
 
 @inline function
-Plm_β(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T<:Real
+Plm_β(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     lT = convert(T, l)
     mT = convert(T, m)
     # Write factors in two pieces to make compiler's job easier. In the case where
@@ -271,27 +273,25 @@ Plm_β(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T<:Real
 end
 
 @propagate_inbounds function
-Plm_β(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer) where {T<:Real}
+Plm_β(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer) where T
     return norm.β[l+1,m+1]
 end
 
 # Named recursion relations
 
 @propagate_inbounds function
-_1term_raise_lm(norm::N, m::Integer, x::T, y::T, plm::T
-        ) where {N<:AbstractLegendreNorm, T<:Real}
+_1term_raise_lm(norm::AbstractLegendreNorm, m::Integer, x::T, y::T, plm::T) where T
     μ = Plm_μ(norm, T, m+1)
     return -μ * y * plm
 end
 @propagate_inbounds function
-_1term_raise_l(norm::N, m::Integer, x::T, plm::T
-        ) where {N<:AbstractLegendreNorm, T<:Real}
+_1term_raise_l(norm::AbstractLegendreNorm, m::Integer, x::T, plm::T) where T
     ν = Plm_ν(norm, T, m)
     return ν * x * plm
 end
 @propagate_inbounds function
-_2term_raise_l(norm::N, l::Integer, m::Integer, x::T, plm::T, plm1m::T
-        ) where {N<:AbstractLegendreNorm, T<:Real}
+_2term_raise_l(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::T,
+               plm::T, plm1m::T) where T
     α = Plm_α(norm, T, l+1, m)
     β = Plm_β(norm, T, l+1, m)
     return α * x * plm - β * plm1m
@@ -327,7 +327,7 @@ end
     TΛ = eltype(Λ)
     TV = typeof(x)
     N = ndims(Λ)
-    T = promote_type(TΛ, TV)
+    T = promote_type(eltype(norm), TΛ, TV)
     z = convert(T, x)
     y = @fastmath sqrt(one(T) - z*z)
 
@@ -376,133 +376,133 @@ end
 end
 
 """
-    p = legendre(norm::AbstractLegendreNorm, l::Integer, x::Real)
+    p = legendre(norm::AbstractLegendreNorm, l::Integer, x)
 
 Computes the scalar value ``p = N_ℓ P_ℓ(x)``, where ``P_ℓ(x)`` is the Legendre
 polynomial of degree `l` at `x` and ``N_ℓ`` is the normalization scheme `norm`.
 """
-function legendre(norm::AbstractLegendreNorm, l::Integer, x)
+@propagate_inbounds function legendre(norm::AbstractLegendreNorm, l::Integer, x)
     Λ = Ref{typeof(x)}()
     _legendre!(norm, Λ, l, 0, x)
     return Λ[]
 end
 
 """
-    p = legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Real)
+    p = legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x)
 
 Computes the scalar value ``p = N_ℓ^m P_ℓ^m(x)``, where ``P_ℓ^m(x)`` is the associated
 Legendre polynomial of degree `l` and order `m` at `x` and ``N_ℓ^m`` the normalization
 scheme `norm`.
 """
-function legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x)
+@propagate_inbounds function legendre(
+        norm::AbstractLegendreNorm, l::Integer, m::Integer, x)
     Λ = Ref{typeof(x)}()
     _legendre!(norm, Λ, l, m, x)
     return Λ[]
 end
 
 """
-    legendre!(norm::AbstractLegendreNorm, Λ::AbstractVector, lmax::Integer, m::Integer,
-              x::Real)
+    legendre!(norm::AbstractLegendreNorm, Λ::AbstractVector, lmax::Integer, m::Integer, x)
 
 Fills the vector `Λ` with the pre-normalized Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``
 for all degrees `0 ≤ ℓ ≤ lmax` and constant order `m` at `x`, where ``N_ℓ^m`` is the
 normalization scheme `norm`.
 """
-function legendre!(norm::AbstractLegendreNorm,
-                   Λ::AbstractVector{T}, lmax::Integer, m::Integer, x::T) where T
+@propagate_inbounds function legendre!(
+        norm::AbstractLegendreNorm,
+        Λ::AbstractVector, lmax::Integer, m::Integer, x) where T
     return _legendre!(norm, Λ, lmax, m, x)
 end
 
 """
-    legendre!(norm::AbstractLegendreNorm, P::AbstractMatrix, lmax::Integer, mmax::Integer, x::Real)
+    legendre!(norm::AbstractLegendreNorm, P::AbstractMatrix, lmax::Integer, mmax::Integer, x)
 
 Fills the matrix `Λ` with the pre-normalized Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``
 for all degrees `0 ≤ ℓ ≤ lmax` and all orders `0 ≤ m ≤ ℓ` at `x`, where ``N_ℓ^m`` is the
 normalization scheme `norm`.
 """
-function legendre!(norm::AbstractLegendreNorm,
-                   Λ::AbstractMatrix{T}, lmax::Integer, mmax::Integer, x::T) where T
+@propagate_inbounds function legendre!(
+        norm::AbstractLegendreNorm,
+        Λ::AbstractMatrix, lmax::Integer, mmax::Integer, x)
     return _legendre!(norm, Λ, lmax, mmax, x)
 end
 
 # Make coefficient cache objects callable with similar syntax as the legendre[!] functions
-@propagate_inbounds function (norm::LegendreNormCoeff)(l::Integer, x::Real)
+@propagate_inbounds function (norm::LegendreNormCoeff)(l::Integer, x)
     return legendre(norm, l, x)
 end
-@propagate_inbounds function (norm::LegendreNormCoeff)(l::Integer, m::Integer, x::Real)
+@propagate_inbounds function (norm::LegendreNormCoeff)(l::Integer, m::Integer, x)
     return legendre(norm, l, m, x)
 end
-@propagate_inbounds function (norm::LegendreNormCoeff)(Λ::AbstractVector{T}, m::Integer, x::T) where T
+@propagate_inbounds function (norm::LegendreNormCoeff)(Λ::AbstractVector, m::Integer, x)
     lmax = size(norm.α,1) - 1
     return legendre!(norm, Λ, lmax, m, x)
 end
-@propagate_inbounds function (norm::LegendreNormCoeff)(Λ::AbstractMatrix{T}, x::T) where T
+@propagate_inbounds function (norm::LegendreNormCoeff)(Λ::AbstractMatrix, x) where T
     lmax,mmax = size(norm.α) .- 1
     return legendre!(norm, Λ, lmax, mmax, x)
 end
 
 
 """
-    p = Pl(l::Integer, x::Real)
+    p = Pl(l::Integer, x)
 
 Computes the scalar value ``p = P_ℓ(x)``, where ``P_ℓ(x)`` is the Legendre polynomial of
 degree `l` at `x`.
 """
-@inline Pl(l::Integer, x::T) where {T<:Real} = legendre(LegendreUnitNorm(), l, x)
+@inline Pl(l::Integer, x) = legendre(LegendreUnitNorm(), l, x)
 
 """
-    p = Plm(l::Integer, m::Integer, x::Real)
+    p = Plm(l::Integer, m::Integer, x)
 
 Computes the scalar value ``p = P_ℓ^m(x)``, where ``P_ℓ^m(x)`` is the associated Legendre
 polynomial of degree `l` and order `m` at `x`.
 """
-@inline Plm(l::Integer, m::Integer, x::T) where {T<:Real} =
-    legendre(LegendreUnitNorm(), l, m, x)
+@inline Plm(l::Integer, m::Integer, x) = legendre(LegendreUnitNorm(), l, m, x)
 
 """
-    λ = λlm(l::Integer, m::Integer, x::Real)
+    λ = λlm(l::Integer, m::Integer, x)
 
 Computes the scalar value ``λ = λ_ℓ^m(x)``, where ``λ_ℓ^m(x)`` is the spherical-harmonic
 normalized associated Legendre polynomial of degree `l` and order `m` at `x`.
 """
-@inline λlm(l::Integer, m::Integer, x::T) where {T<:Real} =
-    legendre(LegendreSphereNorm(), l, m, x)
+@inline λlm(l::Integer, m::Integer, x) = legendre(LegendreSphereNorm(), l, m, x)
 
 """
-    Pl!(P::AbstractVector, lmax::Integer, x::Real)
+    Pl!(P::AbstractVector, lmax::Integer, x)
 
 Fills the vector `P` with the Legendre polynomial values ``P_ℓ(x)`` for all degrees
 `0 ≤ ℓ ≤ lmax` at `x`.
 """
-@inline Pl!(P::AbstractVector{T}, lmax::Integer, x::T) where {T<:Real} =
+@inline Pl!(P::AbstractVector, lmax::Integer, x) =
     legendre!(LegendreUnitNorm(), P, lmax, 0, x)
 
 """
-    Plm!(P::AbstractVector, lmax::Integer, m::Integer, x::Real)
+    Plm!(P::AbstractVector, lmax::Integer, m::Integer, x)
 
 Fills the vector `P` with the Legendre polynomial values ``P_ℓ^m(x)`` for all degrees
 `0 ≤ ℓ ≤ lmax` and constant order `m` at `x`.
 """
-@inline Plm!(P::AbstractVector{T}, lmax::Integer, m::Integer, x::T) where {T<:Real} =
+@inline Plm!(P::AbstractVector, lmax::Integer, m::Integer, x) =
     legendre!(LegendreUnitNorm(), P, lmax, m, x)
 
 
 """
-    Plm!(P::AbstractMatrix, lmax::Integer, mmax::Integer, x::Real)
+    Plm!(P::AbstractMatrix, lmax::Integer, mmax::Integer, x)
 
 Fills the lower triangle of the matrix `P` with the associated Legendre polynomial values
 ``P_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and all orders `0 ≤ m ≤ ℓ` at `x`.
 """
-@inline Plm!(P::AbstractMatrix{T}, lmax::Integer, mmax::Integer, x::T) where {T<:Real} =
+@inline Plm!(P::AbstractMatrix, lmax::Integer, mmax::Integer, x) =
     legendre!(LegendreUnitNorm(), P, lmax, mmax, x)
 
 """
-    λlm!(Λ::AbstractVector, lmax::Integer, m::Integer, x::Real)
+    λlm!(Λ::AbstractVector, lmax::Integer, m::Integer, x)
 
 Fills the vector `Λ` with the spherical harmonic normalized associated Legendre polynomial
 values ``λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and constant order `m` at `x`.
 """
-@inline λlm!(Λ::AbstractVector{T}, lmax::Integer, m::Integer, x::T) where {T<:Real} =
+@inline λlm!(Λ::AbstractVector, lmax::Integer, m::Integer, x) =
     legendre!(LegendreSphereNorm(), Λ, lmax, m, x)
 
 """
@@ -512,7 +512,7 @@ Fills the lower triangle of the matrix `Λ` with the spherical harmonic normaliz
 Legendre polynomial values ``Λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and all orders
 `0 ≤ m ≤ ℓ` at `x`.
 """
-@inline λlm!(Λ::AbstractMatrix{T}, lmax::Integer, mmax::Integer, x::T) where {T<:Real} =
+@inline λlm!(Λ::AbstractMatrix, lmax::Integer, mmax::Integer, x) =
     legendre!(LegendreSphereNorm(), Λ, lmax, mmax, x)
 
 """
@@ -531,7 +531,7 @@ using numbers of type `T`.
 
 See also [`Plm`](@ref) and [`λlm`](@ref).
 """
-function Nlm(::Type{T}, l::Integer, m::Integer) where T<:Real
+function Nlm(::Type{T}, l::Integer, m::Integer) where T
     fac1 = one(T)
     for ii in (l-m+1):(l+m)
         fac1 *= convert(T, ii)
