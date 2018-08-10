@@ -328,7 +328,7 @@ end
     N = ndims(Λ)
     T = promote_type(TΛ, TV)
     z = convert(T, x)
-    y = sqrt(one(T) - z*z)
+    y = @fastmath sqrt(one(T) - z*z)
 
     pm   = zero(T)
     pmp1 = Plm_00(norm, T)
