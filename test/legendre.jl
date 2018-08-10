@@ -4,6 +4,15 @@ module Legendre
     using ..CMBTests: NumTypes
     using CMB.Legendre
 
+    @testset "Coefficient table conversion" begin
+        dtab = LegendreSphereCoeff{Float64}(10)
+        ftab = convert(LegendreSphereCoeff{Float32}, dtab)
+
+        @test ftab isa LegendreSphereCoeff{Float32}
+        @test ftab.α == Float32.(dtab.α)
+        @test_throws MethodError convert(LegendreUnitCoeff{Float64}, dtab)
+    end
+
     @testset "Setting mmax" begin
         LMAX = 10
         MMAX = 2

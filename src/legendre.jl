@@ -19,7 +19,7 @@ export legendre, legendre!
 # Specific computation functions
 export Pl, Pl!, Plm, Plm!, Nlm, λlm, λlm!
 
-import Base: @boundscheck, @propagate_inbounds, eltype
+import Base: @boundscheck, @propagate_inbounds, eltype, convert
 
 
 
@@ -92,9 +92,19 @@ struct LegendreNormCoeff{N<:AbstractLegendreNorm,T<:Real} <: AbstractLegendreNor
 
         return new(μ, ν, α, β)
     end
+
+    function LegendreNormCoeff{N,T1}(norm::LegendreNormCoeff{N,T2}) where {N,T1,T2}
+        return new(convert(Vector{T1}, norm.μ),
+                   convert(Vector{T1}, norm.ν),
+                   convert(Matrix{T1}, norm.α),
+                   convert(Matrix{T1}, norm.β))
+    end
 end
 
 LegendreNormCoeff{N,T}(lmax::Integer) where {N,T} = LegendreNormCoeff{N,T}(lmax, lmax)
+
+convert(::Type{LegendreNormCoeff{N,T}}, norm::LegendreNormCoeff{N}) where {N,T} =
+        LegendreNormCoeff{N,T}(norm)
 
 """
     LegendreUnitCoeff{T}
