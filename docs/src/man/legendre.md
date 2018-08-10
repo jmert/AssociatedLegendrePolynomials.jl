@@ -272,9 +272,9 @@ julia> coeff(20, 2, 0.5) # == legendre(coeff, 20, 2, 0.5)
 
 julia> leg! = coeff;    # alias to clarify that leg! modifies
 
-julia> leg!(λ, 2, 0.5); # same as legendre!(coeff, λ, size(coeff.α)..., 2, 0.5)
+julia> leg!(λ, 2, 0.5); # same as legendre!(coeff, λ, size(coeff.α, 1) - 1, 2, 0.5)
 
-julia> leg!(Λ, 0.5);    # same as legendre!(coeff, Λ, size(coeff.α)..., 0.5)
+julia> leg!(Λ, 0.5);    # same as legendre!(coeff, Λ, (size(coeff.α) .- 1)..., 0.5)
 ```
 
 ## [Custom normalizations](@id legendre_customnorm)
