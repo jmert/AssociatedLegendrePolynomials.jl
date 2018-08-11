@@ -30,11 +30,11 @@ Abstract supertype for normalization conditions of the Associated Legendre polyn
 
 # Example
 ```jldoctest
-julia> subtypes(AbstractLegendreNorm)
-3-element Array{Union{DataType, UnionAll},1}:
- CMB.Legendre.LegendreNormCoeff
- CMB.Legendre.LegendreSphereNorm
- CMB.Legendre.LegendreUnitNorm
+julia> using InteractiveUtils; subtypes(AbstractLegendreNorm)
+3-element Array{Any,1}:
+ LegendreNormCoeff
+ LegendreSphereNorm
+ LegendreUnitNorm
 ```
 """
 abstract type AbstractLegendreNorm end
@@ -58,7 +58,7 @@ Precomputed recursion relation coefficients for the normalization `N` and value 
 # Example
 ```jldoctest
 julia> LegendreNormCoeff{LegendreSphereNorm,Float64}(1)
-CMB.Legendre.LegendreNormCoeff{CMB.Legendre.LegendreSphereNorm,Float64} for lmax = 1, mmax = 1 with coefficients:
+LegendreNormCoeff{LegendreSphereNorm,Float64} for lmax = 1, mmax = 1 with coefficients:
     μ: [0.0, 1.22474]
     ν: [1.73205, 2.23607]
     α: [0.0 0.0; 1.73205 0.0]
