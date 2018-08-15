@@ -191,18 +191,17 @@ where ``β_ℓ^m`` is appropriate for the choice of normalization `N`.
 """
 function Plm_β end
 
-@inline @generated function
+@inline function
 Plm_00(::LegendreUnitNorm, ::Type{T}) where T
-    :(return $(one(T)))
+    return one(T)
 end
 
-@inline @generated function
+@inline function
 Plm_00(::LegendreSphereNorm, ::Type{T}) where T
     # comparing this against
     #   convert(T, inv(sqrt(4*convert(BigFloat, π))))
     # shows that this is exact within Float64 precision
-    Pl00 = inv(sqrt(4 * convert(T, π)))
-    return :(return $Pl00)
+    return inv(sqrt(4 * convert(T, π)))
 end
 
 @inline function
