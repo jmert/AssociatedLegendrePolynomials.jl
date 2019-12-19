@@ -1,8 +1,8 @@
 module Legendre
     using Test
     using LinearAlgebra, Random
-    using ..CMBTests: NumTypes
     using CMB.Legendre
+    import ..NumTypes
 
     @testset "Coefficient table conversion" begin
         dtab = LegendreSphereCoeff{Float64}(10)
