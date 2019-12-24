@@ -271,6 +271,8 @@ module Legendre
         end
     end
 
+    # Test failed with world age problems when generated functions were incorrectly used;
+    # numerical derivative via newer world's Dual numbers tests for this error.
     @testset "Derivatives via dual numbers" begin
         using ForwardDiff: derivative
         LMAX = 5
