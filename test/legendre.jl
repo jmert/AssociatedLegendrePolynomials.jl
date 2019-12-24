@@ -270,5 +270,24 @@ module Legendre
             @test all(isapprox.(nlm.*plm_norm, plm_sphr, atol=atol))
         end
     end
-end
 
+    @testset "Derivatives via dual numbers" begin
+        using ForwardDiff: derivative
+        LMAX = 5
+        ctab = LegendreUnitCoeff{Float64}(LMAX)
+
+        # Numerical derivative for Plm via recurrence relations:
+        function num_deriv1(l, m, x)
+            d = -(l+1) * x * Plm(l, m, x) + (l - m + 1) * Plm(l+1, m, x)
+            return d / (x^2 - 1)
+        end
+        dual_deriv1(l, m, x) = derivative(z -> Plm(l, m, z), x)
+        dual_deriv1_tab(l, m, x) = derivative(z -> ctab(l, m, z), x)
+
+        for l in 0:LMAX, m in 0:l
+            x = 2rand() - 1
+            @test num_deriv1(l, m, x) ≈ dual_deriv1(l, m, x)
+            @test num_deriv1(l, m, x) ≈ dual_deriv1_tab(l, m, x)
+        end
+    end
+end
