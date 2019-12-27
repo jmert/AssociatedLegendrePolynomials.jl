@@ -19,9 +19,43 @@ export legendre, legendre!
 # Specific computation functions
 export Pl, Pl!, Plm, Plm!, Nlm, λlm, λlm!
 
-import Base: @boundscheck, @propagate_inbounds, eltype, convert
+import Base:
+    @boundscheck, @propagate_inbounds,
+    broadcastable, convert, eltype
 
+module Bcast
+    import Base: isassigned, getindex, setindex!, copyto!, @propagate_inbounds
+    import Base.Broadcast: Broadcasted, AbstractArrayStyle, dotview, materialize
 
+    """
+        BScalar{T} <: Ref{T}
+
+    A scalar storage location within broadcast expressions, very similar to `Base.RefValue`,
+    but where assignment in a broadcasted context (for dimensionally-compatible expressions)
+    is supported. For example:
+    ```
+    f!(b::BScalar, x) = (b .= sin.(x); b)
+    b = BScalar{Float64}();
+    f!(b, π/2)
+    ```
+    """
+    struct BScalar{T} <: Ref{T}
+        x::Base.RefValue{T}
+        BScalar{T}() where {T} = new(Ref{T}())
+        BScalar{T}(x) where {T} = new(x)
+    end
+    BScalar(x::T) where {T} = BScalar{T}(x)
+    # Minimal copy of RefValue's methods
+    @propagate_inbounds isassigned(x::BScalar) = isassigned(x.x)
+    @propagate_inbounds getindex(b::BScalar) = b.x[]
+    @propagate_inbounds setindex!(b::BScalar, x) = (b.x[] = x; b)
+    # Broadcasting extensions
+    @propagate_inbounds dotview(A::BScalar, ::CartesianIndex{0}) = A
+    @propagate_inbounds dotview(A::BScalar, ::CartesianIndices{0,Tuple{}}) = A
+    @propagate_inbounds copyto!(dest::BScalar, bc::Broadcasted{<:AbstractArrayStyle{0}}) =
+        dest[] = materialize(bc)
+end # module Bcast
+import .Bcast: BScalar
 
 """
     abstract type AbstractLegendreNorm end
@@ -103,7 +137,8 @@ end
 
 LegendreNormCoeff{N,T}(lmax::Integer) where {N,T} = LegendreNormCoeff{N,T}(lmax, lmax)
 
-convert(::Type{LegendreNormCoeff{N,T}}, norm::LegendreNormCoeff{N}) where {N,T} =
+convert(::Type{LegendreNormCoeff{N,T}}, norm::LegendreNormCoeff{N,T}) where {N,T} = norm
+convert(::Type{LegendreNormCoeff{N,T}}, norm::LegendreNormCoeff{N,S}) where {N,T,S} =
         LegendreNormCoeff{N,T}(norm)
 
 """
@@ -126,6 +161,9 @@ LegendreSphereCoeff{T} = LegendreNormCoeff{LegendreSphereNorm,T}
 # Union{} will always lose out in type promotion.
 eltype(::Type{<:AbstractLegendreNorm}) = Union{}
 eltype(::Type{LegendreNormCoeff{N,T}}) where {N,T} = T
+
+# Normalizations are scalars in a broadcasting context
+broadcastable(x::AbstractLegendreNorm) = Ref(x)
 
 # Improve printing somewhat
 Base.show(io::IO, norm::LegendreNormCoeff{N,T}) where {N,T} =
@@ -307,21 +345,30 @@ _2term_raise_l(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::T,
     return α * x * plm - β * plm1m
 end
 
-function _chkdomain(lmax, mmax)
+@noinline function _chkdomain(lmax, mmax)
     0 ≤ lmax || throw(DomainError(lmax, "degree lmax must be non-negative"))
     0 ≤ mmax ≤ lmax || throw(DomainError(mmax,
             "order mmax must be non-negative and less than lmax"))
-end
-function _chkbounds(Λ::Ref, lmax, mmax)
     nothing
 end
-function _chkbounds(Λ::AbstractArray, lmax, mmax)
-    if ndims(Λ) > 0
-        lmax < size(Λ, 1) || throw(DimensionMismatch(
+@noinline function _chkbounds(Λ, lmax, mmax, x)
+    M = ndims(Λ)
+    N = ndims(x)
+    # Leading dimensions of Λ are storage for the same dimensions as x
+    if N > 0
+        szΛ = ntuple(i -> size(Λ, i), N)
+        szx = size(x)
+        all(szΛ .>= szx) || throw(DimensionMismatch(
+                "Output storage has leading dimensions of size $szΛ, need at least $szx"))
+    end
+    # Trailing dimensions of Λ are storage for range of ell and m, as needed
+    dimΛ = ntuple(i -> size(Λ, i+N), M-N)
+    if length(dimΛ) > 0
+        lmax < dimΛ[1] || throw(DimensionMismatch(
                 "lmax incompatible with output array size"))
     end
-    if ndims(Λ) > 1
-        mmax < size(Λ, 2) || throw(DimensionMismatch(
+    if length(dimΛ) > 1
+        mmax < dimΛ[2] || throw(DimensionMismatch(
                 "mmax incompatible with output array size"))
     end
     nothing
@@ -329,55 +376,68 @@ end
 
 @propagate_inbounds function _legendre!(norm, Λ, lmax, mmax, x)
     @boundscheck _chkdomain(lmax, mmax)
-    @boundscheck _chkbounds(Λ, lmax, mmax)
+    @boundscheck _chkbounds(Λ, lmax, mmax, x)
     @inbounds _legendre_impl!(norm, Λ, lmax, mmax, x)
 end
 
+@inline _similar(A::AbstractArray) = similar(A, size(A))
+@inline _similar(A::BScalar)       = BScalar{eltype(A)}()
+@inline _similar(A::Number)        = BScalar{typeof(A)}()
 @propagate_inbounds function _legendre_impl!(norm::AbstractLegendreNorm, Λ, lmax, mmax, x)
     TΛ = eltype(Λ)
-    TV = typeof(x)
-    N = ndims(Λ)
+    TV = eltype(x)
     T = promote_type(eltype(norm), TΛ, TV)
-    z = convert(T, x)
-    y = @fastmath sqrt(one(T) - z*z)
 
-    pm   = zero(T)
-    pmp1 = Plm_00(norm, T)
+    z    = _similar(x)
+    y    = _similar(x)
+    pmp1 = _similar(x)
+    pm   = _similar(x)
+    plm1 = _similar(x)
+    pl   = _similar(x)
+    plp1 = _similar(x)
+
+    z .= convert.(T, x)
+    y .= @fastmath sqrt.(one.(T) .- z .^ 2)
+
+    M = ndims(x)
+    N = ndims(Λ) - M
+    sz = size(x)
+    I = CartesianIndices(sz)
+
+    pmp1 .= Plm_00(norm, T)
     for m in 0:mmax
-        pm = pmp1
+        pm, pmp1 = pmp1, pm
         if m < mmax
-            pmp1 = _1term_raise_lm(norm, m, z, y, pm)
+            pmp1 .= _1term_raise_lm.(norm, m, z, y, pm)
         end
 
         if N == 2
-            Λ[m+1,m+1] = pm
+            Λ[I,m+1,m+1] .= pm
         elseif N == 1
-            Λ[m+1] = m != mmax ? zero(T) : pm
+            Λ[I,m+1] .= (m != mmax) ? zero(T) : pm
             m != mmax && continue
         elseif N == 0
             m != mmax && continue
             if lmax == m
-                Λ[] = pm
+                Λ[I] .= pm
                 return Λ
             end
         end
 
-        plm1 = zero(T)
-        pl   = pm
-        plp1 = _1term_raise_l(norm, m, z, pm)
+        pl   .= pm
+        plp1 .= _1term_raise_l.(norm, m, z, pm)
         for l in m+1:lmax
-            plm1 = pl
-            pl   = plp1
+            plm1, pl, plp1 = pl, plp1, plm1
             if l < lmax
-                plp1 = _2term_raise_l(norm, l, m, z, pl, plm1)
+                plp1 .= _2term_raise_l.(norm, l, m, z, pl, plm1)
             end
 
             if N == 2
-                Λ[l+1,m+1] = pl
+                Λ[I,l+1,m+1] .= pl
             elseif N == 1
-                Λ[l+1] = pl
+                Λ[I,l+1] .= pl
             elseif N == 0 && m == mmax && l == lmax
-                Λ[] = pl
+                Λ[I] .= pl
             end
         end
     end
@@ -386,55 +446,42 @@ end
 end
 
 """
-    p = legendre(norm::AbstractLegendreNorm, l::Integer, x)
+    p = legendre(norm::AbstractLegendreNorm, l::Integer, x::Number)
 
 Computes the scalar value ``p = N_ℓ P_ℓ(x)``, where ``P_ℓ(x)`` is the Legendre
 polynomial of degree `l` at `x` and ``N_ℓ`` is the normalization scheme `norm`.
 """
-@propagate_inbounds function legendre(norm::AbstractLegendreNorm, l::Integer, x)
-    Λ = Ref{typeof(x)}()
+@propagate_inbounds function legendre(
+        norm::AbstractLegendreNorm, l::Integer, x::Number)
+    Λ = BScalar{typeof(x)}()
     _legendre!(norm, Λ, l, 0, x)
     return Λ[]
 end
 
 """
-    p = legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x)
+    p = legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
 
 Computes the scalar value ``p = N_ℓ^m P_ℓ^m(x)``, where ``P_ℓ^m(x)`` is the associated
 Legendre polynomial of degree `l` and order `m` at `x` and ``N_ℓ^m`` the normalization
 scheme `norm`.
 """
 @propagate_inbounds function legendre(
-        norm::AbstractLegendreNorm, l::Integer, m::Integer, x)
-    Λ = Ref{typeof(x)}()
+        norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
+    Λ = BScalar{typeof(x)}()
     _legendre!(norm, Λ, l, m, x)
     return Λ[]
 end
 
 """
-    legendre!(norm::AbstractLegendreNorm, Λ::AbstractVector, lmax::Integer, m::Integer, x)
+    legendre!(norm::AbstractLegendreNorm, Λ, l::Integer, m::Integer, x)
 
-Fills the vector `Λ` with the pre-normalized Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``
-for all degrees `0 ≤ ℓ ≤ lmax` and constant order `m` at `x`, where ``N_ℓ^m`` is the
-normalization scheme `norm`.
+Fills the array `Λ` with the Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``, where ``N_ℓ^m``
+is the normalization scheme `norm`.
 """
 @propagate_inbounds function legendre!(
         norm::AbstractLegendreNorm,
-        Λ::AbstractVector, lmax::Integer, m::Integer, x) where T
-    return _legendre!(norm, Λ, lmax, m, x)
-end
-
-"""
-    legendre!(norm::AbstractLegendreNorm, P::AbstractMatrix, lmax::Integer, mmax::Integer, x)
-
-Fills the matrix `Λ` with the pre-normalized Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``
-for all degrees `0 ≤ ℓ ≤ lmax` and all orders `0 ≤ m ≤ ℓ` at `x`, where ``N_ℓ^m`` is the
-normalization scheme `norm`.
-"""
-@propagate_inbounds function legendre!(
-        norm::AbstractLegendreNorm,
-        Λ::AbstractMatrix, lmax::Integer, mmax::Integer, x)
-    return _legendre!(norm, Λ, lmax, mmax, x)
+        Λ, l::Integer, m::Integer, x)
+    return _legendre!(norm, Λ, l, m, x)
 end
 
 # Make coefficient cache objects callable with similar syntax as the legendre[!] functions
@@ -444,11 +491,11 @@ end
 @propagate_inbounds function (norm::LegendreNormCoeff)(l::Integer, m::Integer, x)
     return legendre(norm, l, m, x)
 end
-@propagate_inbounds function (norm::LegendreNormCoeff)(Λ::AbstractVector, m::Integer, x)
+@propagate_inbounds function (norm::LegendreNormCoeff)(Λ, m::Integer, x)
     lmax = size(norm.α,1) - 1
     return legendre!(norm, Λ, lmax, m, x)
 end
-@propagate_inbounds function (norm::LegendreNormCoeff)(Λ::AbstractMatrix, x) where T
+@propagate_inbounds function (norm::LegendreNormCoeff)(Λ, x)
     lmax,mmax = size(norm.α) .- 1
     return legendre!(norm, Λ, lmax, mmax, x)
 end
@@ -479,51 +526,32 @@ normalized associated Legendre polynomial of degree `l` and order `m` at `x`.
 @inline λlm(l::Integer, m::Integer, x) = legendre(LegendreSphereNorm(), l, m, x)
 
 """
-    Pl!(P::AbstractVector, lmax::Integer, x)
+    Pl!(P, l::Integer, x)
 
 Fills the vector `P` with the Legendre polynomial values ``P_ℓ(x)`` for all degrees
 `0 ≤ ℓ ≤ lmax` at `x`.
 """
-@inline Pl!(P::AbstractVector, lmax::Integer, x) =
-    legendre!(LegendreUnitNorm(), P, lmax, 0, x)
+@inline Pl!(P, l::Integer, x) =
+    legendre!(LegendreUnitNorm(), P, l, 0, x)
 
 """
-    Plm!(P::AbstractVector, lmax::Integer, m::Integer, x)
+    Plm!(P, l::Integer, m::Integer, x)
 
 Fills the vector `P` with the Legendre polynomial values ``P_ℓ^m(x)`` for all degrees
 `0 ≤ ℓ ≤ lmax` and constant order `m` at `x`.
 """
-@inline Plm!(P::AbstractVector, lmax::Integer, m::Integer, x) =
-    legendre!(LegendreUnitNorm(), P, lmax, m, x)
+@inline Plm!(P, l::Integer, m::Integer, x) =
+    legendre!(LegendreUnitNorm(), P, l, m, x)
 
 
 """
-    Plm!(P::AbstractMatrix, lmax::Integer, mmax::Integer, x)
-
-Fills the lower triangle of the matrix `P` with the associated Legendre polynomial values
-``P_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and all orders `0 ≤ m ≤ ℓ` at `x`.
-"""
-@inline Plm!(P::AbstractMatrix, lmax::Integer, mmax::Integer, x) =
-    legendre!(LegendreUnitNorm(), P, lmax, mmax, x)
-
-"""
-    λlm!(Λ::AbstractVector, lmax::Integer, m::Integer, x)
+    λlm!(Λ, l::Integer, m::Integer, x)
 
 Fills the vector `Λ` with the spherical harmonic normalized associated Legendre polynomial
 values ``λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and constant order `m` at `x`.
 """
-@inline λlm!(Λ::AbstractVector, lmax::Integer, m::Integer, x) =
-    legendre!(LegendreSphereNorm(), Λ, lmax, m, x)
-
-"""
-    λlm!(Λ::AbstractMatrix, lmax::Integer, mmax::Integer, x::Real)
-
-Fills the lower triangle of the matrix `Λ` with the spherical harmonic normalized associated
-Legendre polynomial values ``Λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and all orders
-`0 ≤ m ≤ ℓ` at `x`.
-"""
-@inline λlm!(Λ::AbstractMatrix, lmax::Integer, mmax::Integer, x) =
-    legendre!(LegendreSphereNorm(), Λ, lmax, mmax, x)
+@inline λlm!(Λ, l::Integer, m::Integer, x) =
+    legendre!(LegendreSphereNorm(), Λ, l, m, x)
 
 """
     N = Nlm([T=Float64], l, m)
