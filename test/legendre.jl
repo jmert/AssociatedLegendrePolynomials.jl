@@ -292,4 +292,13 @@ module Legendre
             @test num_deriv1(l, m, x) ≈ dual_deriv1_tab(l, m, x)
         end
     end
+
+    @testset "Broadcasting arguments" begin
+        LMAX = 5
+        ctab = LegendreSphereCoeff{Float64}(LMAX)
+        z = range(-1, 1, length=10)
+        @test [Pl(LMAX, x) for x in z] == Pl.(LMAX, z)
+        @test [Plm(LMAX, LMAX, x) for x in z] == Plm.(LMAX, LMAX, z)
+        @test [λlm(LMAX, LMAX, x) for x in z] == λlm.(LMAX, LMAX, z)
+    end
 end

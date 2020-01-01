@@ -21,7 +21,7 @@ export Pl, Pl!, Plm, Plm!, Nlm, λlm, λlm!
 
 import Base:
     @boundscheck, @propagate_inbounds,
-    broadcastable, convert, eltype
+    broadcasted, broadcastable, convert, eltype
 
 module Bcast
     import Base: isassigned, getindex, setindex!, copyto!, @propagate_inbounds
@@ -345,10 +345,15 @@ _2term_raise_l(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::T,
     return α * x * plm - β * plm1m
 end
 
+@inline _chkdomainnorm(norm::AbstractLegendreNorm, lmax, mmax) = nothing
+@noinline function _chkdomainnorm(norm::LegendreNormCoeff, lmax, mmax)
+    lmax′,mmax′ = size(norm.α)
+    (lmax < lmax′ && mmax < mmax′) || throw(BoundsError(norm.α, (lmax+1, mmax+1)))
+end
 @noinline function _chkdomain(lmax, mmax)
     0 ≤ lmax || throw(DomainError(lmax, "degree lmax must be non-negative"))
     0 ≤ mmax ≤ lmax || throw(DomainError(mmax,
-            "order mmax must be non-negative and less than lmax"))
+            "order mmax must be non-negative and less than or equal to lmax"))
     nothing
 end
 @noinline function _chkbounds(Λ, lmax, mmax, x)
@@ -376,13 +381,16 @@ end
 
 @propagate_inbounds function _legendre!(norm, Λ, lmax, mmax, x)
     @boundscheck _chkdomain(lmax, mmax)
+    @boundscheck _chkdomainnorm(norm, lmax, mmax)
     @boundscheck _chkbounds(Λ, lmax, mmax, x)
     @inbounds _legendre_impl!(norm, Λ, lmax, mmax, x)
 end
 
+# Custom similar()-like functions that operate on raw and BScalar-wrapped scalars as well.
 @inline _similar(A::AbstractArray) = similar(A, size(A))
 @inline _similar(A::BScalar)       = BScalar{eltype(A)}()
 @inline _similar(A::Number)        = BScalar{typeof(A)}()
+
 @propagate_inbounds function _legendre_impl!(norm::AbstractLegendreNorm, Λ, lmax, mmax, x)
     TΛ = eltype(Λ)
     TV = eltype(x)
@@ -451,11 +459,8 @@ end
 Computes the scalar value ``p = N_ℓ P_ℓ(x)``, where ``P_ℓ(x)`` is the Legendre
 polynomial of degree `l` at `x` and ``N_ℓ`` is the normalization scheme `norm`.
 """
-@propagate_inbounds function legendre(
-        norm::AbstractLegendreNorm, l::Integer, x::Number)
-    Λ = BScalar{typeof(x)}()
-    _legendre!(norm, Λ, l, 0, x)
-    return Λ[]
+@inline function legendre(norm::AbstractLegendreNorm, l::Integer, x::Number)
+    return legendre(norm, l, 0, x)
 end
 
 """
@@ -465,10 +470,11 @@ Computes the scalar value ``p = N_ℓ^m P_ℓ^m(x)``, where ``P_ℓ^m(x)`` is th
 Legendre polynomial of degree `l` and order `m` at `x` and ``N_ℓ^m`` the normalization
 scheme `norm`.
 """
-@propagate_inbounds function legendre(
-        norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
+function legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
     Λ = BScalar{typeof(x)}()
-    _legendre!(norm, Λ, l, m, x)
+    _chkdomain(l, m)
+    _chkdomainnorm(norm, l, m)
+    @inbounds _legendre!(norm, Λ, l, m, x)
     return Λ[]
 end
 
@@ -485,10 +491,10 @@ is the normalization scheme `norm`.
 end
 
 # Make coefficient cache objects callable with similar syntax as the legendre[!] functions
-@propagate_inbounds function (norm::LegendreNormCoeff)(l::Integer, x)
+@inline function (norm::LegendreNormCoeff)(l::Integer, x::Number)
     return legendre(norm, l, x)
 end
-@propagate_inbounds function (norm::LegendreNormCoeff)(l::Integer, m::Integer, x)
+@inline function (norm::LegendreNormCoeff)(l::Integer, m::Integer, x::Number)
     return legendre(norm, l, m, x)
 end
 @propagate_inbounds function (norm::LegendreNormCoeff)(Λ, m::Integer, x)
@@ -502,28 +508,28 @@ end
 
 
 """
-    p = Pl(l::Integer, x)
+    p = Pl(l::Integer, x::Number)
 
 Computes the scalar value ``p = P_ℓ(x)``, where ``P_ℓ(x)`` is the Legendre polynomial of
 degree `l` at `x`.
 """
-@inline Pl(l::Integer, x) = legendre(LegendreUnitNorm(), l, x)
+@inline Pl(l::Integer, x::Number) = legendre(LegendreUnitNorm(), l, x)
 
 """
-    p = Plm(l::Integer, m::Integer, x)
+    p = Plm(l::Integer, m::Integer, x::Number)
 
 Computes the scalar value ``p = P_ℓ^m(x)``, where ``P_ℓ^m(x)`` is the associated Legendre
 polynomial of degree `l` and order `m` at `x`.
 """
-@inline Plm(l::Integer, m::Integer, x) = legendre(LegendreUnitNorm(), l, m, x)
+@inline Plm(l::Integer, m::Integer, x::Number) = legendre(LegendreUnitNorm(), l, m, x)
 
 """
-    λ = λlm(l::Integer, m::Integer, x)
+    λ = λlm(l::Integer, m::Integer, x::Number)
 
 Computes the scalar value ``λ = λ_ℓ^m(x)``, where ``λ_ℓ^m(x)`` is the spherical-harmonic
 normalized associated Legendre polynomial of degree `l` and order `m` at `x`.
 """
-@inline λlm(l::Integer, m::Integer, x) = legendre(LegendreSphereNorm(), l, m, x)
+@inline λlm(l::Integer, m::Integer, x::Number) = legendre(LegendreSphereNorm(), l, m, x)
 
 """
     Pl!(P, l::Integer, x)
@@ -552,6 +558,31 @@ values ``λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and constant order `
 """
 @inline λlm!(Λ, l::Integer, m::Integer, x) =
     legendre!(LegendreSphereNorm(), Λ, l, m, x)
+
+# Specialize broadcasting of all of the non-modifying interfaces
+
+@inline broadcasted(::typeof(Pl), l::Integer, x) =
+    broadcasted(legendre, LegendreUnitNorm(), l, 0, x)
+@inline broadcasted(::typeof(Plm), l::Integer, m::Integer, x) =
+    broadcasted(legendre, LegendreUnitNorm(), l, m, x)
+@inline broadcasted(::typeof(λlm), l::Integer, m::Integer, x) =
+    broadcasted(legendre, LegendreSphereNorm(), l, m, x)
+@inline broadcasted(norm::T, l::Integer, x) where {T<:LegendreNormCoeff} =
+    broadcasted(legendre, norm, l, 0, x)
+@inline broadcasted(norm::T, l::Integer, m::Integer, x) where {T<:LegendreNormCoeff} =
+    broadcasted(legendre, norm, l, m, x)
+@inline broadcasted(::typeof(legendre), norm::AbstractLegendreNorm, l::Integer, x) =
+    broadcasted(legendre, norm, l, 0, x)
+
+function broadcasted(::typeof(legendre),
+        norm::AbstractLegendreNorm, l::Integer, m::Integer, x)
+    z = Broadcast.materialize(x)
+    Λ = _similar(z)
+    _chkdomain(l, m)
+    _chkdomainnorm(norm, l, m)
+    @inbounds _legendre_impl!(norm, Λ, l, m, z)
+    return (ndims(Λ) == 0) ? Λ[] : Λ
+end
 
 """
     N = Nlm([T=Float64], l, m)
