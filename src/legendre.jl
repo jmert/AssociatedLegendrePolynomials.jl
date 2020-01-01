@@ -112,7 +112,7 @@ convert(::Type{LegendreNormCoeff{N,T}}, norm::LegendreNormCoeff{N}) where {N,T} 
 Precomputed recursion relation coefficients for the standard unit
 normalization. Alias for `LegendreNormCoeff{LegendreUnitNorm,T}`.
 """
-LegendreUnitCoeff = LegendreNormCoeff{LegendreUnitNorm}
+LegendreUnitCoeff{T} = LegendreNormCoeff{LegendreUnitNorm,T}
 
 """
     LegendreSphereCoeff{T}
@@ -120,7 +120,7 @@ LegendreUnitCoeff = LegendreNormCoeff{LegendreUnitNorm}
 Table type of precomputed recursion relation coefficients for the spherical
 harmonic normalization. Alias for `LegendreNormCoeff{LegendreSphereNorm,T}`.
 """
-LegendreSphereCoeff = LegendreNormCoeff{LegendreSphereNorm}
+LegendreSphereCoeff{T} = LegendreNormCoeff{LegendreSphereNorm,T}
 
 # Define element types as a way to conveniently promote, even for the trait types.
 # Union{} will always lose out in type promotion.
