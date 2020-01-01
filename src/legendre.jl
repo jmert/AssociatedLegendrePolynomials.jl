@@ -141,7 +141,7 @@ function Base.show(io::IO, ::MIME"text/plain", N::LegendreNormCoeff)
 end
 
 """
-    Plm_00(::N, ::Type{T}) where {N<:AbstractLegendreNorm, T<:Real}
+    Plm_00(::N, ::Type{T}) where {N<:AbstractLegendreNorm, T}
 
 Returns the initial condition ``P_0^0(x)`` for the associated Legendre recursions based
 on the normalization choice `N` for numeric type `T`.
@@ -149,7 +149,7 @@ on the normalization choice `N` for numeric type `T`.
 function Plm_00 end
 
 """
-    Plm_μ(norm::N, ::Type{T}, l::Integer) where {N<:AbstractLegendreNorm, T<:Real}
+    Plm_μ(norm::N, ::Type{T}, l::Integer) where {N<:AbstractLegendreNorm, T}
 
 Returns the coefficient ``μ_ℓ`` for the single-term recursion relation
 ```math
@@ -160,7 +160,7 @@ where ``μ_ℓ`` is appropriate for the choice of normalization `N`.
 function Plm_μ end
 
 """
-    Plm_ν(norm::N, ::Type{T}, l::Integer) where {N<:AbstractLegendreNorm, T<:Real}
+    Plm_ν(norm::N, ::Type{T}, l::Integer) where {N<:AbstractLegendreNorm, T}
 
 Returns the coefficient ``ν_ℓ`` for the single-term recursion relation
 ```math
@@ -171,7 +171,7 @@ where ``ν_ℓ`` is appropriate for the choice of normalization `N`.
 function Plm_ν end
 
 """
-    Plm_α(norm::N, ::Type{T}, l::Integer, m::Integer) where {N<:AbstractLegendreNorm, T<:Real}
+    Plm_α(norm::N, ::Type{T}, l::Integer, m::Integer) where {N<:AbstractLegendreNorm, T}
 
 Returns the coefficient ``α_ℓ^m`` for the two-term recursion relation
 ```math
@@ -182,7 +182,7 @@ where ``α_ℓ^m`` is appropriate for the choice of normalization `N`.
 function Plm_α end
 
 """
-    Plm_β(norm::N, ::Type{T}, l::Integer, m::Integer) where {N<:AbstractLegendreNorm, T<:Real}
+    Plm_β(norm::N, ::Type{T}, l::Integer, m::Integer) where {N<:AbstractLegendreNorm, T}
 
 Returns the coefficient ``β_ℓ^m`` for the two-term recursion relation
 ```math
