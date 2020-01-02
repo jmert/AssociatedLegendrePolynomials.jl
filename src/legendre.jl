@@ -325,26 +325,6 @@ Plm_β(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer) where T
     return norm.β[l+1,m+1]
 end
 
-# Named recursion relations
-
-@propagate_inbounds function
-_1term_raise_lm(norm::AbstractLegendreNorm, m::Integer, x::T, y::T, plm::T) where T
-    μ = Plm_μ(norm, T, m+1)
-    return -μ * y * plm
-end
-@propagate_inbounds function
-_1term_raise_l(norm::AbstractLegendreNorm, m::Integer, x::T, plm::T) where T
-    ν = Plm_ν(norm, T, m)
-    return ν * x * plm
-end
-@propagate_inbounds function
-_2term_raise_l(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::T,
-               plm::T, plm1m::T) where T
-    α = Plm_α(norm, T, l+1, m)
-    β = Plm_β(norm, T, l+1, m)
-    return α * x * plm - β * plm1m
-end
-
 @inline _chkdomainnorm(norm::AbstractLegendreNorm, lmax, mmax) = nothing
 @noinline function _chkdomainnorm(norm::LegendreNormCoeff, lmax, mmax)
     lmax′,mmax′ = size(norm.α)
@@ -416,7 +396,9 @@ end
     for m in 0:mmax
         pm, pmp1 = pmp1, pm
         if m < mmax
-            pmp1 .= _1term_raise_lm.(norm, m, z, y, pm)
+            # 1-term recurrence relation taking (m,m) -> (m+1,m+1)
+            μ = Plm_μ(norm, T, m+1)
+            @. pmp1 = -μ * y * pm
         end
 
         if N == 2
@@ -432,12 +414,17 @@ end
             end
         end
 
-        pl   .= pm
-        plp1 .= _1term_raise_l.(norm, m, z, pm)
+        # 1-term recurrence relation taking (m,m) -> (m,m+1)
+        ν = Plm_ν(norm, T, m)
+        @. pl   = pm
+        @. plp1 = ν * x * pl
         for l in m+1:lmax
             plm1, pl, plp1 = pl, plp1, plm1
             if l < lmax
-                plp1 .= _2term_raise_l.(norm, l, m, z, pl, plm1)
+                # 2-term recurrence relation taking (l,m) -> (l+1, m)
+                α = Plm_α(norm, T, l+1, m)
+                β = Plm_β(norm, T, l+1, m)
+                @. plp1 = α * x * pl - β * plm1
             end
 
             if N == 2
