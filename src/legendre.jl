@@ -133,10 +133,11 @@ Base.show(io::IO, norm::LegendreNormCoeff{N,T}) where {N,T} =
 function Base.show(io::IO, ::MIME"text/plain", N::LegendreNormCoeff)
     lmax,mmax = size(N.α) .- 1
     println(io, N, " for lmax = $lmax, mmax = $mmax with coefficients:")
-    println(io, "    μ: ", N.μ)
-    println(io, "    ν: ", N.ν)
-    println(io, "    α: ", N.α)
-    println(io, "    β: ", N.β)
+    io′ = IOContext(io, :compact => true)
+    println(io′, "    μ: ", N.μ)
+    println(io′, "    ν: ", N.ν)
+    println(io′, "    α: ", N.α)
+    println(io′, "    β: ", N.β)
 end
 
 """
