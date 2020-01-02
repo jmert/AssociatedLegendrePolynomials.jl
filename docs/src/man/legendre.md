@@ -1,4 +1,10 @@
 # Legendre Polynomials
+```@meta
+DocTestFilters = Regex[
+        r"Ptr{0x[0-9a-f]+}",
+        r"[0-9\.]+ seconds( \(.*\))?",
+        ]
+```
 
 ```@contents
 Pages = ["legendre.md"]
@@ -234,7 +240,7 @@ On my machine, this results in a further ~50% decrease in computation time compa
 `λlm!`:
 ```jldoctest PlmUsage
 julia> @time legendre!(coeff, λ, 700, 2, 0.5);
-  0.000020 seconds (4 allocations: 160 bytes)
+  0.000020 seconds
 ```
 
 Notice that due to its flexibility, `legendre!` requires explicit `lmax` and `mmax`
