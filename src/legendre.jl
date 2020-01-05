@@ -28,7 +28,7 @@ module Bcast
     import Base.Broadcast: Broadcasted, AbstractArrayStyle, dotview, materialize
 
     """
-        BScalar{T} <: Ref{T}
+        BScalar{T} <: AbstractArray{T,0}
 
     A scalar storage location within broadcast expressions, very similar to `Base.RefValue`,
     but where assignment in a broadcasted context (for dimensionally-compatible expressions)
@@ -39,7 +39,7 @@ module Bcast
     f!(b, π/2)
     ```
     """
-    struct BScalar{T} <: Ref{T}
+    struct BScalar{T} <: AbstractArray{T,0}
         x::Base.RefValue{T}
         BScalar{T}() where {T} = new(Ref{T}())
         BScalar{T}(x) where {T} = new(x)
@@ -54,6 +54,8 @@ module Bcast
     @propagate_inbounds dotview(A::BScalar, ::CartesianIndices{0,Tuple{}}) = A
     @propagate_inbounds copyto!(dest::BScalar, bc::Broadcasted{<:AbstractArrayStyle{0}}) =
         dest[] = materialize(bc)
+    # AbstractArray interfaces
+    Base.size(b::BScalar) = ()
 end # module Bcast
 import .Bcast: BScalar
 
@@ -363,7 +365,18 @@ end
     @boundscheck _chkdomain(lmax, mmax)
     @boundscheck _chkdomainnorm(norm, lmax, mmax)
     @boundscheck _chkbounds(Λ, lmax, mmax, x)
-    @inbounds _legendre_impl!(norm, Λ, lmax, mmax, x)
+    if ndims(x) > 1
+        M = ndims(Λ)
+        N = ndims(x)
+        S = prod(size(x))
+        x′ = reshape(x, S)
+        Λ′ = reshape(Λ, S, ntuple(i->size(Λ,i+N), M-N)...)
+    else
+        x′ = x
+        Λ′ = Λ
+    end
+    @inbounds _legendre_impl!(norm, Λ′, lmax, mmax, x′)
+    return Λ
 end
 
 # Custom similar()-like functions that operate on raw and BScalar-wrapped scalars as well.
@@ -403,11 +416,11 @@ end
 
         # First iteration: takes even m to m+1
         if N == 2
-            Λ[I,m+1,m+1] .= pm
+            Λ[I,m+1,m+1] = pm
         elseif N == 1 && m == mmax
-            Λ[I,m+1] .= pm
+            Λ[I,m+1] = pm
         elseif N == 0 && lmax == m
-            Λ[I] .= pm
+            Λ[I] = pm
             return Λ
         end
         if N == 2 || m == mmax
@@ -425,11 +438,11 @@ end
                 end
 
                 if N == 2
-                    Λ[I,l+1,m+1] .= pl
+                    Λ[I,l+1,m+1] = pl
                 elseif N == 1
-                    Λ[I,l+1] .= pl
+                    Λ[I,l+1] = pl
                 elseif N == 0 && l == lmax
-                    Λ[I] .= pl
+                    Λ[I] = pl
                     return
                 end
             end
@@ -445,11 +458,11 @@ end
         # Second iteration: takes even m to m+2
 
         if N == 2
-            Λ[I,m+2,m+2] .= pmp1
+            Λ[I,m+2,m+2] = pmp1
         elseif N == 1 && m+1 == mmax
-            Λ[I,m+2] .= pmp1
+            Λ[I,m+2] = pmp1
         elseif N == 0 && m+1 == lmax
-            Λ[I] .= pmp1
+            Λ[I] = pmp1
             return Λ
         end
         if N == 2 || m+1 == mmax
@@ -467,11 +480,11 @@ end
                 end
 
                 if N == 2
-                    Λ[I,l+1,m+2] .= pl
+                    Λ[I,l+1,m+2] = pl
                 elseif N == 1
-                    Λ[I,l+1] .= pl
+                    Λ[I,l+1] = pl
                 elseif N == 0 && l == lmax
-                    Λ[I] .= pl
+                    Λ[I] = pl
                     return
                 end
             end
@@ -613,8 +626,25 @@ function broadcasted(::typeof(legendre),
     Λ = _similar(z)
     _chkdomain(l, m)
     _chkdomainnorm(norm, l, m)
-    @inbounds _legendre_impl!(norm, Λ, l, m, z)
+    @inbounds _legendre!(norm, Λ, l, m, z)
     return (ndims(Λ) == 0) ? Λ[] : Λ
+end
+
+function broadcasted(::typeof(legendre),
+         norm::AbstractLegendreNorm, l::UnitRange, m::Union{Integer,UnitRange}, x)
+    first(l) == 0 || throw(ArgumentError("Range of orders l must start at 0"))
+    if m isa UnitRange
+        first(m) == 0 || throw(ArgumentError("Range of degrees m must start at 0"))
+    end
+
+    z = Broadcast.materialize(x)
+    Λ = fill(zero(eltype(z)), size(z)..., size(l)..., size(m)...)
+    lmax = last(l)
+    mmax = m isa UnitRange ? last(m) : m
+    _chkdomain(lmax, mmax)
+    _chkdomainnorm(norm, lmax, mmax)
+    @inbounds _legendre!(norm, Λ, lmax, mmax, z)
+    return Λ
 end
 
 """
