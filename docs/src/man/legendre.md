@@ -139,7 +139,7 @@ julia> n = Nlm(BigFloat, 157, 150)
 4.14800666209481424285411223457923933542541063872695815968861285171699012214351e-314
 
 julia> p = Plm(157, 150, big"0.5")
-4.768286486602206390406601862422168575170463348990958242752608686436785229641202e+308
+4.768286486602206390406601862422168575170463348990958242752608686436785229641823e+308
 
 julia> Float64(n * p)
 1.9778884113202627e-5
@@ -161,7 +161,7 @@ defined as
 computing the normalization separately from the function:
 ```jldoctest PlmUsage
 julia> λlm(157, 150, 0.5)
-1.977888411320241e-5
+1.977888411320258e-5
 ```
 
 !!! note
@@ -438,12 +438,12 @@ With just those 5 methods provided, the full Legendre framework is available,
 including precomputing the coefficients.
 ```jldoctest λNorm
 julia> legendre(λNorm(), 700, 500, 0.4)
-0.35366224602810997
+0.35366224602811
 
 julia> coeff = LegendreNormCoeff{λNorm,Float64}(700);
 
 julia> legendre(coeff, 700, 500, 0.4)
-0.35366224602810997
+0.35366224602811
 ```
 
 ---

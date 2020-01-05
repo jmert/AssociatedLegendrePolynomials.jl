@@ -142,7 +142,9 @@ module Legendre
         @test Λ₁ == λlm!(Λ₂, LMAX, LMAX, x)
 
         # Test single columns
+        fill!(λ₂, 0.0)
         @test @view(Λ₁[:,2+1]) == leg!(λ₂, 2, x)
+        fill!(λ₂, 0.0)
         @test @view(Λ₁[:,2+1]) == λlm!(λ₂, LMAX, 2, x)
     end
 
@@ -300,5 +302,14 @@ module Legendre
         @test [Pl(LMAX, x) for x in z] == Pl.(LMAX, z)
         @test [Plm(LMAX, LMAX, x) for x in z] == Plm.(LMAX, LMAX, z)
         @test [λlm(LMAX, LMAX, x) for x in z] == λlm.(LMAX, LMAX, z)
+    end
+
+    @testset "Numerical stability (issue #11)" begin
+        x = sind(-57.5)
+        lmax = 3 * 720
+        Λ = λlm.(0:lmax, 0:lmax, x)
+        # The amplitude bound of 1.5 is a very rough limit --- simply checking for
+        # unbounded growth.
+        @test all(abs.(Λ[end,:]) .< 1.5)
     end
 end
