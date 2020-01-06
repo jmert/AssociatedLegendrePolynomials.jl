@@ -341,6 +341,10 @@ end
 @noinline function _chkbounds(Λ, lmax, mmax, x)
     M = ndims(Λ)
     N = ndims(x)
+    if !(0 ≤ M - N ≤ 2)
+        throw(DimensionMismatch(
+                "Output storage has $M dimensions; expected $N to $(N+2)"))
+    end
     # Leading dimensions of Λ are storage for the same dimensions as x
     if N > 0
         szΛ = ntuple(i -> size(Λ, i), N)
@@ -379,11 +383,8 @@ end
     return Λ
 end
 
-# Custom similar()-like functions that operate on raw and BScalar-wrapped scalars as well.
 @inline _similar(A::AbstractArray) = similar(A, size(A))
-@inline _similar(A::BScalar)       = BScalar{eltype(A)}()
 @inline _similar(A::Number)        = BScalar{typeof(A)}()
-
 @propagate_inbounds function _legendre_impl!(norm::AbstractLegendreNorm, Λ, lmax, mmax, x)
     TΛ = eltype(Λ)
     TV = eltype(x)
@@ -607,17 +608,17 @@ values ``λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and constant order `
 
 # Specialize broadcasting of all of the non-modifying interfaces
 
-@inline broadcasted(::typeof(Pl), l::Integer, x) =
+@inline broadcasted(::typeof(Pl), l, x) =
     broadcasted(legendre, LegendreUnitNorm(), l, 0, x)
-@inline broadcasted(::typeof(Plm), l::Integer, m::Integer, x) =
+@inline broadcasted(::typeof(Plm), l, m, x) =
     broadcasted(legendre, LegendreUnitNorm(), l, m, x)
-@inline broadcasted(::typeof(λlm), l::Integer, m::Integer, x) =
+@inline broadcasted(::typeof(λlm), l, m, x) =
     broadcasted(legendre, LegendreSphereNorm(), l, m, x)
-@inline broadcasted(norm::T, l::Integer, x) where {T<:LegendreNormCoeff} =
+@inline broadcasted(norm::T, l, x) where {T<:LegendreNormCoeff} =
     broadcasted(legendre, norm, l, 0, x)
-@inline broadcasted(norm::T, l::Integer, m::Integer, x) where {T<:LegendreNormCoeff} =
+@inline broadcasted(norm::T, l, m, x) where {T<:LegendreNormCoeff} =
     broadcasted(legendre, norm, l, m, x)
-@inline broadcasted(::typeof(legendre), norm::AbstractLegendreNorm, l::Integer, x) =
+@inline broadcasted(::typeof(legendre), norm::AbstractLegendreNorm, l, x) =
     broadcasted(legendre, norm, l, 0, x)
 
 function broadcasted(::typeof(legendre),

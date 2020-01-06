@@ -67,7 +67,7 @@ module Legendre
     end
 
     @testset "Output array bounds checking" begin
-        LMAX = 10
+        LMAX = 2
         ctab = LegendreUnitCoeff{Float64}(LMAX)
         λ  = Vector{Float64}(undef, LMAX)
         Λ₁ = Matrix{Float64}(undef, LMAX, LMAX+1)
@@ -81,6 +81,19 @@ module Legendre
         @test_throws DimensionMismatch legendre!(ctab, λ, LMAX, 0, 0.5)
         @test_throws DimensionMismatch legendre!(ctab, Λ₁, LMAX, LMAX, 0.5)
         @test_throws DimensionMismatch legendre!(ctab, Λ₂, LMAX, LMAX, 0.5)
+
+        # Compatibility of output storage
+        Λ₃ = Array{Float64}(undef, 2, LMAX+1, LMAX+1)
+        Λ₄ = Array{Float64}(undef, 2, 2, LMAX+1, LMAX+1)
+        Λ₅ = Array{Float64}(undef, 2, 2, 2, LMAX+1, LMAX+1)
+        # Insufficient dimensions:
+        @test_throws DimensionMismatch Plm!(Λ₁, LMAX, LMAX, 0.0)
+        @test_throws DimensionMismatch Plm!(Λ₂, LMAX, LMAX, zeros(2))
+        @test_throws DimensionMismatch Plm!(Λ₃, LMAX, LMAX, zeros(2,2))
+        # Too many dimensions:
+        @test_throws DimensionMismatch Plm!(Λ₃, LMAX, LMAX, 0.0)
+        @test_throws DimensionMismatch Plm!(Λ₄, LMAX, LMAX, zeros(2))
+        @test_throws DimensionMismatch Plm!(Λ₅, LMAX, LMAX, zeros(2,2))
     end
 
     @testset "Functor interface" begin
@@ -298,10 +311,68 @@ module Legendre
     @testset "Broadcasting arguments" begin
         LMAX = 5
         ctab = LegendreSphereCoeff{Float64}(LMAX)
+        x = 0.5
+
+        # Single (l,m) for single z
+        @test Pl.(LMAX, x)        == Pl(LMAX, x)
+        @test Plm.(LMAX, LMAX, x) == Plm(LMAX, LMAX, x)
+        @test λlm.(LMAX, LMAX, x)  == λlm(LMAX, LMAX, x)
+        @test ctab.(LMAX, x)       == λlm(LMAX, 0, x)
+        @test ctab.(LMAX, LMAX, x) == λlm(LMAX, LMAX, x)
+        @test legendre.(LegendreSphereNorm(), LMAX, x)       == λlm(LMAX, 0, x)
+        @test legendre.(LegendreSphereNorm(), LMAX, LMAX, x) == λlm(LMAX, LMAX, x)
+
         z = range(-1, 1, length=10)
-        @test [Pl(LMAX, x) for x in z] == Pl.(LMAX, z)
-        @test [Plm(LMAX, LMAX, x) for x in z] == Plm.(LMAX, LMAX, z)
-        @test [λlm(LMAX, LMAX, x) for x in z] == λlm.(LMAX, LMAX, z)
+        Λ = zeros(length(z), LMAX + 1, LMAX + 1)
+
+        # Single (l,m) over multiple z
+        legendre!(LegendreUnitNorm(), Λ, LMAX, LMAX, z)
+        @test Pl.(LMAX, z)        == Λ[:,LMAX+1,1]
+        @test Plm.(LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
+        legendre!(LegendreSphereNorm(), Λ, LMAX, LMAX, z)
+        @test λlm.(LMAX, LMAX, z)  == Λ[:,LMAX+1,LMAX+1]
+        @test ctab.(LMAX, z)       == Λ[:,LMAX+1,1]
+        @test ctab.(LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
+        @test legendre.(LegendreSphereNorm(), LMAX, z)       == Λ[:,LMAX+1,1]
+        @test legendre.(LegendreSphereNorm(), LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
+
+        # All l for fixed m over multiple z
+        legendre!(LegendreUnitNorm(), Λ, LMAX, LMAX, z)
+        @test Pl.(0:LMAX, z)        == Λ[:,:,1]
+        @test Plm.(0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
+        legendre!(LegendreSphereNorm(), Λ, LMAX, LMAX, z)
+        @test λlm.(0:LMAX, LMAX, z)  == Λ[:,:,LMAX+1]
+        @test ctab.(0:LMAX, z)       == Λ[:,:,1]
+        @test ctab.(0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
+        @test legendre.(LegendreSphereNorm(), 0:LMAX, z)       == Λ[:,:,1]
+        @test legendre.(LegendreSphereNorm(), 0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
+
+        # All l and m over multiple z
+        legendre!(LegendreUnitNorm(), Λ, LMAX, LMAX, z)
+        @test Plm.(0:LMAX, 0:LMAX, z) == Λ
+        legendre!(LegendreSphereNorm(), Λ, LMAX, LMAX, z)
+        @test λlm.(0:LMAX, 0:LMAX, z)  == Λ
+        @test ctab.(0:LMAX, 0:LMAX, z) == Λ
+        @test legendre.(LegendreSphereNorm(), 0:LMAX, 0:LMAX, z) == Λ
+
+        # Shape-preservation of multi-dimensional arguments
+        sz = (5, 10)
+        z = collect(reshape(range(-1.0, 1.0, length=prod(sz)), sz))
+        @test size(Plm.(LMAX, 0, z)) == sz
+        @test size(Plm.(0:LMAX, 0, z)) == (sz..., LMAX+1)
+        @test size(Plm.(0:LMAX, 0:LMAX, z)) == (sz..., LMAX+1, LMAX+1)
+
+        # Throws on invalid l ranges
+        @test_throws ArgumentError Pl.(1:LMAX, z)
+        @test_throws ArgumentError Plm.(1:LMAX, 0, z)
+        @test_throws ArgumentError λlm.(1:LMAX, 0, z)
+        @test_throws ArgumentError ctab.(1:LMAX, 0, z)
+        @test_throws ArgumentError legendre.(ctab, 1:LMAX, 0, z)
+        # Throws on invalid m ranges
+        @test_throws ArgumentError Plm.(0:LMAX, 1:LMAX, z)
+        @test_throws ArgumentError λlm.(0:LMAX, 1:LMAX, z)
+        @test_throws ArgumentError ctab.(0:LMAX, 1:LMAX, z)
+        @test_throws ArgumentError legendre.(ctab, 0:LMAX, 1:LMAX, z)
     end
 
     @testset "Numerical stability (issue #11)" begin
