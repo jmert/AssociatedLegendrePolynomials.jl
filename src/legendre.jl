@@ -27,18 +27,6 @@ module Bcast
     import Base: isassigned, getindex, setindex!, copyto!, @propagate_inbounds
     import Base.Broadcast: Broadcasted, AbstractArrayStyle, dotview, materialize
 
-    """
-        BScalar{T} <: AbstractArray{T,0}
-
-    A scalar storage location within broadcast expressions, very similar to `Base.RefValue`,
-    but where assignment in a broadcasted context (for dimensionally-compatible expressions)
-    is supported. For example:
-    ```
-    f!(b::BScalar, x) = (b .= sin.(x); b)
-    b = BScalar{Float64}();
-    f!(b, π/2)
-    ```
-    """
     struct BScalar{T} <: AbstractArray{T,0}
         x::Base.RefValue{T}
         BScalar{T}() where {T} = new(Ref{T}())
@@ -77,11 +65,16 @@ abstract type AbstractLegendreNorm end
 
 """
     struct LegendreUnitNorm <: AbstractLegendreNorm end
+
+Trait type denoting the unit normalization of the associated Legendre polynomials.
 """
 struct LegendreUnitNorm <: AbstractLegendreNorm end
 
 """
     struct LegendreSphereNorm <: AbstractLegendreNorm end
+
+Trait type denoting the spherical-harmonic normalization of the associated Legendre
+polynomials.
 """
 struct LegendreSphereNorm <: AbstractLegendreNorm end
 
@@ -502,9 +495,10 @@ end
 
 """
     p = legendre(norm::AbstractLegendreNorm, l::Integer, x::Number)
+    P = legendre.(norm::AbstractLegendreNorm, l, x)
 
-Computes the scalar value ``p = N_ℓ P_ℓ(x)``, where ``P_ℓ(x)`` is the Legendre
-polynomial of degree `l` at `x` and ``N_ℓ`` is the normalization scheme `norm`.
+Computes the associated Legendre polynomial assuming the order ``m = 0``;
+equivalent to `legendre(norm, l, 0, x)` and `legendre.(norm, l, 0, x)`.
 """
 @inline function legendre(norm::AbstractLegendreNorm, l::Integer, x::Number)
     return legendre(norm, l, 0, x)
@@ -512,10 +506,24 @@ end
 
 """
     p = legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
+    P = legendre.(norm::AbstractLegendreNorm, l, m, x)
 
-Computes the scalar value ``p = N_ℓ^m P_ℓ^m(x)``, where ``P_ℓ^m(x)`` is the associated
-Legendre polynomial of degree `l` and order `m` at `x` and ``N_ℓ^m`` the normalization
-scheme `norm`.
+Computes the associated Legendre polynomial ``N_ℓ^m P_ℓ^m(x)`` of degree `l` and
+order `m` at `x` for the normalization scheme `norm`.
+
+With broadcasting syntax, the polynomials can be computed over any iterable `x`.
+Furthermore,
+- If `l isa Integer && m isa Integer`, then the output `P` has the same shape as `x` and
+  is filled with the polynomial values of order `l` and degree `m`.
+- If `l isa UnitRange && m isa Integer`, then `l` is interpreted as `lmax`, and the output
+  `P` has one more dimension than `x` with the trailing dimension spanning the degrees
+  `0 ≤ l ≤ lmax`.
+- If `l isa UnitRange && m isa UnitRange`, then `l` is interpreted as `lmax` and `m` as
+  `mmax`, and the output `P` has two more dimensions than `x` with the trailing dimensions
+  spanning the degrees `0 ≤ l ≤ lmax` and orders `0 ≤ m ≤ mmax`, respectively.
+
+Note that in second and third case, the `UnitRange`s must satisify `first(l) == 0` and
+`first(m) == 0`.
 """
 function legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
     Λ = BScalar{typeof(x)}()
@@ -528,8 +536,18 @@ end
 """
     legendre!(norm::AbstractLegendreNorm, Λ, l::Integer, m::Integer, x)
 
-Fills the array `Λ` with the Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``, where ``N_ℓ^m``
-is the normalization scheme `norm`.
+Fills the array `Λ` with the Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``
+up to/of degree `l` and order `m` for the normalization scheme `norm`.
+`Λ` must be an array with between 0 and 2 more dimensions than `x`, with the leading
+dimensions having the same shape as `x`.
+
+- If `ndims(Λ) == ndims(x)`, then `Λ` is filled with the polynomial values at `x` for
+  degree `l` and order `m`.
+- If `ndims(Λ) == ndims(x) + 1`, then `l` is interpreted as `lmax`, and `Λ` filled with
+  polynomial values for all degrees `0 ≤ l ≤ lmax` of order `m`.
+- If `ndims(Λ) == ndims(x) + 2`, then `l` is interpreted as `lmax` and `m` as `mmax`,
+  and `Λ` is filled with polynomial values for all degrees `0 ≤ l ≤ lmax` and orders
+  `0 ≤ m ≤ min(mmax, l)`.
 """
 @propagate_inbounds function legendre!(
         norm::AbstractLegendreNorm,
@@ -557,32 +575,33 @@ end
 """
     p = Pl(l::Integer, x::Number)
 
-Computes the scalar value ``p = P_ℓ(x)``, where ``P_ℓ(x)`` is the Legendre polynomial of
-degree `l` at `x`.
+Computes the Legendre polynomials using unit normalization and for degree ``m = 0``;
+equivalent to `p = legendre(LegendreUnitNorm(), l, 0, x)`.
 """
-@inline Pl(l::Integer, x::Number) = legendre(LegendreUnitNorm(), l, x)
+@inline Pl(l::Integer, x::Number) = legendre(LegendreUnitNorm(), l, 0, x)
 
 """
     p = Plm(l::Integer, m::Integer, x::Number)
 
-Computes the scalar value ``p = P_ℓ^m(x)``, where ``P_ℓ^m(x)`` is the associated Legendre
-polynomial of degree `l` and order `m` at `x`.
+Computes the associated Legendre polynomials using unit normalization;
+equivalent to `p = legendre(LegendreUnitNorm(), l, m, x)`.
 """
 @inline Plm(l::Integer, m::Integer, x::Number) = legendre(LegendreUnitNorm(), l, m, x)
 
 """
     λ = λlm(l::Integer, m::Integer, x::Number)
 
-Computes the scalar value ``λ = λ_ℓ^m(x)``, where ``λ_ℓ^m(x)`` is the spherical-harmonic
-normalized associated Legendre polynomial of degree `l` and order `m` at `x`.
+Computes the associated Legendre polynomials using spherical-harmonic normalization;
+equivalent to `λ = legendre(LegendreSphereNorm(), l, m, x)`.
 """
 @inline λlm(l::Integer, m::Integer, x::Number) = legendre(LegendreSphereNorm(), l, m, x)
 
 """
     Pl!(P, l::Integer, x)
 
-Fills the vector `P` with the Legendre polynomial values ``P_ℓ(x)`` for all degrees
-`0 ≤ ℓ ≤ lmax` at `x`.
+Fills the array `P` with the unit-normalized Legendre polynomial values ``P_ℓ(x)`` for fixed
+order ``m = 0``;
+equivalent to `legendre!(LegendreUnitNorm(), P, l, 0, x)`.
 """
 @inline Pl!(P, l::Integer, x) =
     legendre!(LegendreUnitNorm(), P, l, 0, x)
@@ -590,8 +609,9 @@ Fills the vector `P` with the Legendre polynomial values ``P_ℓ(x)`` for all de
 """
     Plm!(P, l::Integer, m::Integer, x)
 
-Fills the vector `P` with the Legendre polynomial values ``P_ℓ^m(x)`` for all degrees
-`0 ≤ ℓ ≤ lmax` and constant order `m` at `x`.
+Fills the array `P` with the unit-normalized associated Legendre polynomial values
+``P_ℓ^m(x)``;
+equivalent to `legendre!(LegendreUnitNorm(), P, l, m, x)`.
 """
 @inline Plm!(P, l::Integer, m::Integer, x) =
     legendre!(LegendreUnitNorm(), P, l, m, x)
@@ -600,8 +620,9 @@ Fills the vector `P` with the Legendre polynomial values ``P_ℓ^m(x)`` for all 
 """
     λlm!(Λ, l::Integer, m::Integer, x)
 
-Fills the vector `Λ` with the spherical harmonic normalized associated Legendre polynomial
-values ``λ_ℓ^m(x)`` for all degrees `0 ≤ ℓ ≤ lmax` and constant order `m` at `x`.
+Fills the array `Λ` with the spherical-harmonic normalized associated Legendre polynomial
+values ``λ_ℓ^m(x)``;
+equivalent to `legendre!(LegendreSphereNorm(), P, l, m, x)`.
 """
 @inline λlm!(Λ, l::Integer, m::Integer, x) =
     legendre!(LegendreSphereNorm(), Λ, l, m, x)
