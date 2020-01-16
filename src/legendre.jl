@@ -421,14 +421,14 @@ end
             # 1-term recurrence relation taking (m,m) -> (m,m+1)
             ν = Plm_ν(norm, T, m)
             @. pl   = pm
-            @. plp1 = ν * x * pl
+            @. plp1 = ν * z * pl
             for l in m+1:lmax
                 plm1, pl, plp1 = pl, plp1, plm1
                 if l < lmax
                     # 2-term recurrence relation taking (l,m) -> (l+1, m)
                     α = Plm_α(norm, T, l+1, m)
                     β = Plm_β(norm, T, l+1, m)
-                    @. plp1 = α * x * pl - β * plm1
+                    @. plp1 = α * z * pl - β * plm1
                 end
 
                 if N == 2
@@ -463,14 +463,14 @@ end
             # 1-term recurrence relation taking (m+1,m+1) -> (m+1,m+2)
             ν = Plm_ν(norm, T, m+1)
             @. pl   = pmp1
-            @. plp1 = ν * x * pl
+            @. plp1 = ν * z * pl
             for l in m+2:lmax
                 plm1, pl, plp1 = pl, plp1, plm1
                 if l < lmax
                     # 2-term recurrence relation taking (l,m+1) -> (l+1, m+1)
                     α = Plm_α(norm, T, l+1, m+1)
                     β = Plm_β(norm, T, l+1, m+1)
-                    @. plp1 = α * x * pl - β * plm1
+                    @. plp1 = α * z * pl - β * plm1
                 end
 
                 if N == 2
