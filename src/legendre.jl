@@ -393,8 +393,8 @@ end
     plp1 = _similar(x)
 
     @. z = convert(T, x)
-    @. y² = -muladd(z, z, $(-one(T)))
-    @. y¹ = @fastmath sqrt(y²)
+    @. y² = -fma(z, z, -one(T))
+    @. y¹ = sqrt(y²)
 
     M = ndims(x)
     N = ndims(Λ) - M
