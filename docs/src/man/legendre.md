@@ -1,4 +1,4 @@
-# Legendre Polynomials
+# [Legendre Polynomials](@id man_legendre)
 ```@meta
 DocTestFilters = Regex[
         r"Ptr{0x[0-9a-f]+}",
