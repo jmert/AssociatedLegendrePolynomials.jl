@@ -1,7 +1,7 @@
-module Legendre
+module LegendreTest
     using Test
     using LinearAlgebra, Random
-    using CMB.Legendre
+    using Legendre
     import ..NumTypes
 
     @testset "Coefficient table conversion" begin

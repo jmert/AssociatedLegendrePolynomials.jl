@@ -11,7 +11,7 @@ Pages = ["legendre.md"]
 Depth = 2
 ```
 
-The [`Legendre`](@ref) module implementation has been largely based on the approach of
+The [`Legendre`](@ref Legendre.Legendre) module implementation has been largely based on the approach of
 [Limpanuparb and Milthorpe (2014)](@ref bib-legendre).
 
 ## [Definition and Properties](@id legendre_defn)
@@ -79,15 +79,15 @@ mechanics and obeys the following properties:
 ### Calculating scalar values
 
 At its simplest, the associated Legendre polynomial ``P_ℓ^m(x)`` is computed by calling
-[`CMB.Legendre.Plm`](@ref). For example, to compute ``P_2^1(0.5)``,
+[`Legendre.Plm`](@ref). For example, to compute ``P_2^1(0.5)``,
 ```jldoctest PlmUsage
-julia> using CMB.Legendre
+julia> using Legendre
 
 julia> Plm(2, 1, 0.5)
 -1.299038105676658
 ```
 When ``m = 0`` and only the Legendre polynomial ``P_ℓ(x)`` is needed,
-[`CMB.Legendre.Pl`](@ref) can be used instead:
+[`Legendre.Pl`](@ref) can be used instead:
 ```jldoctest PlmUsage
 julia> Plm(2, 0, 0.5)
 -0.125
@@ -109,7 +109,7 @@ compute the spherical harmonics ``Y_{ℓm}(θ,ϕ)``:
     \end{aligned}
 \end{align}
 ```
-The function [`CMB.Legendre.Nlm`](@ref) calculates the normalization factor ``N_ℓ^m``:
+The function [`Legendre.Nlm`](@ref) calculates the normalization factor ``N_ℓ^m``:
 ```jldoctest PlmUsage
 julia> Nlm(2, 0)
 0.6307831305050401
@@ -157,7 +157,7 @@ defined as
     \end{aligned}
 \end{align}
 ```
-[`CMB.Legendre.λlm`](@ref) implements this scheme and avoids the under/overflow of
+[`Legendre.λlm`](@ref) implements this scheme and avoids the under/overflow of
 computing the normalization separately from the function:
 ```jldoctest PlmUsage
 julia> λlm(157, 150, 0.5)
@@ -350,7 +350,7 @@ julia> leg!(Λ, 0.5);    # same as legendre!(coeff, Λ, (size(coeff.α) .- 1)...
 ```
 
 ## [Custom normalizations](@id legendre_customnorm)
-`CMB.Legendre` provides the standard and spherical harmonic normalizations by default, but
+`Legendre` provides the standard and spherical harmonic normalizations by default, but
 arbitrary normalizations are also supported.
 The mile-high overview is that the initial condition and recurrence relation (r.r.)
 coefficients are all methods which dispatch on a normalization trait type, so a new
@@ -360,12 +360,12 @@ implement.
 
 | Interfaces to extend/implement              | Brief description                                                              |
 |:------------------------------------------- |:------------------------------------------------------------------------------ |
-| [`CMB.Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                         |
-| [`CMB.Legendre.Plm_00()`](@ref)             | Value of ``N_0^0 P_0^0(x)`` for the given normalization                        |
-| [`CMB.Legendre.Plm_μ()`](@ref)              | Coefficient ``μ_m`` for the 1-term r.r. boosting ``ℓ → ℓ+1`` and ``m → m+1``   |
-| [`CMB.Legendre.Plm_ν()`](@ref)              | Coefficient ``ν_m`` for the 1-term r.r. boosting ``ℓ → ℓ+1``                   |
-| [`CMB.Legendre.Plm_α()`](@ref)              | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ,m)`` term         |
-| [`CMB.Legendre.Plm_β()`](@ref)              | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term       |
+| [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                         |
+| [`Legendre.Plm_00()`](@ref)             | Value of ``N_0^0 P_0^0(x)`` for the given normalization                        |
+| [`Legendre.Plm_μ()`](@ref)              | Coefficient ``μ_m`` for the 1-term r.r. boosting ``ℓ → ℓ+1`` and ``m → m+1``   |
+| [`Legendre.Plm_ν()`](@ref)              | Coefficient ``ν_m`` for the 1-term r.r. boosting ``ℓ → ℓ+1``                   |
+| [`Legendre.Plm_α()`](@ref)              | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ,m)`` term         |
+| [`Legendre.Plm_β()`](@ref)              | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term       |
 
 As a concrete example, we'll walk through how ``λ_ℓ^m(x)`` is defined to have the
 spherical harmonic normalization baked in.
@@ -460,9 +460,9 @@ This is straight forward given the definition:
 We now have all the information required to define a custom Legendre normalization.
 Begin by importing the types and methods which will need to be extended:
 ```jldoctest λNorm
-julia> using CMB.Legendre
+julia> using Legendre
 
-julia> import CMB.Legendre: AbstractLegendreNorm, Plm_00, Plm_μ, Plm_ν, Plm_α, Plm_β
+julia> import Legendre: AbstractLegendreNorm, Plm_00, Plm_μ, Plm_ν, Plm_α, Plm_β
 ```
 We'll call our new normalization `λNorm`, which must be a subclass of
 `AbstractLegendreNorm`.

@@ -25,7 +25,7 @@ const TESTLIST = [
         DocMeta.setdocmeta!(Legendre, :DocTestSetup, :(using Legendre); recursive=true)
         print("running Doc tests... ")
         t0 = time_ns()
-        doctest(CMB, testset="Doc Tests")
+        doctest(Legendre, testset="Doc Tests")
         t1 = time_ns()
         println( (t1-t0)/1e9, " seconds")
     finally

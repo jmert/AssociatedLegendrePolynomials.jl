@@ -1,12 +1,3 @@
-"""
-Collections of functions which compute the associated Legendre functions.
-
-Based on implementation described in Limpanuparb and Milthorpe (2014)
-*“Associated Legendre Polynomials and Spherical Harmonics Computation for
-Chemistry Applications”* arXiv:1410.1748v1
-"""
-module Legendre
-
 # Normalization trait and cache types
 export
     AbstractLegendreNorm, LegendreNormCoeff,
@@ -695,5 +686,3 @@ function Nlm(::Type{T}, l::Integer, m::Integer) where T
     return sqrt( num * inv(den) * inv(fac1) )
 end
 Nlm(l::Integer, m::Integer) = Nlm(Float64, l, m)
-
-end # module Legendre
