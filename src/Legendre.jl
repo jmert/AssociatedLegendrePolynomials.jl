@@ -6,5 +6,26 @@ Based on implementation described in Limpanuparb and Milthorpe (2014)
 Chemistry Applications”* arXiv:1410.1748v1
 """
 module Legendre
-    include("legendre.jl")
-end
+
+import Base: @boundscheck, @propagate_inbounds
+
+# Public interfaces interface
+export AbstractLegendreNorm
+include("interface.jl")
+
+# Specific normalizations
+export LegendreUnitNorm,  LegendreSphereNorm,  LegendreNormCoeff,
+       LegendreUnitCoeff, LegendreSphereCoeff
+include("norm_unit.jl")
+include("norm_sphere.jl")
+include("norm_table.jl")
+
+export legendre, legendre!
+include("calculation.jl")
+
+# Other functionality
+export Pl, Pl!, Plm, Plm!, Nlm, λlm, λlm!
+include("aliases.jl")
+include("broadcasting.jl")
+
+end # module Legendre
