@@ -28,4 +28,6 @@ export Pl, Pl!, Plm, Plm!, Nlm, λlm, λlm!
 include("aliases.jl")
 include("broadcasting.jl")
 
+include("precompile.jl")
+_precompile_()
 end # module Legendre
