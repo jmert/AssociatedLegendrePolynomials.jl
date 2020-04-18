@@ -12,11 +12,9 @@ branches:
     - master
     - /^v[0-9]+\.[0-9]+\.[0-9]+$/ # version tags for Documenter.jl
     - /^release-.*$/
+codecov: true
 notifications:
   email: false
-
-after_success:
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
 
 jobs:
   allow_failures:
