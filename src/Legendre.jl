@@ -9,6 +9,8 @@ module Legendre
 
 import Base: @boundscheck, @propagate_inbounds
 
+include("scalar.jl")
+
 # Public interfaces interface
 export AbstractLegendreNorm
 include("interface.jl")
@@ -21,7 +23,6 @@ include("norm_sphere.jl")
 include("norm_table.jl")
 
 export legendre, legendre!
-include("scalar.jl")
 include("calculation.jl")
 
 # Other functionality

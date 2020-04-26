@@ -3,6 +3,7 @@ using Legendre
 const NumTypes = (Float32, Float64, BigFloat)
 
 const TESTLIST = [
+    "scalar" => "Broadcastable scalar",
     "legendre" => "Legendre",
    ]
 
