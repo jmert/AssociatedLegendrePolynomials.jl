@@ -1,27 +1,3 @@
-module Bcast
-    import Base: isassigned, getindex, setindex!, copyto!, @propagate_inbounds
-    import Base.Broadcast: Broadcasted, AbstractArrayStyle, dotview, materialize
-
-    struct BScalar{T} <: AbstractArray{T,0}
-        x::Base.RefValue{T}
-        BScalar{T}() where {T} = new(Ref{T}())
-        BScalar{T}(x) where {T} = new(x)
-    end
-    BScalar(x::T) where {T} = BScalar{T}(Ref{T}(x))
-    # Minimal copy of RefValue's methods
-    @propagate_inbounds isassigned(x::BScalar) = isassigned(x.x)
-    @propagate_inbounds getindex(b::BScalar) = b.x[]
-    @propagate_inbounds setindex!(b::BScalar, x) = (b.x[] = x; b)
-    # Broadcasting extensions
-    @propagate_inbounds dotview(A::BScalar, ::CartesianIndex{0}) = A
-    @propagate_inbounds dotview(A::BScalar, ::CartesianIndices{0,Tuple{}}) = A
-    @propagate_inbounds copyto!(dest::BScalar, bc::Broadcasted{<:AbstractArrayStyle{0}}) =
-        dest[] = materialize(bc)
-    # AbstractArray interfaces
-    Base.size(b::BScalar) = ()
-end # module Bcast
-import .Bcast: BScalar
-
 @inline _chkdomainnorm(norm::AbstractLegendreNorm, lmax, mmax) = nothing
 @noinline function _chkdomainnorm(norm::LegendreNormCoeff, lmax, mmax)
     lmax′,mmax′ = size(norm.α)
@@ -79,7 +55,7 @@ end
 end
 
 @inline _similar(A::AbstractArray) = similar(A, size(A))
-@inline _similar(A::Number)        = BScalar{typeof(A)}()
+@inline _similar(A::Number)        = Scalar{typeof(A)}()
 @propagate_inbounds function _legendre_impl!(norm::AbstractLegendreNorm, Λ, lmax, mmax, x)
     TΛ = eltype(Λ)
     TV = eltype(x)
@@ -217,7 +193,7 @@ Note that in second and third case, the `UnitRange`s must satisify `first(l) == 
 `first(m) == 0`.
 """
 function legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
-    Λ = BScalar{typeof(x)}()
+    Λ = _similar(x)
     _chkdomain(l, m)
     _chkdomainnorm(norm, l, m)
     @inbounds _legendre!(norm, Λ, l, m, x)
