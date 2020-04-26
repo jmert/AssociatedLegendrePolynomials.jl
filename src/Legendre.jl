@@ -21,6 +21,7 @@ include("norm_sphere.jl")
 include("norm_table.jl")
 
 export legendre, legendre!
+include("scalar.jl")
 include("calculation.jl")
 
 # Other functionality
