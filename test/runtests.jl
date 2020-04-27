@@ -1,34 +1,36 @@
-using Test, TestSetExtensions, Logging
+using Test, TestSetExtensions
+using Legendre # For doctests, include Legendre as a binding in Main
+
 const NumTypes = (Float32, Float64, BigFloat)
 
+include("testsuite.jl")
+
+function prettytime(t)
+    v, u = t < 1e3 ? (t, "ns") :
+           t < 1e6 ? (t/1e3, "μs") :
+           t < 1e9 ? (t/1e6, "ms") :
+                     (t/1e9, "s")
+    return string(round(v, digits=3), " ", u)
+end
 macro include(file, desc)
-    mod = Symbol(splitext(file))
+    mod = gensym(first(splitext(file)))
     quote
         print($desc, ": ")
-        @eval module $mod
-            using Test, Legendre
-            import ..NumTypes
-            @testset $desc begin
-                Base.include($mod, $file)
+        t0 = time_ns()
+        @testset $desc begin
+            @eval module $mod
+                using Test, Legendre
+                import ..NumTypes
+                include($file)
             end
         end
-        println()
+        printstyled("  ", prettytime(time_ns() - t0), "\n", color=:light_black)
     end
 end
 
 @testset ExtendedTestSet "Legendre" begin
     @include "scalar.jl" "Broadcastable scalar"
+    @include "analytic.jl" "Analytic checks"
     @include "legendre.jl" "Legendre"
-
-    print("Doc tests: ")
-    # Disable Documeter's Info logging
-    oldlvl = Logging.min_enabled_level(current_logger())
-    disable_logging(Logging.Info)
-    try
-        using Documenter, Legendre
-        DocMeta.setdocmeta!(Legendre, :DocTestSetup, :(using Legendre); recursive=true)
-        doctest(Legendre, testset="Doc Tests")
-    finally
-        disable_logging(oldlvl - 1)
-    end
+    @include "doctests.jl" "Doctests"
 end
