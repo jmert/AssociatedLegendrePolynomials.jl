@@ -1,6 +1,3 @@
-module ScalarTest
-
-using Test
 using Legendre: Scalar
 
 @test Scalar{Float64}() isa Scalar{Float64}
@@ -35,5 +32,3 @@ s[Z] .= fill(5)
 s[I] .= fill(6)
 @test s[I] == fill(6)
 @test all(s[I] .+ 1 .== 7)
-
-end # module ScalarTest

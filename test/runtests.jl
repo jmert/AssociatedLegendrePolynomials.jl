@@ -1,34 +1,33 @@
-using Test, Logging
-using Legendre
+using Test, TestSetExtensions, Logging
 const NumTypes = (Float32, Float64, BigFloat)
 
-const TESTLIST = [
-    "scalar" => "Broadcastable scalar",
-    "legendre" => "Legendre",
-   ]
-
-@testset "Legendre" begin
-    @testset "$desc" for (id,desc) in TESTLIST
-        modpath = joinpath(dirname(@__FILE__), "$(id).jl")
-        # Include the file and have it processed within this module
-        print("running $desc tests... ")
-        t0 = time_ns()
-        include(modpath)
-        t1 = time_ns()
-        println( (t1-t0)/1e9, " seconds")
+macro include(file, desc)
+    mod = Symbol(splitext(file))
+    quote
+        print($desc, ": ")
+        @eval module $mod
+            using Test, Legendre
+            import ..NumTypes
+            @testset $desc begin
+                Base.include($mod, $file)
+            end
+        end
+        println()
     end
+end
 
+@testset ExtendedTestSet "Legendre" begin
+    @include "scalar.jl" "Broadcastable scalar"
+    @include "legendre.jl" "Legendre"
+
+    print("Doc tests: ")
     # Disable Documeter's Info logging
     oldlvl = Logging.min_enabled_level(current_logger())
     disable_logging(Logging.Info)
     try
-        using Documenter
+        using Documenter, Legendre
         DocMeta.setdocmeta!(Legendre, :DocTestSetup, :(using Legendre); recursive=true)
-        print("running Doc tests... ")
-        t0 = time_ns()
         doctest(Legendre, testset="Doc Tests")
-        t1 = time_ns()
-        println( (t1-t0)/1e9, " seconds")
     finally
         disable_logging(oldlvl - 1)
     end
