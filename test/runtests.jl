@@ -28,11 +28,11 @@ macro include(file, desc)
 end
 
 @testset ExtendedTestSet "Legendre" begin
-    @include "scalar.jl" "Broadcastable scalar"
     @include "norms.jl" "Normalizations"
     @include "errors.jl" "Error checking"
     @include "coeffs.jl" "Precomputed coefficients"
     @include "analytic.jl" "Analytic checks"
-    @include "legendre.jl" "Legendre"
+    @include "implementation.jl" "Implementation details"
+    @include "scalar.jl" "Utility: scalar container"
     @include "doctests.jl" "Doctests"
 end

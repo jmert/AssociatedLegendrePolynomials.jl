@@ -1,4 +1,4 @@
-using LinearAlgebra, Random
+using Random
 
 @testset "Functor interface" begin
     LMAX = 10
@@ -115,13 +115,4 @@ end
     @test size(Plm.(LMAX, 0, z)) == sz
     @test size(Plm.(0:LMAX, 0, z)) == (sz..., LMAX+1)
     @test size(Plm.(0:LMAX, 0:LMAX, z)) == (sz..., LMAX+1, LMAX+1)
-end
-
-@testset "Numerical stability (issue #11)" begin
-    x = sind(-57.5)
-    lmax = 3 * 720
-    Λ = λlm.(0:lmax, 0:lmax, x)
-    # The amplitude bound of 1.5 is a very rough limit --- simply checking for
-    # unbounded growth.
-    @test all(abs.(Λ[end,:]) .< 1.5)
 end

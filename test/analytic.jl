@@ -100,3 +100,16 @@ end
         @test all(isapprox.(nlm.*plm_norm, plm_sphr, atol=atol))
     end
 end
+
+################################
+# Other analytic checks / issues
+################################
+
+@testset "Numerical stability (issue CMB.jl#11)" begin
+    x = sind(-57.5)
+    lmax = 3 * 720
+    Λ = λlm.(0:lmax, 0:lmax, x)
+    # The amplitude bound of 1.5 is a very rough limit --- simply checking for
+    # unbounded growth.
+    @test all(abs.(Λ[end,:]) .< 1.5)
+end
