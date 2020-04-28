@@ -35,68 +35,6 @@ end
     @test mmaxtab.ν == @view fulltab.ν[1:(MMAX+1)]
 end
 
-@testset "Domain checking" begin
-    LMAX = 10
-    MMAX = 2
-    ctab = LegendreUnitCoeff{Float64}(LMAX)
-    mtab = LegendreUnitCoeff{Float64}(LMAX, MMAX)
-    λ = Vector{Float64}(undef, LMAX+1)
-    Λ = Matrix{Float64}(undef, LMAX+1, LMAX+1)
-
-    # Mathematical domain errors:
-    @test_throws DomainError Pl(-1, 0.5)
-    @test_throws DomainError Plm(-1, 0, 0.5)
-    @test_throws DomainError Plm(LMAX, -1, 0.5)
-    @test_throws DomainError Plm(LMAX, LMAX+1, 0.5)
-    @test_throws DomainError Pl!(λ, -1, 0.5)
-    @test_throws DomainError Plm!(Λ, -1, 0, 0.5)
-    @test_throws DomainError Plm!(Λ, LMAX, -1, 0.5)
-    @test_throws DomainError Plm!(Λ, LMAX, LMAX+1, 0.5)
-    @test_throws DomainError legendre(ctab, -1, 0, 0.5)
-    @test_throws DomainError legendre(ctab, LMAX, -1, 0.5)
-    @test_throws DomainError legendre(ctab, LMAX, LMAX+1, 0.5)
-    @test_throws DomainError legendre!(ctab, λ, -1, LMAX, 0.5)
-    @test_throws DomainError legendre!(ctab, Λ, -1, LMAX, 0.5)
-    @test_throws DomainError legendre!(ctab, Λ, LMAX, -1, 0.5)
-    @test_throws DomainError legendre!(ctab, Λ, LMAX, LMAX+1, 0.5)
-
-    # Bounds error for precomputed coefficient tables
-    @test_throws BoundsError legendre(ctab, LMAX+1, 0, 0.5)
-    @test_throws BoundsError legendre(mtab, LMAX, MMAX+1, 0.5)
-    @test_throws BoundsError legendre!(mtab, λ, LMAX, MMAX+1, 0.5)
-    @test_throws BoundsError legendre!(mtab, Λ, LMAX, MMAX+1, 0.5)
-end
-
-@testset "Output array bounds checking" begin
-    LMAX = 2
-    ctab = LegendreUnitCoeff{Float64}(LMAX)
-    λ  = Vector{Float64}(undef, LMAX)
-    Λ₁ = Matrix{Float64}(undef, LMAX, LMAX+1)
-    Λ₂ = Matrix{Float64}(undef, LMAX+1, LMAX)
-
-    # Bounds error for filling vector or matrix
-    @test_throws DimensionMismatch Pl!(λ, LMAX, 0.5)
-    @test_throws DimensionMismatch Plm!(λ, LMAX, 0, 0.5)
-    @test_throws DimensionMismatch Plm!(Λ₁, LMAX, LMAX, 0.5)
-    @test_throws DimensionMismatch Plm!(Λ₂, LMAX, LMAX, 0.5)
-    @test_throws DimensionMismatch legendre!(ctab, λ, LMAX, 0, 0.5)
-    @test_throws DimensionMismatch legendre!(ctab, Λ₁, LMAX, LMAX, 0.5)
-    @test_throws DimensionMismatch legendre!(ctab, Λ₂, LMAX, LMAX, 0.5)
-
-    # Compatibility of output storage
-    Λ₃ = Array{Float64}(undef, 2, LMAX+1, LMAX+1)
-    Λ₄ = Array{Float64}(undef, 2, 2, LMAX+1, LMAX+1)
-    Λ₅ = Array{Float64}(undef, 2, 2, 2, LMAX+1, LMAX+1)
-    # Insufficient dimensions:
-    @test_throws DimensionMismatch Plm!(Λ₁, LMAX, LMAX, 0.0)
-    @test_throws DimensionMismatch Plm!(Λ₂, LMAX, LMAX, zeros(2))
-    @test_throws DimensionMismatch Plm!(Λ₃, LMAX, LMAX, zeros(2,2))
-    # Too many dimensions:
-    @test_throws DimensionMismatch Plm!(Λ₃, LMAX, LMAX, 0.0)
-    @test_throws DimensionMismatch Plm!(Λ₄, LMAX, LMAX, zeros(2))
-    @test_throws DimensionMismatch Plm!(Λ₅, LMAX, LMAX, zeros(2,2))
-end
-
 @testset "Functor interface" begin
     LMAX = 10
     leg = LegendreSphereCoeff{Float64}(LMAX)
@@ -237,18 +175,6 @@ end
     @test size(Plm.(LMAX, 0, z)) == sz
     @test size(Plm.(0:LMAX, 0, z)) == (sz..., LMAX+1)
     @test size(Plm.(0:LMAX, 0:LMAX, z)) == (sz..., LMAX+1, LMAX+1)
-
-    # Throws on invalid l ranges
-    @test_throws ArgumentError Pl.(1:LMAX, z)
-    @test_throws ArgumentError Plm.(1:LMAX, 0, z)
-    @test_throws ArgumentError λlm.(1:LMAX, 0, z)
-    @test_throws ArgumentError ctab.(1:LMAX, 0, z)
-    @test_throws ArgumentError legendre.(ctab, 1:LMAX, 0, z)
-    # Throws on invalid m ranges
-    @test_throws ArgumentError Plm.(0:LMAX, 1:LMAX, z)
-    @test_throws ArgumentError λlm.(0:LMAX, 1:LMAX, z)
-    @test_throws ArgumentError ctab.(0:LMAX, 1:LMAX, z)
-    @test_throws ArgumentError legendre.(ctab, 0:LMAX, 1:LMAX, z)
 end
 
 @testset "Numerical stability (issue #11)" begin

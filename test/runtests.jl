@@ -30,6 +30,7 @@ end
 
 @testset ExtendedTestSet "Legendre" begin
     @include "scalar.jl" "Broadcastable scalar"
+    @include "errors.jl" "Error checking"
     @include "analytic.jl" "Analytic checks"
     @include "legendre.jl" "Legendre"
     @include "doctests.jl" "Doctests"
