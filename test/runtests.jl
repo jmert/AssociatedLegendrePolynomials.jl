@@ -1,9 +1,8 @@
 using Test, TestSetExtensions
 using Legendre # For doctests, include Legendre as a binding in Main
 
-const NumTypes = (Float32, Float64, BigFloat)
-
 include("testsuite.jl")
+using .TestSuite: NumTypes
 
 function prettytime(t)
     v, u = t < 1e3 ? (t, "ns") :
@@ -30,7 +29,9 @@ end
 
 @testset ExtendedTestSet "Legendre" begin
     @include "scalar.jl" "Broadcastable scalar"
+    @include "norms.jl" "Normalizations"
     @include "errors.jl" "Error checking"
+    @include "coeffs.jl" "Precomputed coefficients"
     @include "analytic.jl" "Analytic checks"
     @include "legendre.jl" "Legendre"
     @include "doctests.jl" "Doctests"
