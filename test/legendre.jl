@@ -1,40 +1,5 @@
 using LinearAlgebra, Random
 
-import ..TestSuite
-TestSuite.runtests(LegendreUnitNorm())
-TestSuite.runtests(LegendreSphereNorm())
-TestSuite.runtests(LegendreUnitCoeff{Float64}(5))
-
-@testset "Coefficient table conversion" begin
-    dtab = LegendreSphereCoeff{Float64}(10)
-    ftab = convert(LegendreSphereCoeff{Float32}, dtab)
-
-    @test ftab isa LegendreSphereCoeff{Float32}
-    @test ftab.α == Float32.(dtab.α)
-    @test_throws MethodError convert(LegendreUnitCoeff{Float64}, dtab)
-end
-
-@testset "Setting mmax" begin
-    LMAX = 10
-    MMAX = 2
-    impltab = LegendreUnitCoeff{Float64}(LMAX)
-    fulltab = LegendreUnitCoeff{Float64}(LMAX, LMAX)
-    mmaxtab = LegendreUnitCoeff{Float64}(LMAX, MMAX)
-
-    # Equality of implicit and explicit [maximal] mmax
-    @test impltab.α == fulltab.α
-    @test impltab.α == fulltab.α
-    @test impltab.β == fulltab.β
-    @test impltab.μ == fulltab.μ
-    @test impltab.ν == fulltab.ν
-
-    # Equality of coefficients up to mmax for mmax limited
-    @test mmaxtab.α == @view fulltab.α[:, 1:(MMAX+1)]
-    @test mmaxtab.β == @view fulltab.β[:, 1:(MMAX+1)]
-    @test mmaxtab.μ == @view fulltab.μ[1:(MMAX+1)]
-    @test mmaxtab.ν == @view fulltab.ν[1:(MMAX+1)]
-end
-
 @testset "Functor interface" begin
     LMAX = 10
     leg = LegendreSphereCoeff{Float64}(LMAX)
@@ -46,31 +11,6 @@ end
     @test leg(1, 0.5) == legendre(leg, 1, 0.5)
     @test all(leg(λ₁, 2, 0.5) .== legendre!(leg, λ₂, LMAX, 2, 0.5))
     @test all(leg(Λ₁, 0.5) .== legendre!(leg, Λ₂, LMAX, LMAX, 0.5))
-end
-
-@testset "Mixed types" begin
-    LMAX = 10
-    legb! = LegendreUnitCoeff{BigFloat}(LMAX)
-    legd! = LegendreUnitCoeff{Float64}(LMAX)
-    λb = Vector{BigFloat}(undef, LMAX+1)
-    λd = Vector{Float64}(undef, LMAX+1)
-    xb = big"0.5"
-    xd = 5e-1
-
-    # Same table and array, mixed value
-    @test @inferred(legb!(λb, 2, xd)) isa typeof(λb)
-    @test @inferred(legd!(λd, 2, xb)) isa typeof(λd)
-
-    # Same table and value, mixed array
-    @test @inferred(legb!(λd, 2, xb)) isa typeof(λd)
-    @test @inferred(legd!(λb, 2, xd)) isa typeof(λb)
-
-    # Same array and value, mixed table
-    @test @inferred(legb!(λd, 2, xd)) isa typeof(λd)
-    @test @inferred(legd!(λb, 2, xb)) isa typeof(λb)
-
-    # All three mixed
-    @test @inferred(legb!(λd, 2, Float32(xd))) isa typeof(λd)
 end
 
 @testset "Equality of legendre[!]" begin
