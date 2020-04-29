@@ -21,7 +21,9 @@ Base.size(s::Scalar) = ()
 @propagate_inbounds Base.setindex!(s::Scalar, x) = (s.x = x; s)
 @propagate_inbounds Base.setindex!(s::Scalar, x, ::CartesianIndex{0}) = (s.x = x; s)
 Base.similar(s::Scalar{T}) where {T} = Scalar{T}()
+Base.similar(s::Scalar, ::Type{T}) where {T} = Scalar{T}()
 Base.similar(s::Scalar{T}, ::Tuple{}) where {T} = Scalar{T}()
+Base.similar(s::Scalar, ::Type{T}, ::Tuple{}) where {T} = Scalar{T}()
 
 # Iteration on a scalar
 Base.iterate(s::Scalar) = (s.x, nothing)

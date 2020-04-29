@@ -49,21 +49,21 @@ end
     return Λ
 end
 
-@inline _similar(A::AbstractArray) = similar(A, size(A))
-@inline _similar(A::Number)        = Scalar{typeof(A)}()
+@inline _similar(A::AbstractArray, ::Type{T}=eltype(A)) where {T} = similar(A, T, size(A))
+@inline _similar(A::Number, ::Type{T}=typeof(A)) where {T}        = Scalar{T}()
 @propagate_inbounds function _legendre_impl!(norm::AbstractLegendreNorm, Λ, lmax, mmax, x)
     TΛ = eltype(Λ)
     TV = eltype(x)
     T = promote_type(eltype(norm), TΛ, TV)
 
-    z    = _similar(x)
-    y¹   = _similar(x)
-    y²   = _similar(x)
-    pm   = _similar(x)
-    pmp2 = _similar(x)
-    plm1 = _similar(x)
-    pl   = _similar(x)
-    plp1 = _similar(x)
+    z    = _similar(x, T)
+    y¹   = _similar(x, T)
+    y²   = _similar(x, T)
+    pm   = _similar(x, T)
+    pmp2 = _similar(x, T)
+    plm1 = _similar(x, T)
+    pl   = _similar(x, T)
+    plp1 = _similar(x, T)
 
     @. z = convert(T, x)
     @. y² = -fma(z, z, -one(T))

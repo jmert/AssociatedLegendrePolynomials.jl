@@ -43,6 +43,23 @@ end
     end
 end
 
+@testset "Internal type promotion" begin
+    LMAX = 5
+    # The implementation should promote all internal calculations, so given arguments
+    # 0.5f0 (32-bit) and 0.5e0 (64-bit) which can both be exactly represented, calculate
+    # that the former is calculated at 64-bit precision when the 64-bit output encourages
+    # it.
+    @test λlm!(fill(0.0), LMAX, LMAX, 0.5f0) == λlm!(fill(0.0), LMAX, LMAX, 0.5e0)
+    # Do the same for a normalization which contains its own inherent element type.
+    # Now take advantage of the fact that 0.2 is not exactly representable and have
+    # different approximations at different accuracy to induce numerical differences
+    # based on whether the values have been promoted or not.
+    bigΛ! = LegendreSphereCoeff{BigFloat}(LMAX)
+    λ1 = bigΛ!(fill(0f0), LMAX, LMAX, 0.2f0)
+    λ2 = bigΛ!(fill(big(0f0)), LMAX, LMAX, big(0.2f0))
+    @test λ1[] == Float32(λ2[])
+end
+
 @testset "Broadcasting arguments" begin
     LMAX = 5
     ctab = LegendreSphereCoeff{Float64}(LMAX)
