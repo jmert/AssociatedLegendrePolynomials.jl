@@ -1,32 +1,40 @@
 using Random
-import ..Norms
+using LinearAlgebra: triu, diagind
+import ..LMAX, ..Norms
 
-@testset "Equality of legendre[!]" begin
-    LMAX = 10
-    x = 0.5
-    λ₂ = fill(0.0, LMAX+1)
-    Λ₂ = fill(0.0, LMAX+1, LMAX+1)
+@testset "Equality of legendre! ($(typeof(N)) with argument type $T)" for N in Norms, T in NumTypes
+    x = T(0.5)
+    λ2 = fill(T(NaN), LMAX+1, LMAX+1)
+    λ1 = fill(T(NaN), LMAX+1)
+    λ0 = fill(T(NaN), )
 
-    leg! = LegendreSphereCoeff{Float64}(LMAX)
-    # Fill lower triangular matrix by hand
-    Λ₁ = [m > l ? 0.0 : λlm(l, m, x) for l in 0:LMAX, m in 0:LMAX]
-
-    # Test full matrix
-    @test Λ₁ == leg!(Λ₂, LMAX, LMAX, x)
-    @test Λ₁ == λlm!(Λ₂, LMAX, LMAX, x)
-
-    # Test single columns
-    fill!(λ₂, 0.0)
-    @test @view(Λ₁[:,2+1]) == leg!(λ₂, LMAX, 2, x)
-    fill!(λ₂, 0.0)
-    @test @view(Λ₁[:,2+1]) == λlm!(λ₂, LMAX, 2, x)
+    # Fill the full matrix of values just once
+    legendre!(N, λ2, LMAX, LMAX, x)
+    for m in 0:LMAX
+        # Check that vector filling function returns same answers
+        legendre!(N, λ1, LMAX, m, x)
+        @test @view(λ1[m+1:end]) == @view(λ2[m+1:end,m+1])
+        for ℓ in m:LMAX
+            # Then check that scalar output matches as well.
+            legendre!(N, λ0, ℓ, m, x)
+            @test λ0[] == λ1[ℓ+1]
+        end
+    end
+    # As an implementation detail, the outputs arrays are not cleared outside of the valid
+    # domain, so initial or previous values should remain. Check these invariants as a
+    # way to notice an implementation change.
+    #
+    # For the matrix output, the upper triangle (excluding diagonal) should be all NaN.
+    @test isequal(triu(λ2, 1), triu(fill(T(NaN), LMAX+1, LMAX+1), 1))
+    # The vector output should accumulate the (m,m) term at each step, i.e. the diagonal
+    # of the matrix output.
+    @test λ1 == λ2[diagind(λ2)]
 end
 
 # Test failed with world age problems when generated functions were incorrectly used;
 # numerical derivative via newer world's Dual numbers tests for this error.
 @testset "Derivatives via dual numbers" begin
     using ForwardDiff: derivative
-    LMAX = 5
     ctab = LegendreUnitCoeff{Float64}(LMAX)
 
     # Numerical derivative for Plm via recurrence relations:
@@ -45,7 +53,6 @@ end
 end
 
 @testset "Return inference ($(typeof(N)) with argument type $T)" for N in Norms, T in NumTypes
-    import ..LMAX
     Λ₀ = fill(0.0)
     Λ₁ = zeros(LMAX+1)
     Λ₂ = zeros(LMAX+1, LMAX+1)
@@ -69,7 +76,6 @@ end
 end
 
 @testset "Internal type promotion" begin
-    LMAX = 5
     # The implementation should promote all internal calculations, so given arguments
     # 0.5f0 (32-bit) and 0.5e0 (64-bit) which can both be exactly represented, calculate
     # that the former is calculated at 64-bit precision when the 64-bit output encourages
@@ -86,7 +92,6 @@ end
 end
 
 @testset "Broadcasting arguments" begin
-    LMAX = 5
     ctab = LegendreSphereCoeff{Float64}(LMAX)
     x = 0.5
 
