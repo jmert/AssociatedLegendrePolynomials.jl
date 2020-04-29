@@ -23,6 +23,12 @@ module TestSuite
             # 2-term recurrence coefficients
             @test isfinite(Legendre.Plm_α(norm, Float64, 1, 0))
             @test isfinite(Legendre.Plm_β(norm, Float64, 1, 0))
+
+            # Make sure object calls have not been shadowed
+            Λ₁ = zeros(LMAX+1, LMAX+1)
+            Λ₂ = zeros(LMAX+1, LMAX+1)
+            @test norm(    LMAX, LMAX, 0.5) == legendre( norm,     LMAX, LMAX, 0.5)
+            @test norm(Λ₁, LMAX, LMAX, 0.5) == legendre!(norm, Λ₁, LMAX, LMAX, 0.5)
         end
     end
 

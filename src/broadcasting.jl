@@ -1,18 +1,8 @@
 # Specialize broadcasting of all of the non-modifying interfaces
 import Base.broadcasted
 
-@inline broadcasted(::typeof(Pl), l, x) =
-    broadcasted(legendre, LegendreUnitNorm(), l, 0, x)
-@inline broadcasted(::typeof(Plm), l, m, x) =
-    broadcasted(legendre, LegendreUnitNorm(), l, m, x)
-@inline broadcasted(::typeof(λlm), l, m, x) =
-    broadcasted(legendre, LegendreSphereNorm(), l, m, x)
-@inline broadcasted(norm::T, l, x) where {T<:LegendreNormCoeff} =
-    broadcasted(legendre, norm, l, 0, x)
-@inline broadcasted(norm::T, l, m, x) where {T<:LegendreNormCoeff} =
+@inline broadcasted(norm::T, l, m, x) where {T<:AbstractLegendreNorm} =
     broadcasted(legendre, norm, l, m, x)
-@inline broadcasted(::typeof(legendre), norm::AbstractLegendreNorm, l, x) =
-    broadcasted(legendre, norm, l, 0, x)
 
 function broadcasted(::typeof(legendre),
         norm::AbstractLegendreNorm, l::Integer, m::Integer, x)

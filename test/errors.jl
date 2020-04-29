@@ -23,7 +23,6 @@ end
     LMAX = 5
     ctab = LegendreUnitCoeff{Float64}(LMAX)
     # Throws on invalid l ranges
-    @test_throws ArgumentError Pl.(1:LMAX, 0.5)
     @test_throws ArgumentError Plm.(1:LMAX, 0, 0.5)
     @test_throws ArgumentError λlm.(1:LMAX, 0, 0.5)
     @test_throws ArgumentError ctab.(1:LMAX, 0, 0.5)

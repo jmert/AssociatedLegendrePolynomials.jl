@@ -86,19 +86,6 @@ julia> using Legendre
 julia> Plm(2, 1, 0.5)
 -1.299038105676658
 ```
-When ``m = 0`` and only the Legendre polynomial ``P_ℓ(x)`` is needed,
-[`Legendre.Pl`](@ref) can be used instead:
-```jldoctest PlmUsage
-julia> Plm(2, 0, 0.5)
--0.125
-
-julia> Pl(2, 0.5)
--0.125
-
-julia> Pl(2, 0.5) == Plm(2, 0, 0.5)
-true
-```
-
 In the context of CMB analysis, a common use of the associated Legendre polynomials is to
 compute the spherical harmonics ``Y_{ℓm}(θ,ϕ)``:
 ```math
@@ -329,24 +316,6 @@ julia> Λ[1:5, 1:5]
  -0.0788479  -0.334523  0.289706  0.0  0.0
   0.0         0.0       0.0       0.0  0.0
   0.0         0.0       0.0       0.0  0.0
-```
-In most situations, though, it'll probably be most convenient to use the functor interface
-attached to the coefficient cache object which assumes the `lmax` it was constructed
-with.
-The coefficient table itself is callable with forms similar to `legendre` and `legendre!`
-except that the `norm` and `lmax` arguments are implicit/not necessary.
-```jldoctest PlmUsage
-julia> coeff(20, 0.5)    # == legendre(coeff, 20, 0.5)
--0.08734916334699527
-
-julia> coeff(20, 2, 0.5) # == legendre(coeff, 20, 2, 0.5)
-0.10617507806374693
-
-julia> leg! = coeff;    # alias to clarify that leg! modifies
-
-julia> leg!(λ, 2, 0.5); # same as legendre!(coeff, λ, size(coeff.α, 1) - 1, 2, 0.5)
-
-julia> leg!(Λ, 0.5);    # same as legendre!(coeff, Λ, (size(coeff.α) .- 1)..., 0.5)
 ```
 
 ## [Custom normalizations](@id legendre_customnorm)

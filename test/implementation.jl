@@ -1,41 +1,22 @@
 using Random
 
-@testset "Functor interface" begin
-    LMAX = 10
-    leg = LegendreSphereCoeff{Float64}(LMAX)
-    λ₁ = fill(0.0, LMAX+1)
-    λ₂ = fill(0.0, LMAX+1)
-    Λ₁ = fill(0.0, LMAX+1, LMAX+1)
-    Λ₂ = fill(0.0, LMAX+1, LMAX+1)
-    @test leg(1, 1, 0.5) == legendre(leg, 1, 1, 0.5)
-    @test leg(1, 0.5) == legendre(leg, 1, 0.5)
-    @test all(leg(λ₁, 2, 0.5) .== legendre!(leg, λ₂, LMAX, 2, 0.5))
-    @test all(leg(Λ₁, 0.5) .== legendre!(leg, Λ₂, LMAX, LMAX, 0.5))
-end
-
 @testset "Equality of legendre[!]" begin
     LMAX = 10
     x = 0.5
     λ₂ = fill(0.0, LMAX+1)
     Λ₂ = fill(0.0, LMAX+1, LMAX+1)
 
-    # P_l(x) is implemented with its own fast-path for m == 0
-    λ₁ = [Pl(l, x) for l in 0:LMAX]
-    @test λ₁ == Pl!(λ₂, LMAX, x)
-
-    # Use λlm instead of Plm to provide coverage for the convenience wrapper functions,
-    # too
     leg! = LegendreSphereCoeff{Float64}(LMAX)
     # Fill lower triangular matrix by hand
     Λ₁ = [m > l ? 0.0 : λlm(l, m, x) for l in 0:LMAX, m in 0:LMAX]
 
     # Test full matrix
-    @test Λ₁ == leg!(Λ₂, x)
+    @test Λ₁ == leg!(Λ₂, LMAX, LMAX, x)
     @test Λ₁ == λlm!(Λ₂, LMAX, LMAX, x)
 
     # Test single columns
     fill!(λ₂, 0.0)
-    @test @view(Λ₁[:,2+1]) == leg!(λ₂, 2, x)
+    @test @view(Λ₁[:,2+1]) == leg!(λ₂, LMAX, 2, x)
     fill!(λ₂, 0.0)
     @test @view(Λ₁[:,2+1]) == λlm!(λ₂, LMAX, 2, x)
 end
@@ -68,12 +49,9 @@ end
     x = 0.5
 
     # Single (l,m) for single z
-    @test Pl.(LMAX, x)        == Pl(LMAX, x)
     @test Plm.(LMAX, LMAX, x) == Plm(LMAX, LMAX, x)
     @test λlm.(LMAX, LMAX, x)  == λlm(LMAX, LMAX, x)
-    @test ctab.(LMAX, x)       == λlm(LMAX, 0, x)
     @test ctab.(LMAX, LMAX, x) == λlm(LMAX, LMAX, x)
-    @test legendre.(LegendreSphereNorm(), LMAX, x)       == λlm(LMAX, 0, x)
     @test legendre.(LegendreSphereNorm(), LMAX, LMAX, x) == λlm(LMAX, LMAX, x)
 
     z = range(-1, 1, length=10)
@@ -81,24 +59,18 @@ end
 
     # Single (l,m) over multiple z
     legendre!(LegendreUnitNorm(), Λ, LMAX, LMAX, z)
-    @test Pl.(LMAX, z)        == Λ[:,LMAX+1,1]
     @test Plm.(LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
     legendre!(LegendreSphereNorm(), Λ, LMAX, LMAX, z)
     @test λlm.(LMAX, LMAX, z)  == Λ[:,LMAX+1,LMAX+1]
-    @test ctab.(LMAX, z)       == Λ[:,LMAX+1,1]
     @test ctab.(LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
-    @test legendre.(LegendreSphereNorm(), LMAX, z)       == Λ[:,LMAX+1,1]
     @test legendre.(LegendreSphereNorm(), LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
 
     # All l for fixed m over multiple z
     legendre!(LegendreUnitNorm(), Λ, LMAX, LMAX, z)
-    @test Pl.(0:LMAX, z)        == Λ[:,:,1]
     @test Plm.(0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
     legendre!(LegendreSphereNorm(), Λ, LMAX, LMAX, z)
     @test λlm.(0:LMAX, LMAX, z)  == Λ[:,:,LMAX+1]
-    @test ctab.(0:LMAX, z)       == Λ[:,:,1]
     @test ctab.(0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
-    @test legendre.(LegendreSphereNorm(), 0:LMAX, z)       == Λ[:,:,1]
     @test legendre.(LegendreSphereNorm(), 0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
 
     # All l and m over multiple z
