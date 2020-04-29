@@ -2,7 +2,8 @@ using Test, TestSetExtensions
 using Legendre # For doctests, include Legendre as a binding in Main
 
 include("testsuite.jl")
-using .TestSuite: NumTypes
+using .TestSuite: LMAX, NumTypes
+const Norms = (LegendreUnitNorm(), LegendreUnitCoeff{BigFloat}(LMAX))
 
 function prettytime(t)
     v, u = t < 1e3 ? (t, "ns") :
