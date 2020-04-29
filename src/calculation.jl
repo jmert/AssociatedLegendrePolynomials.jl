@@ -1,8 +1,3 @@
-@inline _chkdomainnorm(norm::AbstractLegendreNorm, lmax, mmax) = nothing
-@noinline function _chkdomainnorm(norm::LegendreNormCoeff, lmax, mmax)
-    lmax′,mmax′ = size(norm.α)
-    (lmax < lmax′ && mmax < mmax′) || throw(BoundsError(norm.α, (lmax+1, mmax+1)))
-end
 @noinline function _chkdomain(lmax, mmax)
     0 ≤ lmax || throw(DomainError(lmax, "degree lmax must be non-negative"))
     0 ≤ mmax ≤ lmax || throw(DomainError(mmax,
@@ -38,8 +33,8 @@ end
 
 @propagate_inbounds function _legendre!(norm, Λ, lmax, mmax, x)
     @boundscheck _chkdomain(lmax, mmax)
-    @boundscheck _chkdomainnorm(norm, lmax, mmax)
     @boundscheck _chkbounds(Λ, lmax, mmax, x)
+    @boundscheck boundscheck_hook(norm, lmax, mmax)
     if ndims(x) > 1
         M = ndims(Λ)
         N = ndims(x)
@@ -195,7 +190,7 @@ Note that in second and third case, the `UnitRange`s must satisify `first(l) == 
 function legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
     Λ = _similar(x)
     _chkdomain(l, m)
-    _chkdomainnorm(norm, l, m)
+    boundscheck_hook(norm, l, m)
     @inbounds _legendre!(norm, Λ, l, m, x)
     return Λ[]
 end

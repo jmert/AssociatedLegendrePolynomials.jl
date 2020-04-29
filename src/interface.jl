@@ -65,3 +65,6 @@ Returns the coefficient ``β_ℓ^m`` for the two-term recursion relation
 where ``β_ℓ^m`` is appropriate for the choice of normalization `N`.
 """
 function Plm_β end
+
+# Hook to allow an AbstractLegendreNorm to participate in bounds checking.
+boundscheck_hook(norm::AbstractLegendreNorm, lmax, mmax) = nothing
