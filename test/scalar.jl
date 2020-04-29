@@ -19,7 +19,9 @@ s[I] = fill(3)
 @test ndims(s) == 0
 @test length(s) == 1
 @test similar(s) isa Scalar{Float64}
+@test similar(s, Float32) isa Scalar{Float32}
 @test similar(s, size(s)) isa Scalar{Float64}
+@test similar(s, Float32, size(s)) isa Scalar{Float32}
 
 @test [x for x in s] == fill(s[])
 
