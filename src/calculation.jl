@@ -223,9 +223,24 @@ dimensions having the same shape as `x`.
 end
 
 # Make normalizations callable with similar syntax as the legendre[!] functions
-@inline function (norm::AbstractLegendreNorm)(l::Integer, m::Integer, x)
-    return legendre(norm, l, m, x)
-end
-@inline function (norm::AbstractLegendreNorm)(Λ, l::Integer, m::Integer, x)
-    return legendre!(norm, Λ, l, m, x)
+@static if VERSION < v"1.3.0-alpha"
+    # Prior to julia-1.3.0, abstract types could not have methods attached to them.
+    # Provide for just the defined normalization types.
+    for N in (LegendreUnitNorm,LegendreSphereNorm,LegendreNormCoeff)
+        @eval begin
+            @inline function (norm::$N)(l::Integer, m::Integer, x)
+                return legendre(norm, l, m, x)
+            end
+            @inline function (norm::$N)(Λ, l::Integer, m::Integer, x)
+                return legendre!(norm, Λ, l, m, x)
+            end
+        end
+    end
+else
+    @inline function (norm::AbstractLegendreNorm)(l::Integer, m::Integer, x)
+        return legendre(norm, l, m, x)
+    end
+    @inline function (norm::AbstractLegendreNorm)(Λ, l::Integer, m::Integer, x)
+        return legendre!(norm, Λ, l, m, x)
+    end
 end
