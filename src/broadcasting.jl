@@ -9,7 +9,7 @@ function broadcasted(::typeof(legendre),
     z = Broadcast.materialize(x)
     Λ = _similar(z)
     _chkdomain(l, m)
-    _chkdomainnorm(norm, l, m)
+    boundscheck_hook(norm, l, m)
     @inbounds _legendre!(norm, Λ, l, m, z)
     return (ndims(Λ) == 0) ? Λ[] : Λ
 end
@@ -26,7 +26,7 @@ function broadcasted(::typeof(legendre),
     lmax = last(l)
     mmax = m isa UnitRange ? last(m) : m
     _chkdomain(lmax, mmax)
-    _chkdomainnorm(norm, lmax, mmax)
+    boundscheck_hook(norm, lmax, mmax)
     @inbounds _legendre!(norm, Λ, lmax, mmax, z)
     return Λ
 end

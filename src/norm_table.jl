@@ -100,3 +100,10 @@ end
 Plm_β(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer) where T
     return norm.β[l+1,m+1]
 end
+
+function boundscheck_hook(norm::LegendreNormCoeff, lmax, mmax)
+    @noinline _throw(α, lmax, mmax) = throw(BoundsError(α, (lmax+1, mmax+1)))
+    lmax′,mmax′ = size(norm.α)
+    (lmax < lmax′ && mmax < mmax′) || _throw(norm.α, lmax, mmax)
+    nothing
+end

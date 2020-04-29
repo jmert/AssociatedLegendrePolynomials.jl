@@ -26,7 +26,7 @@ export legendre, legendre!
 include("calculation.jl")
 
 # Other functionality
-export Pl, Pl!, Plm, Plm!, Nlm, λlm, λlm!
+export Plm, Plm!, Nlm, λlm, λlm!
 include("aliases.jl")
 include("broadcasting.jl")
 
