@@ -100,20 +100,3 @@ end
 Plm_β(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer) where T
     return norm.β[l+1,m+1]
 end
-
-# Make coefficient cache objects callable with similar syntax as the legendre[!] functions
-@inline function (norm::LegendreNormCoeff)(l::Integer, x::Number)
-    return legendre(norm, l, x)
-end
-@inline function (norm::LegendreNormCoeff)(l::Integer, m::Integer, x::Number)
-    return legendre(norm, l, m, x)
-end
-@propagate_inbounds function (norm::LegendreNormCoeff)(Λ, m::Integer, x)
-    lmax = size(norm.α,1) - 1
-    return legendre!(norm, Λ, lmax, m, x)
-end
-@propagate_inbounds function (norm::LegendreNormCoeff)(Λ, x)
-    lmax,mmax = size(norm.α) .- 1
-    return legendre!(norm, Λ, lmax, mmax, x)
-end
-

@@ -11,7 +11,6 @@ inf_timing = @snoopi tmin=0.01 begin
         Ptab(I(2), I(2), s)
         λlm(I(2), I(2), s)
         Λtab(I(2), I(2), s)
-        Pl(I(2), s)
         # Broadcasted operations:
         #  Scalar argument, vector output
         Plm.(I(0):I(2), I(2), s)

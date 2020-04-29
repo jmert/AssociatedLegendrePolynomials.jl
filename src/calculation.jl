@@ -221,3 +221,11 @@ dimensions having the same shape as `x`.
         Λ, l::Integer, m::Integer, x)
     return _legendre!(norm, Λ, l, m, x)
 end
+
+# Make normalizations callable with similar syntax as the legendre[!] functions
+@inline function (norm::AbstractLegendreNorm)(l::Integer, m::Integer, x)
+    return legendre(norm, l, m, x)
+end
+@inline function (norm::AbstractLegendreNorm)(Λ, l::Integer, m::Integer, x)
+    return legendre!(norm, Λ, l, m, x)
+end
