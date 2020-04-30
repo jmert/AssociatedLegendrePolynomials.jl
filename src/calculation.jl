@@ -211,7 +211,7 @@ dimensions having the same shape as `x`.
   and `Λ` is filled with polynomial values for all degrees `0 ≤ l ≤ lmax` and orders
   `0 ≤ m ≤ min(mmax, l)`.
 """
-@propagate_inbounds function legendre!(
+function legendre!(
         norm::AbstractLegendreNorm,
         Λ, l::Integer, m::Integer, x)
     return _legendre!(norm, Λ, l, m, x)
