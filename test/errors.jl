@@ -1,20 +1,18 @@
-import ..LMAX
+import ..LMAX, ..Norms
 
 @testset "Degree/order domain errors" begin
     MMAX = LMAX - 2
     Λ = Matrix{Float64}(undef, LMAX+1, MMAX+1)
-    norms = (LegendreUnitNorm(), LegendreSphereNorm(),
-             LegendreUnitCoeff{Float64}(LMAX, MMAX))
 
-    @testset "ℓ < 0 ($(typeof(N))" for N in norms
+    @testset "ℓ < 0 ($(typeof(N))" for N in Norms
         @test_throws DomainError legendre( N,    -1, 0, 0.5)
         @test_throws DomainError legendre!(N, Λ, -1, 0, 0.5)
     end
-    @testset "ℓ > 0 & m < 0 ($(typeof(N))" for N in norms
+    @testset "ℓ > 0 & m < 0 ($(typeof(N))" for N in Norms
         @test_throws DomainError legendre( N,    LMAX, -1, 0.5)
         @test_throws DomainError legendre!(N, Λ, LMAX, -1, 0.5)
     end
-    @testset "m > ℓ ($(typeof(N))" for N in norms
+    @testset "m > ℓ ($(typeof(N))" for N in Norms
         @test_throws DomainError legendre( N,    LMAX, LMAX+1, 0.5)
         @test_throws DomainError legendre!(N, Λ, LMAX, LMAX+1, 0.5)
     end
