@@ -92,41 +92,19 @@ end
 end
 
 @testset "Broadcasting arguments" begin
-    ctab = LegendreSphereCoeff{Float64}(LMAX)
     x = 0.5
-
-    # Single (l,m) for single z
-    @test Plm.(LMAX, LMAX, x) == Plm(LMAX, LMAX, x)
-    @test λlm.(LMAX, LMAX, x)  == λlm(LMAX, LMAX, x)
-    @test ctab.(LMAX, LMAX, x) == λlm(LMAX, LMAX, x)
-    @test legendre.(LegendreSphereNorm(), LMAX, LMAX, x) == λlm(LMAX, LMAX, x)
-
     z = range(-1, 1, length=10)
     Λ = zeros(length(z), LMAX + 1, LMAX + 1)
+    λlm!(Λ, LMAX, LMAX, z)
 
+    # Single (l,m) for single z
+    @test λlm.(LMAX, LMAX, x) == λlm(LMAX, LMAX, x)
     # Single (l,m) over multiple z
-    legendre!(LegendreUnitNorm(), Λ, LMAX, LMAX, z)
-    @test Plm.(LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
-    legendre!(LegendreSphereNorm(), Λ, LMAX, LMAX, z)
-    @test λlm.(LMAX, LMAX, z)  == Λ[:,LMAX+1,LMAX+1]
-    @test ctab.(LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
-    @test legendre.(LegendreSphereNorm(), LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
-
+    @test λlm.(LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
     # All l for fixed m over multiple z
-    legendre!(LegendreUnitNorm(), Λ, LMAX, LMAX, z)
-    @test Plm.(0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
-    legendre!(LegendreSphereNorm(), Λ, LMAX, LMAX, z)
-    @test λlm.(0:LMAX, LMAX, z)  == Λ[:,:,LMAX+1]
-    @test ctab.(0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
-    @test legendre.(LegendreSphereNorm(), 0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
-
+    @test λlm.(0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
     # All l and m over multiple z
-    legendre!(LegendreUnitNorm(), Λ, LMAX, LMAX, z)
-    @test Plm.(0:LMAX, 0:LMAX, z) == Λ
-    legendre!(LegendreSphereNorm(), Λ, LMAX, LMAX, z)
-    @test λlm.(0:LMAX, 0:LMAX, z)  == Λ
-    @test ctab.(0:LMAX, 0:LMAX, z) == Λ
-    @test legendre.(LegendreSphereNorm(), 0:LMAX, 0:LMAX, z) == Λ
+    @test λlm.(0:LMAX, 0:LMAX, z) == Λ
 
     # Shape-preservation of multi-dimensional arguments
     sz = (5, 10)

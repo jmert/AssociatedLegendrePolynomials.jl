@@ -1,6 +1,7 @@
+import ..LMAX
+
 @testset "Degree/order domain errors" begin
-    LMAX = 10
-    MMAX = 2
+    MMAX = LMAX - 2
     Λ = Matrix{Float64}(undef, LMAX+1, MMAX+1)
     norms = (LegendreUnitNorm(), LegendreSphereNorm(),
              LegendreUnitCoeff{Float64}(LMAX, MMAX))
@@ -20,23 +21,13 @@
 end
 
 @testset "Degree/order range errors" begin
-    LMAX = 5
-    ctab = LegendreUnitCoeff{Float64}(LMAX)
     # Throws on invalid l ranges
-    @test_throws ArgumentError Plm.(1:LMAX, 0, 0.5)
-    @test_throws ArgumentError λlm.(1:LMAX, 0, 0.5)
-    @test_throws ArgumentError ctab.(1:LMAX, 0, 0.5)
-    @test_throws ArgumentError legendre.(ctab, 1:LMAX, 0, 0.5)
+    @test_throws ArgumentError legendre.(λlm, 1:LMAX, 0, 0.5)
     # Throws on invalid m ranges
-    @test_throws ArgumentError Plm.(0:LMAX, 1:LMAX, 0.5)
-    @test_throws ArgumentError λlm.(0:LMAX, 1:LMAX, 0.5)
-    @test_throws ArgumentError ctab.(0:LMAX, 1:LMAX, 0.5)
-    @test_throws ArgumentError legendre.(ctab, 0:LMAX, 1:LMAX, 0.5)
+    @test_throws ArgumentError legendre.(λlm, 0:LMAX, 1:LMAX, 0.5)
 end
 
 @testset "Output array bounds checking" begin
-    LMAX = 2
-
     # Scalar argument
     λ  = Vector{Float64}(undef, LMAX)
     Λ₁ = Matrix{Float64}(undef, LMAX, LMAX+1)
@@ -62,9 +53,8 @@ end
 end
 
 @testset "Precompute coefficient lmax/mmax" begin
-    LMAX, MMAX = 2, 0
+    MMAX = 0
     ctab = LegendreUnitCoeff{Float64}(LMAX, MMAX)
     @test_throws BoundsError ctab(LMAX+1, 0, 0.5)
     @test_throws BoundsError ctab(LMAX, MMAX+1, 0.5)
 end
-
