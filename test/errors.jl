@@ -41,8 +41,6 @@ end
     Λ₄ = Array{Float64}(undef, 2, 2, LMAX+1, LMAX+1)
     Λ₅ = Array{Float64}(undef, 2, 2, 2, LMAX+1, LMAX+1)
     # Insufficient dimensions:
-    @test_throws DimensionMismatch Plm!(Λ₁, LMAX, LMAX, 0.0)
-    @test_throws DimensionMismatch Plm!(Λ₂, LMAX, LMAX, zeros(2))
     @test_throws DimensionMismatch Plm!(Λ₃, LMAX, LMAX, zeros(2,2))
     # Too many dimensions:
     @test_throws DimensionMismatch Plm!(Λ₃, LMAX, LMAX, 0.0)
