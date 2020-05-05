@@ -7,6 +7,9 @@
   In: *Proceedings of the 40th Congress on Science and Technology of Thailand* (Dec 2014)
   arXiv: [1410.1748](https://arxiv.org/abs/1410.1748v1)
 
+* “Legendre and Related Functions” [(Chapter 14)](https://dlmf.nist.gov/14)
+  In: *NIST Digital Library of Mathematical Functions*
+
 * “Legendre polynomials” on
   [*Wikipedia*](https://en.wikipedia.org/wiki/Legendre_polynomials)
   and
