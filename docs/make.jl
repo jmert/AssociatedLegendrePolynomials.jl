@@ -1,6 +1,7 @@
 using Documenter, Legendre
 
-doctest = "--fix" in ARGS ? :fix : false
+doctest = "--fix"  in ARGS ? :fix :
+          "--test" in ARGS ? true : false
 
 DocMeta.setdocmeta!(Legendre, :DocTestSetup, :(using Legendre); recursive=true)
 
@@ -16,9 +17,11 @@ makedocs(
     ],
     pages = [
         "Legendre.jl Documentation" => "index.md",
-        "Manual" => [
-            "Legendre Functions" => "man/legendre.md",
-            "References" => "man/references.md"
+        "Associated Legendre Functions" => [
+            "Introduction" => "man/intro.md",
+            "Usage" => "man/usage.md",
+            "Developer Documentation" => "man/devdocs.md",
+            "Literature/References" => "man/references.md"
         ],
         "API Reference" => [
             "Public" => "lib/public.md",

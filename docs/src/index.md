@@ -12,7 +12,9 @@ Design goals of this package include:
 ## User Manual and Documentation
 ```@contents
 Pages = [
-    "man/legendre.md",
+    "man/intro.md",
+    "man/usage.md",
+    "man/devdocs.md",
     "man/references.md"
 ]
 Depth = 1
@@ -31,4 +33,3 @@ Depth = 1
 ```@index
 Pages = ["lib/public.md"]
 ```
-
