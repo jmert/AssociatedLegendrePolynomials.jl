@@ -66,5 +66,18 @@ where ``β_ℓ^m`` is appropriate for the choice of normalization `N`.
 """
 function Plm_β end
 
-# Hook to allow an AbstractLegendreNorm to participate in bounds checking.
+"""
+    boundscheck_hook(norm::AbstractLegendreNorm, lmax, mmax)
+
+A bounds-checking hook executed at the beginning of each [`legendre!`](@ref) call to
+permit a normalization `norm` to validate that the given maximum ``(ℓ,m)`` will be within
+the ability to satisfy. The default case always returns `nothing`. A custom normalization
+should throw an error if `lmax` or `mmax` is out of bounds or return `nothing` otherwise.
+
+For example, the precomputed coefficients of [`LegendreNormCoeff`](@ref) are limited to
+a given domain at time of construction and cannot be used to calculate terms to arbitrary
+orders/degrees.
+"""
+function boundscheck_hook end
+
 boundscheck_hook(norm::AbstractLegendreNorm, lmax, mmax) = nothing

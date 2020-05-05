@@ -21,14 +21,23 @@ normalization is added by simply extending appropriate types and methods.
 The following table lists all of the types to extend and method specialization to
 implement.
 
-| Interfaces to extend/implement              | Brief description                                                              |
-|:------------------------------------------- |:------------------------------------------------------------------------------ |
-| [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                         |
-| [`Legendre.Plm_00()`](@ref)             | Value of ``N_0^0 P_0^0(x)`` for the given normalization                        |
-| [`Legendre.Plm_μ()`](@ref)              | Coefficient ``μ_m`` for the 1-term r.r. boosting ``ℓ → ℓ+1`` and ``m → m+1``   |
-| [`Legendre.Plm_ν()`](@ref)              | Coefficient ``ν_m`` for the 1-term r.r. boosting ``ℓ → ℓ+1``                   |
-| [`Legendre.Plm_α()`](@ref)              | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ,m)`` term         |
-| [`Legendre.Plm_β()`](@ref)              | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term       |
+### Normalization Interface
+
+| Interfaces to extend/implement          | Brief description                                                            |
+|:--------------------------------------- |:---------------------------------------------------------------------------- |
+| [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                       |
+| [`Legendre.Plm_00()`](@ref)             | Value of ``N_0^0 P_0^0(x)`` for the given normalization                      |
+| [`Legendre.Plm_μ()`](@ref)              | Coefficient ``μ_m`` for the 1-term r.r. boosting ``ℓ → ℓ+1`` and ``m → m+1`` |
+| [`Legendre.Plm_ν()`](@ref)              | Coefficient ``ν_m`` for the 1-term r.r. boosting ``ℓ → ℓ+1``                 |
+| [`Legendre.Plm_α()`](@ref)              | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ,m)`` term       |
+| [`Legendre.Plm_β()`](@ref)              | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term     |
+
+| Optional interfaces                 | Brief description                      |
+|:----------------------------------- |:-------------------------------------- |
+| [`Legendre.boundscheck_hook()`](@ref) | Hook to participate in bounds checking |
+
+
+### Example implementation
 
 As a concrete example, we'll walk through how ``λ_ℓ^m(x)`` is defined to have the
 spherical harmonic normalization baked in.
