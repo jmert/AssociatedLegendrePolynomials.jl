@@ -33,7 +33,8 @@ struct LegendreNormCoeff{N<:AbstractLegendreNorm,T<:Real} <: AbstractLegendreNor
 
         @inbounds for m in 0:mmax
             μ[m+1] = m == 0 ? zero(T) : Plm_μ(N(), T, m)
-            ν[m+1] = Plm_ν(N(), T, m)
+            # N.B.: Need access to mmax+1 but will never use m==0 term, so offset storage
+            ν[m+1] = Plm_ν(N(), T, m+1)
 
             for l in (m+1):lmax
                 α[l+1,m+1] = Plm_α(N(), T, l, m)
@@ -82,13 +83,14 @@ Plm_00(::LegendreNormCoeff{N}, ::Type{T}) where {N<:AbstractLegendreNorm, T}
 end
 
 @propagate_inbounds function
-Plm_μ(norm::LegendreNormCoeff, ::Type{T}, m::Integer) where T
-    return norm.μ[m+1]
+Plm_μ(norm::LegendreNormCoeff, ::Type{T}, l::Integer) where T
+    return norm.μ[l+1]
 end
 
 @propagate_inbounds function
-Plm_ν(norm::LegendreNormCoeff, ::Type{T}, m::Integer) where T
-    return norm.ν[m+1]
+Plm_ν(norm::LegendreNormCoeff, ::Type{T}, l::Integer) where T
+    # N.B.: Storage is offset by 1 compared to other arrays. See constructor.
+    return norm.ν[l]
 end
 
 @propagate_inbounds function

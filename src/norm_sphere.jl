@@ -17,13 +17,13 @@ Plm_00(::LegendreSphereNorm, ::Type{T}) where T
 end
 
 @inline function
-Plm_μ(::LegendreSphereNorm, ::Type{T}, m::Integer) where T
-    return sqrt(one(T) + inv(convert(T, 2m)))
+Plm_μ(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
+    return sqrt(one(T) + inv(convert(T, 2l)))
 end
 
 @inline function
-Plm_ν(::LegendreSphereNorm, ::Type{T}, m::Integer) where T
-    return sqrt(convert(T, 2m + 3))
+Plm_ν(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
+    return sqrt(convert(T, 2l + 1))
 end
 
 @inline function

@@ -23,14 +23,14 @@ implement.
 
 ### Normalization Interface
 
-| Interfaces to extend/implement          | Brief description                                                            |
-|:--------------------------------------- |:---------------------------------------------------------------------------- |
-| [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                       |
-| [`Legendre.Plm_00()`](@ref)             | Value of ``N_0^0 P_0^0(x)`` for the given normalization                      |
-| [`Legendre.Plm_μ()`](@ref)              | Coefficient ``μ_m`` for the 1-term r.r. boosting ``ℓ → ℓ+1`` and ``m → m+1`` |
-| [`Legendre.Plm_ν()`](@ref)              | Coefficient ``ν_m`` for the 1-term r.r. boosting ``ℓ → ℓ+1``                 |
-| [`Legendre.Plm_α()`](@ref)              | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ,m)`` term       |
-| [`Legendre.Plm_β()`](@ref)              | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term     |
+| Interfaces to extend/implement          | Brief description                                                                               |
+|:--------------------------------------- |:----------------------------------------------------------------------------------------------- |
+| [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                                          |
+| [`Legendre.Plm_00()`](@ref)             | Value of ``N_0^0 P_0^0(x)`` for the given normalization                                         |
+| [`Legendre.Plm_μ()`](@ref)              | Coefficient ``μ_ℓ`` for the 1-term r.r. boosting ``ℓ → ℓ+1`` and ``m → m+1`` where ``m = \ell`` |
+| [`Legendre.Plm_ν()`](@ref)              | Coefficient ``ν_ℓ`` for the 1-term r.r. boosting ``ℓ → ℓ+1``                                    |
+| [`Legendre.Plm_α()`](@ref)              | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ,m)`` term                          |
+| [`Legendre.Plm_β()`](@ref)              | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term                        |
 
 | Optional interfaces                 | Brief description                      |
 |:----------------------------------- |:-------------------------------------- |
@@ -55,10 +55,10 @@ relations given in the [Definitions and Properties](@ref legendre_defn) section.
 For our purposes, they take on the form:
 ```math
 \begin{align}
-    P_{m+1}^{m+1}(x) &= \mu_{m+1} \sqrt{1-x^2} P_m^m(x)
+    P_{\ell+1}^{\ell+1}(x) &= \mu_{\ell+1} \sqrt{1-x^2} P_\ell^\ell(x)
         \label{eqn:cus_rr_1term_lm}
     \\
-    P_{m+1}^m(x) &= \nu_m x P_m^m(x)
+    P_{\ell+1}^\ell(x) &= \nu_{\ell+1} x P_\ell^\ell(x)
         \label{eqn:cus_rr_1term_l}
     \\
     P_{\ell+1}^m(x) &= \alpha_{\ell+1}^m x P_\ell^m(x)
@@ -66,13 +66,13 @@ For our purposes, they take on the form:
         \label{eqn:cus_rr_2term}
 \end{align}
 ```
-The normalization is encoded in the coefficients ``α_ℓ^m``, ``β_ℓ^m``, ``μ_m``, and
-``ν_m``.
+The normalization is encoded in the coefficients ``μ_ℓ``, ``ν_ℓ``, ``α_ℓ^m``,
+``β_ℓ^m``.
 For the standard (unity) normalization, these take on the values
 ```math
 \begin{align}
-    μ_m &= 2ℓ - 1 \\
-    ν_m &= 2ℓ + 1 \\
+    μ_ℓ &= 2ℓ - 1 \\
+    ν_ℓ &= 2ℓ - 1 \\
     α_ℓ^m &= \frac{2ℓ - 1}{ℓ - m} \\
     β_ℓ^m &= \frac{ℓ + m - 1}{ℓ - m}
 \end{align}
@@ -114,8 +114,8 @@ they are the cofficients appropriate for generating ``λ_{ℓ+1}^m(x)``.
 Doing so with the other two recurrence relation equations, we obtain:
 ```math
 \begin{align}
-    μ_m &= \sqrt{1 + \frac{1}{2m}} \\
-    ν_m &= \sqrt{2m + 3} \\
+    μ_ℓ &= \sqrt{1 + \frac{1}{2ℓ}} \\
+    ν_ℓ &= \sqrt{2ℓ + 1} \\
     α_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{4(ℓ-1)^2 - 1}{ℓ^2 - m^2}} \\
     β_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{(ℓ-1)^2 - m^2}{ℓ^2 - m^2}}
 \end{align}
@@ -165,10 +165,10 @@ julia> function Plm_β(::λNorm, T::Type, l::Integer, m::Integer)
        end
 Plm_β (generic function with 4 methods)
 
-julia> Plm_μ(::λNorm, T::Type, m::Integer) = sqrt(1 + 1 / 2m)
+julia> Plm_μ(::λNorm, T::Type, l::Integer) = sqrt(1 + 1 / 2l)
 Plm_μ (generic function with 4 methods)
 
-julia> Plm_ν(::λNorm, T::Type, m::Integer) = sqrt(3 + 2m)
+julia> Plm_ν(::λNorm, T::Type, l::Integer) = sqrt(1 + 2l)
 Plm_ν (generic function with 4 methods)
 ```
 

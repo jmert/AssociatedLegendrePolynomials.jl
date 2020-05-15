@@ -92,7 +92,7 @@ end
         end
         if N == 2 || m == mmax
             # 1-term recurrence relation taking (m,m) -> (m,m+1)
-            ν = Plm_ν(norm, T, m)
+            ν = Plm_ν(norm, T, m+1)
             @. pl   = pm
             @. plp1 = ν * z * pl
             for l in m+1:lmax
@@ -134,7 +134,7 @@ end
         end
         if N == 2 || m+1 == mmax
             # 1-term recurrence relation taking (m+1,m+1) -> (m+1,m+2)
-            ν = Plm_ν(norm, T, m+1)
+            ν = Plm_ν(norm, T, m+2)
             @. pl   = pmp1
             @. plp1 = ν * z * pl
             for l in m+2:lmax
