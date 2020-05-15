@@ -55,15 +55,15 @@ relations given in the [Definitions and Properties](@ref legendre_defn) section.
 For our purposes, they take on the form:
 ```math
 \begin{align}
-    P_{\ell+1}^m(x) &= \alpha_{\ell+1}^m x P_\ell^m(x)
-        - \beta_{\ell+1}^m P_{\ell-1}^m(x)
-        \label{eqn:cus_rr_2term}
-    \\
     P_{m+1}^{m+1}(x) &= \mu_{m+1} \sqrt{1-x^2} P_m^m(x)
         \label{eqn:cus_rr_1term_lm}
     \\
     P_{m+1}^m(x) &= \nu_m x P_m^m(x)
         \label{eqn:cus_rr_1term_l}
+    \\
+    P_{\ell+1}^m(x) &= \alpha_{\ell+1}^m x P_\ell^m(x)
+        - \beta_{\ell+1}^m P_{\ell-1}^m(x)
+        \label{eqn:cus_rr_2term}
 \end{align}
 ```
 The normalization is encoded in the coefficients ``α_ℓ^m``, ``β_ℓ^m``, ``μ_m``, and
@@ -71,10 +71,10 @@ The normalization is encoded in the coefficients ``α_ℓ^m``, ``β_ℓ^m``, ``�
 For the standard (unity) normalization, these take on the values
 ```math
 \begin{align}
-    α_ℓ^m &= \frac{2ℓ - 1}{ℓ - m} \\
-    β_ℓ^m &= \frac{ℓ + m - 1}{ℓ - m} \\
     μ_m &= 2ℓ - 1 \\
-    ν_m &= 2ℓ + 1
+    ν_m &= 2ℓ + 1 \\
+    α_ℓ^m &= \frac{2ℓ - 1}{ℓ - m} \\
+    β_ℓ^m &= \frac{ℓ + m - 1}{ℓ - m}
 \end{align}
 ```
 by simply identifying the coefficients from Eqns.
@@ -114,10 +114,10 @@ they are the cofficients appropriate for generating ``λ_{ℓ+1}^m(x)``.
 Doing so with the other two recurrence relation equations, we obtain:
 ```math
 \begin{align}
-    α_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{4(ℓ-1)^2 - 1}{ℓ^2 - m^2}} \\
-    β_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{(ℓ-1)^2 - m^2}{ℓ^2 - m^2}} \\
     μ_m &= \sqrt{1 + \frac{1}{2m}} \\
-    ν_m &= \sqrt{2m + 3}
+    ν_m &= \sqrt{2m + 3} \\
+    α_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{4(ℓ-1)^2 - 1}{ℓ^2 - m^2}} \\
+    β_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{(ℓ-1)^2 - m^2}{ℓ^2 - m^2}}
 \end{align}
 ```
 The final math required is to define the initial condition ``λ_0^0(x)``.
