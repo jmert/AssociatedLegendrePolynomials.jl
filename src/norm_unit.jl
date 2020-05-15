@@ -13,13 +13,13 @@ Plm_00(::LegendreUnitNorm, ::Type{T}) where T
 end
 
 @inline function
-Plm_μ(::LegendreUnitNorm, ::Type{T}, m::Integer) where T
-    return convert(T, 2m - 1)
+Plm_μ(::LegendreUnitNorm, ::Type{T}, l::Integer) where T
+    return convert(T, 2l - 1)
 end
 
 @inline function
-Plm_ν(::LegendreUnitNorm, ::Type{T}, m::Integer) where T
-    return convert(T, 2m + 1)
+Plm_ν(::LegendreUnitNorm, ::Type{T}, l::Integer) where T
+    return convert(T, 2l - 1)
 end
 
 @inline function
