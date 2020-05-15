@@ -27,7 +27,7 @@ function Plm_00 end
 
 Returns the coefficient ``μ_ℓ`` for the single-term recursion relation
 ```math
-    P_{ℓ+1}^{ℓ+1}(x) = -μ_{ℓ+1} \\sqrt{1-x^2} P_ℓ^ℓ(x)
+    P_ℓ^ℓ(x) = -μ_ℓ \\sqrt{1-x^2} P_{ℓ-1}^{ℓ-1}(x)
 ```
 where ``μ_ℓ`` is appropriate for the choice of normalization `N`.
 """
@@ -38,7 +38,7 @@ function Plm_μ end
 
 Returns the coefficient ``ν_ℓ`` for the single-term recursion relation
 ```math
-    P_{ℓ+1}^ℓ(x) = ν_{ℓ+1} x P_ℓ^ℓ(x)
+    P_ℓ^{ℓ-1}(x) = ν_ℓ x P_{ℓ-1}^{ℓ-1}(x)
 ```
 where ``ν_ℓ`` is appropriate for the choice of normalization `N`.
 """
@@ -49,7 +49,7 @@ function Plm_ν end
 
 Returns the coefficient ``α_ℓ^m`` for the two-term recursion relation
 ```math
-    P_{ℓ+1}^{m}(x) = α_{ℓ+1}^m x P_ℓ^m(x) - β_{ℓ+1}^m P_{ℓ-1}^m(x)
+    P_ℓ^m(x) = α_ℓ^m x P_{ℓ-1}^m(x) - β_ℓ^m P_{ℓ-2}^m(x)
 ```
 where ``α_ℓ^m`` is appropriate for the choice of normalization `N`.
 """
@@ -60,7 +60,7 @@ function Plm_α end
 
 Returns the coefficient ``β_ℓ^m`` for the two-term recursion relation
 ```math
-    P_{ℓ+1}^{m}(x) = α_{ℓ+1}^m x P_ℓ^m(x) - β_{ℓ+1}^m P_{ℓ-1}^m(x)
+    P_ℓ^m(x) = α_ℓ^m x P_{ℓ-1}^m(x) - β_ℓ^m P_{ℓ-2}^m(x)
 ```
 where ``β_ℓ^m`` is appropriate for the choice of normalization `N`.
 """
