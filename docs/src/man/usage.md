@@ -26,7 +26,7 @@ compute the spherical harmonics ``Y_{ℓm}(θ,ϕ)``:
 ```math
 \begin{align}
     \begin{aligned}
-    Y_{ℓm}(θ,ϕ) &≡ (-1)^m N_ℓ^m P_ℓ^m(\cos θ) e^{imϕ} \\
+    Y_{ℓm}(θ,ϕ) &≡ N_ℓ^m P_ℓ^m(\cos θ) e^{imϕ} \\
     &\text{where } N_ℓ^m ≡ \sqrt{\frac{2ℓ+1}{4π} \frac{(ℓ-m)!}{(ℓ+m)!}}
     \end{aligned}
 \end{align}
@@ -74,7 +74,7 @@ defined as
 ```math
 \begin{align}
     \begin{aligned}
-    Y_{ℓm}(θ,ϕ) &= (-1)^m λ_ℓ^m(\cos θ) e^{imϕ} \\
+    Y_{ℓm}(θ,ϕ) &= λ_ℓ^m(\cos θ) e^{imϕ} \\
     & \text{where } λ_ℓ^m(x) ≡ N_ℓ^m P_ℓ^m(x)
     \end{aligned}
 \end{align}
