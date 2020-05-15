@@ -54,14 +54,14 @@ mechanics and obeys the following properties:
   following recursion relations (given the initial condition ``P_0^0(x)``):
   ```math
   \begin{align}
-      (ℓ - m + 1)P_{ℓ+1}^m(x) &= (2ℓ+1)xP_ℓ^m(x) - (ℓ+m)P_{ℓ-1}^m(x)
-      \label{eqn:std_rr_2term}
-      \\
       P_{ℓ+1}^{ℓ+1}(x) &= -(2ℓ+1)\sqrt{1-x^2} P_ℓ^ℓ(x)
       \label{eqn:std_rr_1term_lm}
       \\
       P_{ℓ+1}^ℓ(x) &= x(2ℓ+1)P_ℓ^ℓ(x)
       \label{eqn:std_rr_1term_l}
+      \\
+      (ℓ - m + 1)P_{ℓ+1}^m(x) &= (2ℓ+1)xP_ℓ^m(x) - (ℓ+m)P_{ℓ-1}^m(x)
+      \label{eqn:std_rr_2term}
   \end{align}
   ```
 
