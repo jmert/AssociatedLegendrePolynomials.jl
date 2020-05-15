@@ -27,10 +27,10 @@ implement.
 |:--------------------------------------- |:----------------------------------------------------------------------------------------------- |
 | [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                                          |
 | [`Legendre.Plm_00()`](@ref)             | Value of ``N_0^0 P_0^0(x)`` for the given normalization                                         |
-| [`Legendre.Plm_μ()`](@ref)              | Coefficient ``μ_ℓ`` for the 1-term r.r. boosting ``ℓ → ℓ+1`` and ``m → m+1`` where ``m = \ell`` |
-| [`Legendre.Plm_ν()`](@ref)              | Coefficient ``ν_ℓ`` for the 1-term r.r. boosting ``ℓ → ℓ+1``                                    |
-| [`Legendre.Plm_α()`](@ref)              | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ,m)`` term                          |
-| [`Legendre.Plm_β()`](@ref)              | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term                        |
+| [`Legendre.Plm_μ()`](@ref)              | Coefficient ``μ_ℓ`` for the 1-term r.r. boosting ``ℓ-1 → ℓ`` and ``m-1 → m`` where ``m = \ell`` |
+| [`Legendre.Plm_ν()`](@ref)              | Coefficient ``ν_ℓ`` for the 1-term r.r. boosting ``ℓ-1 → ℓ``                                    |
+| [`Legendre.Plm_α()`](@ref)              | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term                          |
+| [`Legendre.Plm_β()`](@ref)              | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-2,m)`` term                        |
 
 | Optional interfaces                 | Brief description                      |
 |:----------------------------------- |:-------------------------------------- |
@@ -50,19 +50,24 @@ spherical harmonic normalization baked in.
 \end{align}
 ```
 
+[^1]:
+    Note that here we have shifted the indices by 1 compared to the definitions
+    in the introduction such that the left-hand side is always written in terms
+    of degree ``ℓ`` rather than ``ℓ+1``.
+
 Baking in the normalization happens by changing the coefficients in the recursion
-relations given in the [Definitions and Properties](@ref legendre_defn) section.
+relations given in the [Definitions and Properties](@ref legendre_defn) section[^1].
 For our purposes, they take on the form:
 ```math
 \begin{align}
-    P_{\ell+1}^{\ell+1}(x) &= \mu_{\ell+1} \sqrt{1-x^2} P_\ell^\ell(x)
+    P_ℓ^ℓ(x) &= \mu_ℓ \sqrt{1-x^2} P_{ℓ-1}^{ℓ-1}(x)
         \label{eqn:cus_rr_1term_lm}
     \\
-    P_{\ell+1}^\ell(x) &= \nu_{\ell+1} x P_\ell^\ell(x)
+    P_ℓ^{ℓ-1}(x) &= \nu_ℓ x P_{ℓ-1}^{ℓ-1}(x)
         \label{eqn:cus_rr_1term_l}
     \\
-    P_{\ell+1}^m(x) &= \alpha_{\ell+1}^m x P_\ell^m(x)
-        - \beta_{\ell+1}^m P_{\ell-1}^m(x)
+    P_ℓ^m(x) &= \alpha_ℓ^m x P_{ℓ-1}^m(x)
+        - \beta_ℓ^m P_{ℓ-2}^m(x)
         \label{eqn:cus_rr_2term}
 \end{align}
 ```
@@ -80,37 +85,38 @@ For the standard (unity) normalization, these take on the values
 by simply identifying the coefficients from Eqns.
 ``\ref{eqn:cus_rr_2term}``–``\ref{eqn:cus_rr_1term_l}`` on each of the ``P_ℓ^m(x)`` terms
 on the right hand side.
+
 For other normalizations, we multiply through by the normalization factor
 appropriate for the left-hand side of the equations, rearrange terms to
 correctly normalize the terms on the right, and identify the coefficients left
 over.
 For example, ``α_ℓ^m`` and ``β_ℓ^m`` for ``λ_ℓ^m(x)`` are determined by starting with
-Eq. ``\ref{eqn:cus_rr_2term}`` and multiply through by ``N_{ℓ+1}^m``.
-The left-hand side by definition is ``λ_{ℓ+1}^m``, leaving us with
+Eq. ``\ref{eqn:cus_rr_2term}`` and multiply through by ``N_ℓ^m``.
+The left-hand side by definition is ``λ_ℓ^m``, leaving us with
 ```math
 \begin{align}
     \begin{split}
-        λ_{ℓ+1}^m &= \frac{2ℓ + 1}{ℓ - m + 1} x
-            \sqrt{\frac{2ℓ+3}{4π} \frac{(ℓ-m+1)!}{(ℓ+m+1)!}} P_ℓ^m(x) -
+        λ_ℓ^m &= \frac{2ℓ-1}{ℓ-m} x
+            \sqrt{\frac{2ℓ+1}{4π} \frac{(ℓ-m)!}{(ℓ+m)!}} P_{ℓ-1}^m(x) -
             \\
-            &\quad\quad \frac{ℓ+m}{ℓ-m+1} \sqrt{\frac{2ℓ+3}{4π}
-            \frac{(ℓ-m+1)!}{(ℓ+m+1)!}} P_{ℓ-1}^m(x)
+            &\quad\quad \frac{ℓ+m-1}{ℓ-m} \sqrt{\frac{2ℓ+1}{4π}
+            \frac{(ℓ-m)!}{(ℓ+m)!}} P_{ℓ-2}^m(x)
     \end{split}
 \end{align}
 ```
 Through judicious use of algebra, the terms on the right-hand side can be manipulated
-to gather terms of the form ``N_ℓ^m P_ℓ^m(x)`` and ``N_{ℓ-1}^m P_{ℓ-1}^m(x)``, leaving us
-with
+to gather terms of the form ``N_{ℓ-1}^m P_{ℓ-1}^m(x)`` and
+``N_{ℓ-2}^m P_{ℓ-2}^m(x)``, leaving us with
 ```math
 \begin{align}
-    λ_{ℓ+1}^m &= \sqrt{\frac{2ℓ+3}{2ℓ-1} \frac{4ℓ^2 - 1}{(ℓ+1)^2 - m^2}} x
-        λ_ℓ^m(x) -
-        \sqrt{\frac{2ℓ+3}{2ℓ-1} \frac{ℓ^2 - m^2}{(ℓ+1)^2 - m^2}}
-        λ_{ℓ-1}^m(x)
+    λ_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{4(ℓ-1)^2 - 1}{ℓ^2 - m^2}} x
+        λ_{ℓ-1}^m(x) -
+        \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{(ℓ-1)^2 - m^2}{ℓ^2 - m^2}}
+        λ_{ℓ-2}^m(x)
 \end{align}
 ```
-We identify each of the two square root terms as ``α_{ℓ+1}^m`` and ``β_{ℓ+1}^m`` since
-they are the cofficients appropriate for generating ``λ_{ℓ+1}^m(x)``.
+We identify each of the two square root terms as ``α_ℓ^m`` and ``β_ℓ^m`` since
+they are the cofficients appropriate for generating ``λ_ℓ^m(x)``.
 Doing so with the other two recurrence relation equations, we obtain:
 ```math
 \begin{align}
