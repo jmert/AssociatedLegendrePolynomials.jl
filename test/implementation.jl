@@ -113,3 +113,16 @@ end
     @test size(Plm.(0:LMAX, 0, z)) == (sz..., LMAX+1)
     @test size(Plm.(0:LMAX, 0:LMAX, z)) == (sz..., LMAX+1, LMAX+1)
 end
+
+@testset "Arguments with offset axes $axs" for axs in ((-5:5,), (-5:5, -5:5))
+    using OffsetArrays
+
+    X = reshape(collect(range(-1, 1, length=prod(length.(axs)))), axs...)
+    Λ  = zeros(Float64, length.(axs)..., LMAX+1, LMAX+1)
+    Λ′ = zeros(Float64, axes(X)..., LMAX+1, LMAX+1)
+
+    λlm!(Λ, LMAX, LMAX, parent(X))
+    @test λlm!(Λ′, LMAX, LMAX, X) isa typeof(Λ′) # Just verify no errors
+    @test parent(Λ′) == Λ                        # Equality of values
+    @test_throws DimensionMismatch λlm(Λ, LMAX, LMAX, X) # Mismatched axes
+end
