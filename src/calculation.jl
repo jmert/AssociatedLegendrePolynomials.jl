@@ -1,32 +1,43 @@
-@noinline function _chkdomain(lmax, mmax)
-    0 ≤ lmax || throw(DomainError(lmax, "degree lmax must be non-negative"))
-    0 ≤ mmax ≤ lmax || throw(DomainError(mmax,
-            "order mmax must be non-negative and less than or equal to lmax"))
+import Base: checkindex, checkbounds_indices, OneTo
+
+function _chkdomain(lmax, mmax)
+    @noinline _chkdomain_throw_lmax(l) = throw(DomainError(l, "degree lmax must be non-negative"))
+    @noinline _chkdomain_throw_mmax(m) = throw(DomainError(m, "order mmax must be non-negative and less than or equal to lmax"))
+
+    0 ≤ lmax || _chkdomain_throw_lmax(lmax)
+    0 ≤ mmax ≤ lmax || _chkdomain_throw_mmax(mmax)
     nothing
 end
-@noinline function _chkbounds(Λ, lmax, mmax, x)
+
+function _chkbounds(Λ, lmax, mmax, x)
+    @noinline _chkbounds_throw_dims(M, N) = throw(DimensionMismatch(
+        "Output has $M dimensions, expected $N to $(N+2)"))
+    @noinline _chkbounds_throw_axes(Λ, x) = begin
+        throw(DimensionMismatch(
+            "Output has leading axes $(ntuple(i -> axes(Λ,i), ndims(x))), expected $(axes(x))"))
+    end
+    @noinline _chkbounds_throw_lmax() = throw(DimensionMismatch(
+            "lmax incompatible with output array axes"))
+    @noinline _chkbounds_throw_mmax() = throw(DimensionMismatch(
+            "mmax incompatible with output array axes"))
+
     M = ndims(Λ)
     N = ndims(x)
-    if !(0 ≤ M - N ≤ 2)
-        throw(DimensionMismatch(
-                "Output storage has $M dimensions; expected $N to $(N+2)"))
-    end
+    (0 ≤ M - N ≤ 2) || _chkbounds_throw_dims(M, N)
     # Leading dimensions of Λ are storage for the same dimensions as x
+    axesΛ = axes(Λ)
     if N > 0
-        szΛ = ntuple(i -> size(Λ, i), N)
-        szx = size(x)
-        all(szΛ .>= szx) || throw(DimensionMismatch(
-                "Output storage has leading dimensions of size $szΛ, need at least $szx"))
+        axΛ = ntuple(i -> axesΛ[i], N)
+        axx = axes(x)
+        checkbounds_indices(Bool, axΛ, axx) || _chkbounds_throw_axes(Λ, x)
     end
     # Trailing dimensions of Λ are storage for range of ell and m, as needed
-    dimΛ = ntuple(i -> size(Λ, i+N), M-N)
-    if length(dimΛ) > 0
-        lmax < dimΛ[1] || throw(DimensionMismatch(
-                "lmax incompatible with output array size"))
+    dimΛ = ntuple(i -> axesΛ[i+N], M-N)
+    if M - N > 0
+        checkindex(Bool, dimΛ[1], OneTo(lmax+1)) || _chkbounds_throw_lmax()
     end
-    if length(dimΛ) > 1
-        mmax < dimΛ[2] || throw(DimensionMismatch(
-                "mmax incompatible with output array size"))
+    if M - N > 1
+        checkindex(Bool, dimΛ[2], OneTo(mmax+1)) || _chkbounds_throw_mmax()
     end
     nothing
 end
@@ -49,7 +60,7 @@ end
     return Λ
 end
 
-@inline _similar(A::AbstractArray, ::Type{T}=eltype(A)) where {T} = similar(A, T, size(A))
+@inline _similar(A::AbstractArray, ::Type{T}=eltype(A)) where {T} = similar(A, T, axes(A))
 @inline _similar(A::Number, ::Type{T}=typeof(A)) where {T}        = Scalar{T}()
 @propagate_inbounds function _legendre_impl!(norm::AbstractLegendreNorm, Λ, lmax, mmax, x)
     TΛ = eltype(Λ)
@@ -71,8 +82,7 @@ end
 
     M = ndims(x)
     N = ndims(Λ) - M
-    sz = size(x)
-    I = CartesianIndices(sz)
+    I = CartesianIndices(axes(x))
     mmax′ = mmax - mod(unsigned(mmax), 2)
 
     local μ₁, μ₂
