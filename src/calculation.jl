@@ -92,41 +92,42 @@ end
         pmp1 = pmp2 # name alias
 
         # First iteration: takes even m to m+1
+        m′ = m
         if N == 2
-            Λ[I,m+1,m+1] = pm
-        elseif N == 1 && m == mmax
-            Λ[I,m+1] = pm
-        elseif N == 0 && lmax == m
+            Λ[I,m′+1,m′+1] = pm
+        elseif N == 1 && m′ == mmax
+            Λ[I,m′+1] = pm
+        elseif N == 0
             Λ[I] = pm
-            return Λ
         end
-        if N == 2 || m == mmax
-            # 1-term recurrence relation taking (m,m) -> (m,m+1)
-            ν = Plm_ν(norm, T, m+1)
+
+        if N == 2 || m′ == mmax
+            # 1-term recurrence relation taking (l-1,l-1) -> (l,l-1) where l == m′ == m
+            l = m′ + 1
+            ν = Plm_ν(norm, T, l)
             @. pl   = pm
             @. plp1 = ν * z * pl
-            for l in m+1:lmax
+            for l in m′+1:lmax
                 plm1, pl, plp1 = pl, plp1, plm1
                 if l < lmax
                     # 2-term recurrence relation taking (l,m) -> (l+1, m)
-                    α = Plm_α(norm, T, l+1, m)
-                    β = Plm_β(norm, T, l+1, m)
+                    α = Plm_α(norm, T, l+1, m′)
+                    β = Plm_β(norm, T, l+1, m′)
                     @. plp1 = α * z * pl - β * plm1
                 end
 
                 if N == 2
-                    Λ[I,l+1,m+1] = pl
+                    Λ[I,l+1,m′+1] = pl
                 elseif N == 1
                     Λ[I,l+1] = pl
                 elseif N == 0 && l == lmax
                     Λ[I] = pl
-                    return
                 end
             end
         end
-        if m < mmax
+        if m′ < mmax
             # 1-term recurrence relation taking (m,m) -> (m+1,m+1)
-            μ₁ = Plm_μ(norm, T, m+1)
+            μ₁ = Plm_μ(norm, T, m′+1)
             @. pmp1 = -μ₁ * y¹ * pm
         end
 
@@ -134,41 +135,42 @@ end
 
         # Second iteration: takes even m to m+2
 
+        m′ = m + 1
         if N == 2
-            Λ[I,m+2,m+2] = pmp1
-        elseif N == 1 && m+1 == mmax
-            Λ[I,m+2] = pmp1
-        elseif N == 0 && m+1 == lmax
+            Λ[I,m′+1,m′+1] = pmp1
+        elseif N == 1 && m′ == mmax
+            Λ[I,m′+1] = pmp1
+        elseif N == 0
             Λ[I] = pmp1
-            return Λ
         end
-        if N == 2 || m+1 == mmax
-            # 1-term recurrence relation taking (m+1,m+1) -> (m+1,m+2)
-            ν = Plm_ν(norm, T, m+2)
+
+        if N == 2 || m′ == mmax
+            # 1-term recurrence relation taking (l-1,l-1) -> (l,l-1) where l == m′ == m + 1
+            l = m′ + 1
+            ν = Plm_ν(norm, T, l)
             @. pl   = pmp1
             @. plp1 = ν * z * pl
-            for l in m+2:lmax
+            for l in m′+1:lmax
                 plm1, pl, plp1 = pl, plp1, plm1
                 if l < lmax
                     # 2-term recurrence relation taking (l,m+1) -> (l+1, m+1)
-                    α = Plm_α(norm, T, l+1, m+1)
-                    β = Plm_β(norm, T, l+1, m+1)
+                    α = Plm_α(norm, T, l+1, m′)
+                    β = Plm_β(norm, T, l+1, m′)
                     @. plp1 = α * z * pl - β * plm1
                 end
 
                 if N == 2
-                    Λ[I,l+1,m+2] = pl
+                    Λ[I,l+1,m′+1] = pl
                 elseif N == 1
                     Λ[I,l+1] = pl
-                elseif N == 0 && l == lmax
+                elseif N == 0
                     Λ[I] = pl
-                    return
                 end
             end
         end
-        if m+1 < mmax
+        if m′ < mmax
             # 1-term recurrence relation applied twice taking (m,m) -> (m+2,m+2)
-            μ₂ = Plm_μ(norm, T, m+2)
+            μ₂ = Plm_μ(norm, T, m′+1)
             @. pmp2 = μ₁ * μ₂ * y² * pm
         end
     end
