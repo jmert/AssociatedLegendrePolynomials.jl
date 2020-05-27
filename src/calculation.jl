@@ -1,4 +1,4 @@
-import Base: checkindex, checkbounds_indices, OneTo
+import Base: checkindex, checkbounds_indices, OneTo, Slice
 
 function _chkdomain(lmax, mmax)
     @noinline _chkdomain_throw_lmax(l) = throw(DomainError(l, "degree lmax must be non-negative"))
@@ -82,7 +82,7 @@ end
 
     M = ndims(x)
     N = ndims(Λ) - M
-    I = CartesianIndices(axes(x))
+    I = CartesianIndices(map(Slice, axes(x)))
     mmax′ = mmax - mod(unsigned(mmax), 2)
 
     local μ₁, μ₂
