@@ -72,9 +72,9 @@ end
     y²   = _similar(x, T)
     pm   = _similar(x, T)
     pmp2 = _similar(x, T)
+    plm2 = _similar(x, T)
     plm1 = _similar(x, T)
     pl   = _similar(x, T)
-    plp1 = _similar(x, T)
 
     @. z = convert(T, x)
     @. y² = -fma(z, z, -one(T))
@@ -100,21 +100,30 @@ end
         elseif N == 0
             Λ[I] = pm
         end
+        m′ == lmax && break # exit for lmax == mmax == m′
 
         if N == 2 || m′ == mmax
             # 1-term recurrence relation taking (l-1,l-1) -> (l,l-1) where l == m′ == m
             l = m′ + 1
             ν = Plm_ν(norm, T, l)
-            @. pl   = pm
-            @. plp1 = ν * z * pl
-            for l in m′+1:lmax
-                plm1, pl, plp1 = pl, plp1, plm1
-                if l < lmax
-                    # 2-term recurrence relation taking (l,m) -> (l+1, m)
-                    α = Plm_α(norm, T, l+1, m′)
-                    β = Plm_β(norm, T, l+1, m′)
-                    @. plp1 = α * z * pl - β * plm1
-                end
+            @. plm1 = pm
+            @. pl   = ν * z * plm1
+            if N == 2
+                Λ[I,l+1,m′+1] = pl
+            elseif N == 1
+                Λ[I,l+1] = pl
+            elseif N == 0 && l == lmax
+                Λ[I] = pl
+            end
+            # no exit since following loop will be skipped for
+            #   lmax == mmax + 1
+
+            for l in m′+2:lmax
+                plm2, plm1, pl = plm1, pl, plm2
+                # 2-term recurrence relation taking (l-1,m′) -> (l, m′)
+                α = Plm_α(norm, T, l, m′)
+                β = Plm_β(norm, T, l, m′)
+                @. pl = α * z * plm1 - β * plm2
 
                 if N == 2
                     Λ[I,l+1,m′+1] = pl
@@ -125,13 +134,11 @@ end
                 end
             end
         end
-        if m′ < mmax
-            # 1-term recurrence relation taking (m,m) -> (m+1,m+1)
-            μ₁ = Plm_μ(norm, T, m′+1)
-            @. pmp1 = -μ₁ * y¹ * pm
-        end
+        m′ == mmax && break # skip calculating (m′,m′) where m′ == mmax + 1
 
-        m == mmax == mmax′ && break
+        # 1-term recurrence relation taking (m,m) -> (m+1,m+1)
+        μ₁ = Plm_μ(norm, T, m′+1)
+        @. pmp1 = -μ₁ * y¹ * pm
 
         # Second iteration: takes even m to m+2
 
@@ -143,21 +150,30 @@ end
         elseif N == 0
             Λ[I] = pmp1
         end
+        m′ == lmax && break # exit for lmax == mmax == m′
 
         if N == 2 || m′ == mmax
             # 1-term recurrence relation taking (l-1,l-1) -> (l,l-1) where l == m′ == m + 1
             l = m′ + 1
             ν = Plm_ν(norm, T, l)
-            @. pl   = pmp1
-            @. plp1 = ν * z * pl
-            for l in m′+1:lmax
-                plm1, pl, plp1 = pl, plp1, plm1
-                if l < lmax
-                    # 2-term recurrence relation taking (l,m+1) -> (l+1, m+1)
-                    α = Plm_α(norm, T, l+1, m′)
-                    β = Plm_β(norm, T, l+1, m′)
-                    @. plp1 = α * z * pl - β * plm1
-                end
+            @. plm1 = pmp1
+            @. pl   = ν * z * plm1
+            if N == 2
+                Λ[I,l+1,m′+1] = pl
+            elseif N == 1
+                Λ[I,l+1] = pl
+            elseif N == 0
+                Λ[I] = pl
+            end
+            # no exit since following loop will be skipped for
+            #   lmax == mmax + 1
+
+            for l in m′+2:lmax
+                plm2, plm1, pl = plm1, pl, plm2
+                # 2-term recurrence relation taking (l-1,m′) -> (l, m′)
+                α = Plm_α(norm, T, l, m′)
+                β = Plm_β(norm, T, l, m′)
+                @. pl = α * z * plm1 - β * plm2
 
                 if N == 2
                     Λ[I,l+1,m′+1] = pl
@@ -168,11 +184,11 @@ end
                 end
             end
         end
-        if m′ < mmax
-            # 1-term recurrence relation applied twice taking (m,m) -> (m+2,m+2)
-            μ₂ = Plm_μ(norm, T, m′+1)
-            @. pmp2 = μ₁ * μ₂ * y² * pm
-        end
+        m′ == mmax && break # skip calculating (m′,m′) where m′ == mmax + 1
+
+        # 1-term recurrence relation applied twice taking (m,m) -> (m+2,m+2)
+        μ₂ = Plm_μ(norm, T, m′+1)
+        @. pmp2 = μ₁ * μ₂ * y² * pm
     end
 
     return Λ
