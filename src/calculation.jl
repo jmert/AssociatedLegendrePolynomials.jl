@@ -76,23 +76,27 @@ end
     plm1 = _similar(x, T)
     pl   = _similar(x, T)
 
-    @. z = convert(T, x)
-    @. y² = -fma(z, z, -one(T))
-    @. y¹ = sqrt(y²)
-
+    local μ₁, μ₂
     M = ndims(x)
     N = ndims(Λ) - M
     I = CartesianIndices(map(Slice, axes(x)))
 
-    local μ₁, μ₂
-    pm .= Plm_00(norm, T)
+    @simd for ii in I
+        z[ii]  = convert(T, x[ii])
+        y²[ii] = -fma(z[ii], z[ii], -one(T))
+        y¹[ii] = sqrt(y²[ii])
+    end
+
+    fill!(pm, Plm_00(norm, T))
     for m in 0:mmax
-        if N == 2
-            Λ[I,m+1,m+1] = pm
-        elseif N == 1 && m == mmax
-            Λ[I,m+1] = pm
-        elseif N == 0 && m == lmax # == mmax
-            Λ[I] = pm
+        @simd for ii in I
+            if N == 2
+                Λ[ii,m+1,m+1] = pm[ii]
+            elseif N == 1 && m == mmax
+                Λ[ii,m+1] = pm[ii]
+            elseif N == 0 && m == lmax # == mmax
+                Λ[ii] = pm[ii]
+            end
         end
         m == lmax && break # exit for lmax == mmax == m
 
@@ -100,14 +104,16 @@ end
             # 1-term recurrence relation taking (l-1,l-1) -> (l,l-1) where l == m == m
             l = m + 1
             ν = Plm_ν(norm, T, l)
-            @. plm1 = pm
-            @. pl   = ν * z * plm1
-            if N == 2
-                Λ[I,l+1,m+1] = pl
-            elseif N == 1
-                Λ[I,l+1] = pl
-            elseif N == 0 && l == lmax
-                Λ[I] = pl
+            @simd for ii in I
+                plm1[ii] = pm[ii]
+                pl[ii]   = ν * z[ii] * plm1[ii]
+                if N == 2
+                    Λ[ii,l+1,m+1] = pl[ii]
+                elseif N == 1
+                    Λ[ii,l+1] = pl[ii]
+                elseif N == 0 && l == lmax
+                    Λ[ii] = pl[ii]
+                end
             end
             # no exit since following loop will be skipped for
             #   lmax == mmax + 1
@@ -117,14 +123,15 @@ end
                 # 2-term recurrence relation taking (l-1,m) -> (l, m)
                 α = Plm_α(norm, T, l, m)
                 β = Plm_β(norm, T, l, m)
-                @. pl = α * z * plm1 - β * plm2
-
-                if N == 2
-                    Λ[I,l+1,m+1] = pl
-                elseif N == 1
-                    Λ[I,l+1] = pl
-                elseif N == 0 && l == lmax
-                    Λ[I] = pl
+                @simd for ii in I
+                    pl[ii] = α * z[ii] * plm1[ii] - β * plm2[ii]
+                    if N == 2
+                        Λ[ii,l+1,m+1] = pl[ii]
+                    elseif N == 1
+                        Λ[ii,l+1] = pl[ii]
+                    elseif N == 0 && l == lmax
+                        Λ[ii] = pl[ii]
+                    end
                 end
             end
         end
@@ -135,11 +142,15 @@ end
             pmm2, pm = pm, pmm2
             # Takes even m-2 to odd m-1 for following iteration where m will be odd
             μ₁ = Plm_μ(norm, T, m+1)
-            @. pm = -μ₁ * y¹ * pmm2
+            @simd for ii in I
+                pm[ii] = -μ₁ * y¹[ii] * pmm2[ii]
+            end
         else
             # Takes even m-2 to even m for following iteration where m will be even again
             μ₂ = Plm_μ(norm, T, m+1)
-            @. pm = μ₁ * μ₂ * y² * pmm2
+            @simd for ii in I
+                pm[ii] = μ₁ * μ₂ * y²[ii] * pmm2[ii]
+            end
         end
     end
 
