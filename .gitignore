@@ -1,7 +1,13 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
+
 Manifest.toml
+
 docs/build/
 docs/site/
+
+bench-*.json
+bench/params.json
+
 **/.ipynb_checkpoints/
