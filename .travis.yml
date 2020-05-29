@@ -2,11 +2,6 @@
 language: julia
 os:
   - linux
-julia:
-  - 1.5
-  - 1.4
-  - 1.2
-  - nightly
 branches:
   only:
     - master
@@ -21,9 +16,11 @@ jobs:
   fast_finish: true
 
   include:
-
-    - julia: # defaults to first in list above
+    - julia: nightly
+    - julia: 1.5
       codecov: true
+    - julia: 1.4
+    - julia: 1.2
 
     - stage: Documentation
       julia: 1.2
