@@ -102,6 +102,19 @@ end
 end
 
 ################################
+# Complex domain
+################################
+
+# Trivial case: real-only complex arguments should be identical to the real case
+@testset "Complex arguments, real axis ($T)" for T in NumTypes
+    LMAX = 10
+    x = collect(range(-one(T), one(T), length=100))
+    z = complex(x)
+    @test Plm.(0:LMAX, 0:LMAX, x) == real.(Plm.(0:LMAX, 0:LMAX, z))
+    @test λlm.(0:LMAX, 0:LMAX, x) == real.(λlm.(0:LMAX, 0:LMAX, z))
+end
+
+################################
 # Other analytic checks / issues
 ################################
 

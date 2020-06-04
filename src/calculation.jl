@@ -60,6 +60,34 @@ end
     return Λ
 end
 
+"""
+    _fma(x, y, z)
+
+Similar to `Base.fma` but defined for `Complex` arguments such that if all arguments are
+on the real axis, the result of `_fma(x, y, z) === _fma(real(x), real(y), real(z)) + 0im`.
+
+!!! note
+    The total operation for generic complex arguments is not fused but rather
+    proceeds via a series of FMA instructions (which include intermediate
+    rounding) --- the fusing is only strictly true for the all-real-axis case.
+"""
+function _fma end
+# Following definitions should be complete, but we comment out most of them since they
+# are unused.
+#_fma(z::Complex, w::Complex, x::Complex) =
+#    Complex(_fma(real(z), real(w), -_fma(imag(z), imag(w), -real(x))),
+#            _fma(real(z), imag(w),  _fma(imag(z), real(w),  imag(x))))
+_fma(z::Complex, w::Complex, x::Real) =
+    Complex(_fma(real(z), real(w), -_fma(imag(z), imag(w), -x)),
+            _fma(real(z), imag(w), imag(z) * real(w)))
+#_fma(x::Real, z::Complex, y::Number) = _fma(z, x, y)
+#_fma(z::Complex, x::Real, y::Real) = Complex(_fma(real(z),x,y), imag(z)*x)
+#_fma(z::Complex, x::Real, w::Complex) =
+#    Complex(_fma(real(z),x,real(w)), _fma(imag(z),x,imag(w)))
+#_fma(x::Real, y::Real, z::Complex) = Complex(_fma(x,y,real(z)), imag(z))
+# Then cascade back to Base.fma
+_fma(x, y, z) = Base.fma(x, y, z)
+
 @inline _similar(A::AbstractArray, ::Type{T}=eltype(A)) where {T} = similar(A, T, axes(A))
 @inline _similar(A::Number, ::Type{T}=typeof(A)) where {T}        = Scalar{T}()
 @propagate_inbounds function _legendre_impl!(norm::AbstractLegendreNorm, Λ, lmax, mmax, x)
@@ -83,7 +111,7 @@ end
 
     @simd for ii in I
         z[ii]  = convert(T, x[ii])
-        y²[ii] = -fma(z[ii], z[ii], -one(T))
+        y²[ii] = -_fma(z[ii], z[ii], -one(real(T)))
         y¹[ii] = sqrt(y²[ii])
     end
 
@@ -103,7 +131,7 @@ end
         if N == 2 || m == mmax
             # 1-term recurrence relation taking (l-1,l-1) -> (l,l-1) where l == m == m
             l = m + 1
-            ν = Plm_ν(norm, T, l)
+            ν = Plm_ν(norm, real(T), l)
             @simd for ii in I
                 plm1[ii] = pm[ii]
                 pl[ii]   = ν * z[ii] * plm1[ii]
@@ -121,8 +149,8 @@ end
             for l in m+2:lmax
                 plm2, plm1, pl = plm1, pl, plm2
                 # 2-term recurrence relation taking (l-1,m) -> (l, m)
-                α = Plm_α(norm, T, l, m)
-                β = Plm_β(norm, T, l, m)
+                α = Plm_α(norm, real(T), l, m)
+                β = Plm_β(norm, real(T), l, m)
                 @simd for ii in I
                     pl[ii] = α * z[ii] * plm1[ii] - β * plm2[ii]
                     if N == 2
@@ -141,13 +169,13 @@ end
         if iseven(m)
             pmm2, pm = pm, pmm2
             # Takes even m-2 to odd m-1 for following iteration where m will be odd
-            μ₁ = Plm_μ(norm, T, m+1)
+            μ₁ = Plm_μ(norm, real(T), m+1)
             @simd for ii in I
                 pm[ii] = -μ₁ * y¹[ii] * pmm2[ii]
             end
         else
             # Takes even m-2 to even m for following iteration where m will be even again
-            μ₂ = Plm_μ(norm, T, m+1)
+            μ₂ = Plm_μ(norm, real(T), m+1)
             @simd for ii in I
                 pm[ii] = μ₁ * μ₂ * y²[ii] * pmm2[ii]
             end
