@@ -18,12 +18,12 @@ end
 
 @inline function
 Plm_μ(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
-    return sqrt(one(T) + inv(convert(T, 2l)))
+    return @fastmath(sqrt)(one(T) + inv(convert(T, 2l)))
 end
 
 @inline function
 Plm_ν(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
-    return sqrt(convert(T, 2l + 1))
+    return @fastmath(sqrt)(convert(T, 2l + 1))
 end
 
 @inline function
@@ -33,7 +33,7 @@ Plm_α(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     # Write factors in two pieces to make compiler's job easier. In the case where
     # both Plm_α and Plm_β are called and inlined, the next line from both functions
     # should be merged and shared.
-    fac1 = (2lT + 1) * inv((2lT - 3) * (lT^2 - mT^2))
+    fac1 = (2lT + 1) / ((2lT - 3) * (lT^2 - mT^2))
     fac2 = 4*(lT - 1)^2 - 1
     @fastmath return sqrt(fac1 * fac2)
 end
@@ -45,7 +45,7 @@ Plm_β(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     # Write factors in two pieces to make compiler's job easier. In the case where
     # both Plm_α and Plm_β are called and inlined, the next line from both functions
     # should be merged and shared.
-    fac1 = (2lT + 1) * inv((2lT - 3) * (lT^2 - mT^2))
+    fac1 = (2lT + 1) / ((2lT - 3) * (lT^2 - mT^2))
     fac2 = (lT - 1)^2 - mT^2
     @fastmath return sqrt(fac1 * fac2)
 end
