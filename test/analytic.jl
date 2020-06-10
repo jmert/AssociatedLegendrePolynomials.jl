@@ -118,11 +118,24 @@ end
 # Other analytic checks / issues
 ################################
 
-@testset "Numerical stability (issue CMB.jl#11)" begin
+@testset "Numerical stability/accuracy" begin
+    # issue CMB.jl#11
+    #   Overall accuracy --- fixed by adding FMA y=(1-x^2) and pairwise diagonal iteration
     x = sind(-57.5)
     lmax = 3 * 720
     Λ = λlm.(0:lmax, 0:lmax, x)
     # The amplitude bound of 1.5 is a very rough limit --- simply checking for
     # unbounded growth.
     @test all(abs.(Λ[end,:]) .< 1.5)
+
+    # PR#16
+    #   Increase accuracy of μ coefficient for spherical norm.
+    #   Also test ν, and both already equivalent for unit norm.
+    @testset "coeffs μ, ν ($norm)" for norm in (LegendreSphereNorm(), LegendreUnitNorm())
+        lrng = 1:30_000
+        μ(T, l) = Legendre.Plm_μ(norm, T, l)
+        ν(T, l) = Legendre.Plm_ν(norm, T, l)
+        @test μ.(Float64, lrng) == Float64.(μ.(BigFloat, lrng))
+        @test ν.(Float64, lrng) == Float64.(ν.(BigFloat, lrng))
+    end
 end

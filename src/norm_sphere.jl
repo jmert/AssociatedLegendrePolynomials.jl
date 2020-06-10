@@ -18,7 +18,31 @@ end
 
 @inline function
 Plm_μ(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
-    return @fastmath(sqrt)(one(T) + inv(convert(T, 2l)))
+    # The direct derivation of the normalization constant gives
+    #     return sqrt(one(T) + inv(convert(T, 2l)))
+    # but when comparing results for T ∈ (Float64,BigFloat), the Float64 results differ by
+    # ±1 ulp at various points.
+    #
+    # Instead, consider the following which limits to 0 (i.e. as (2l)^-1) rather than 1.
+    # ```math
+    #     μ'_ℓ = μ_ℓ - 1 = \sqrt{1 + \frac{1}{2ℓ}} - 1
+    # ```
+    # Now complete the square by multiplying through by a factor of unity to instead write
+    # ```math
+    #   \left( \sqrt{1 + \frac{1}{2ℓ}} - 1 \right) \times
+    #       \frac{\sqrt{1 + \frac{1}{2ℓ}} + 1}{\sqrt{1 + \frac{1}{2ℓ}} + 1}
+    #   = \frac{1}{\sqrt{2ℓ(2ℓ + 1) + 2ℓ}}
+    # ```
+    # Then rewrite ``μ_ℓ`` in terms of ``μ'_ℓ`` to arrive at
+    # ```math
+    #   μ_ℓ = 1 + \left[ 2ℓ + \sqrt{2ℓ(2ℓ + 1)} \right]^{-1}
+    # ```
+    # The square root is calculated on a growing quantity rather than one limiting to 1,
+    # so the significance of the low-order digits are better preserved. This expression
+    # allows Float64 calculations to be correctly rounded values when compared to BigFloat
+    # to very high ℓ.
+    xT = convert(T, 2l)
+    return one(T) + inv(xT + @fastmath(sqrt)(muladd(xT, xT, xT)))
 end
 
 @inline function

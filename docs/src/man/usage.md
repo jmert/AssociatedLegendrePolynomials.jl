@@ -83,7 +83,7 @@ defined as
 computing the normalization separately from the function:
 ```jldoctest PlmUsage
 julia> λlm(157, 150, 0.5)
-1.977888411320258e-5
+1.977888411320263e-5
 ```
 
 !!! note
