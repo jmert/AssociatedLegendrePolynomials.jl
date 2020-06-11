@@ -1,15 +1,31 @@
 using Random
-using LinearAlgebra: triu, diagind
+using LinearAlgebra: tril, triu, diagind
 import ..LMAX, ..Norms
 
-@testset "Equality of legendre! ($(typeof(N)) with argument type $T)" for N in Norms, T in NumTypes
+@testset "Equality of legendre[!] ($(typeof(N)) with argument type $T)" for N in Norms, T in NumTypes
     x = T(0.5)
+    # On the first pass, use out-of-place interface
+    #
+    # Fill the full matrix of values just once.
+    λ2 = legendre(N, 0:LMAX, 0:LMAX, x)
+    for m in 0:LMAX
+        # Check that vector filling function returns same answers
+        λ1 = legendre(N, 0:LMAX, m, x)
+        @test @view(λ1[m+1:end]) == @view(λ2[m+1:end,m+1])
+        for ℓ in m:LMAX
+            # Then check that scalar output matches as well.
+            @test legendre(N, ℓ, m, x) == λ1[ℓ+1]
+        end
+    end
+
+    # Now on the second pass, use the in-place interface
     λ2 = fill(T(NaN), LMAX+1, LMAX+1)
     λ1 = fill(T(NaN), LMAX+1)
-    λ0 = fill(T(NaN), )
+    λ0 = fill(T(NaN))
 
-    # Fill the full matrix of values just once
     legendre!(N, λ2, LMAX, LMAX, x)
+    # Test for equality in legendre! and legendre; wrap with tril to exlude NaNs used later
+    @test tril(λ2) == legendre(N, 0:LMAX, 0:LMAX, x)
     for m in 0:LMAX
         # Check that vector filling function returns same answers
         legendre!(N, λ1, LMAX, m, x)
@@ -20,9 +36,10 @@ import ..LMAX, ..Norms
             @test λ0[] == λ1[ℓ+1]
         end
     end
+
     # As an implementation detail, the outputs arrays are not cleared outside of the valid
-    # domain, so initial or previous values should remain. Check these invariants as a
-    # way to notice an implementation change.
+    # domain when operated up by the in-place functions, so initial or previous values
+    # should remain. Check these invariants as a way to notice an implementation change.
     #
     # For the matrix output, the upper triangle (excluding diagonal) should be all NaN.
     @test isequal(triu(λ2, 1), triu(fill(T(NaN), LMAX+1, LMAX+1), 1))
@@ -63,13 +80,17 @@ end
     #   4. Boost again in ℓ from (m+1,m) -> (m+2, m) [and further]
     cases = ((0,0), (1,1), (2,1), (3,1))
     @testset "(ℓ,m) == ($ℓ, $m)" for (ℓ, m) in cases
-        # Return type matches that of the argument, even though internal calculation
-        # will promote.
+        # Return type matches that of the argument for allocating interface, even though
+        # internal calculation will promote.
+        #
+        # single (ℓ,m)
         @test @inferred(legendre(N, ℓ, m, one(T))) isa T
-        # Also must handle single value, all ℓ for fixed m, and all (ℓ,m) up to
-        # (LMAX,LMAX)
         @test @inferred(legendre!(N, Λ₀, LMAX, LMAX, one(T))) isa typeof(Λ₀)
+        # all ℓ for fixed m
+        @test @inferred(legendre(N, 0:ℓ, m, one(T))) isa Vector{T}
         @test @inferred(legendre!(N, Λ₁, LMAX, LMAX, one(T))) isa typeof(Λ₁)
+        # all ℓ and m
+        @test @inferred(legendre(N, 0:ℓ, 0:m, one(T))) isa Matrix{T}
         @test @inferred(legendre!(N, Λ₂, LMAX, LMAX, one(T))) isa typeof(Λ₂)
     end
 end
@@ -90,40 +111,54 @@ end
     @test λ1[] == Float32(λ2[])
 end
 
-@testset "Broadcasting arguments" begin
+@testset "Broadcasting" begin
     x = 0.5
     z = range(-1, 1, length=10)
     Λ = zeros(length(z), LMAX + 1, LMAX + 1)
-    λlm!(Λ, LMAX, LMAX, z)
 
-    # Single (l,m) for single z
+    # Single (l,m)
     @test λlm.(LMAX, LMAX, x) == λlm(LMAX, LMAX, x)
-    # Single (l,m) over multiple z
-    @test λlm.(LMAX, LMAX, z) == Λ[:,LMAX+1,LMAX+1]
-    # All l for fixed m over multiple z
-    @test λlm.(0:LMAX, LMAX, z) == Λ[:,:,LMAX+1]
+    @test λlm.(LMAX, LMAX, z) == λlm(LMAX, LMAX, z)
+    # All l for fixed m
+    @test λlm.(0:LMAX, LMAX, x) == λlm(0:LMAX, LMAX, x)
+    @test λlm.(0:LMAX, LMAX, z) == λlm(0:LMAX, LMAX, z)
     # All l and m over multiple z
-    @test λlm.(0:LMAX, 0:LMAX, z) == Λ
+    @test λlm.(0:LMAX, 0:LMAX, x) == λlm(0:LMAX, 0:LMAX, x)
+    @test λlm.(0:LMAX, 0:LMAX, z) == λlm(0:LMAX, 0:LMAX, z)
 
-    # Shape-preservation of multi-dimensional arguments
-    sz = (5, 10)
-    z = collect(reshape(range(-1.0, 1.0, length=prod(sz)), sz))
-    @test size(Plm.(LMAX, 0, z)) == sz
-    @test size(Plm.(0:LMAX, 0, z)) == (sz..., LMAX+1)
-    @test size(Plm.(0:LMAX, 0:LMAX, z)) == (sz..., LMAX+1, LMAX+1)
+    # Test that the single (l,m) for scalar and vector arguments inferrs correctly, since
+    # the return is branched on whether the argument is 0-dimensional or not.
+    # Dot syntax is not a call expression, so have to test the broadcasted() call directly.
+    @test @inferred(Base.broadcasted(legendre, λlm, LMAX, LMAX, x)) isa Float64
+    @test @inferred(Base.broadcasted(legendre, λlm, LMAX, LMAX, z)) isa Vector{Float64}
 end
 
-@testset "Arguments with offset axes $axs" for axs in ((-5:5,), (-5:5, -5:5))
+@testset "Shape preservation ($(ndims(x))-dimensional array)" for x in (fill(1.0), ones(1), ones(1,1))
+    @test ndims(λlm(LMAX, LMAX, x)) == ndims(x)
+    @test ndims(λlm(0:LMAX, LMAX, x)) == ndims(x) + 1
+    @test ndims(λlm(0:LMAX, 0:LMAX, x)) == ndims(x) + 2
+
+    @test ndims(λlm.(LMAX, LMAX, x)) == ndims(x)
+    @test ndims(λlm.(0:LMAX, LMAX, x)) == ndims(x) + 1
+    @test ndims(λlm.(0:LMAX, 0:LMAX, x)) == ndims(x) + 2
+end
+
+@testset "Axes preservation (offset axes $axs)" for axs in ((-5:5,), (-5:5, -5:5))
     using OffsetArrays
+    using Base: OneTo
 
     X = reshape(collect(range(-1, 1, length=prod(length.(axs)))), axs...)
-    Λ  = zeros(Float64, length.(axs)..., LMAX+1, LMAX+1)
-    Λ′ = zeros(Float64, axes(X)..., LMAX+1, LMAX+1)
 
-    λlm!(Λ, LMAX, LMAX, parent(X))
-    @test λlm!(Λ′, LMAX, LMAX, X) isa typeof(Λ′) # Just verify no errors
-    @test parent(Λ′) == Λ                        # Equality of values
-    @test_throws DimensionMismatch λlm(Λ, LMAX, LMAX, X) # Mismatched axes
+    @test axes(λlm(LMAX, LMAX, X)) == axs
+    @test axes(λlm(0:LMAX, LMAX, X)) == (axs..., OneTo(LMAX+1))
+    @test axes(λlm(0:LMAX, 0:LMAX, X)) == (axs..., OneTo(LMAX+1), OneTo(LMAX+1))
 
-    @test axes(Λ′) == axes(λlm.(0:LMAX, 0:LMAX, X))
+    @test axes(λlm.(LMAX, LMAX, X)) == axs
+    @test axes(λlm.(0:LMAX, LMAX, X)) == (axs..., OneTo(LMAX+1))
+    @test axes(λlm.(0:LMAX, 0:LMAX, X)) == (axs..., OneTo(LMAX+1), OneTo(LMAX+1))
+
+    Λ  = λlm(0:LMAX, 0:LMAX, parent(X)) # Normal axes
+    Λ′ = λlm(0:LMAX, 0:LMAX, X)         # Offset axes
+    @test parent(Λ′) == Λ # Equality of values
+    @test_throws DimensionMismatch λlm!(Λ, LMAX, LMAX, X) # Mismatched axes
 end

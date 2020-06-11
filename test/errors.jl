@@ -20,9 +20,14 @@ end
 
 @testset "Degree/order range errors" begin
     # Throws on invalid l ranges
+    @test_throws ArgumentError legendre(λlm, 1:LMAX, 0, 0.5)
     @test_throws ArgumentError legendre.(λlm, 1:LMAX, 0, 0.5)
     # Throws on invalid m ranges
+    @test_throws ArgumentError legendre(λlm, 0:LMAX, 1:LMAX, 0.5)
     @test_throws ArgumentError legendre.(λlm, 0:LMAX, 1:LMAX, 0.5)
+    # Throws on invalid combination of ranges
+    @test_throws ArgumentError legendre(λlm, LMAX, 0:LMAX, 0.5)
+    @test_throws ArgumentError legendre.(λlm, LMAX, 0:LMAX, 0.5)
 end
 
 @testset "Output array bounds checking" begin
