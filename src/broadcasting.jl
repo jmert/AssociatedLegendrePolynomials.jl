@@ -13,7 +13,7 @@ function broadcasted(::typeof(legendre),
     boundscheck_hook(norm, l, m)
     z = Broadcast.materialize(x)
     Λ = _similar(z)
-    _legendre!(norm, Λ, l, m, z)
+    unsafe_legendre!(norm, Λ, l, m, z)
     return (ndims(Λ) == 0) ? Λ[] : Λ
 end
 
@@ -34,6 +34,6 @@ function broadcasted(::typeof(legendre), norm::AbstractLegendreNorm, l::DimOrInd
 
     z = Broadcast.materialize(x)
     Λ = zeros(eltype(z), axes(z)..., size(l)..., size(m)...)
-    _legendre!(norm, Λ, lmax, mmax, z)
+    unsafe_legendre!(norm, Λ, lmax, mmax, z)
     return Λ
 end
