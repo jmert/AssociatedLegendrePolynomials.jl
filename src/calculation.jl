@@ -42,7 +42,7 @@ function _chkbounds(Λ, lmax, mmax, x)
     nothing
 end
 
-function _legendre!(norm, Λ, lmax, mmax, x)
+function unsafe_legendre!(norm, Λ, lmax, mmax, x)
     if ndims(x) > 1
         M = ndims(Λ)
         N = ndims(x)
@@ -202,7 +202,7 @@ function legendre!(norm::AbstractLegendreNorm, Λ, l::Integer, m::Integer, x)
     _chkdomain(l, m)
     boundscheck_hook(norm, l, m)
     _chkbounds(Λ, l, m, x)
-    return _legendre!(norm, Λ, l, m, x)
+    return unsafe_legendre!(norm, Λ, l, m, x)
 end
 
 """
@@ -226,7 +226,7 @@ function legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
     _chkdomain(l, m)
     boundscheck_hook(norm, l, m)
     Λ = _similar(x)
-    _legendre!(norm, Λ, l, m, x)
+    unsafe_legendre!(norm, Λ, l, m, x)
     return Λ[]
 end
 
@@ -246,7 +246,7 @@ function legendre(norm::AbstractLegendreNorm, l::DimOrInd, m::DimOrInd, x)
     boundscheck_hook(norm, lmax, mmax)
 
     Λ = zeros(eltype(x), axes(x)..., size(l)..., size(m)...)
-    _legendre!(norm, Λ, lmax, mmax, x)
+    unsafe_legendre!(norm, Λ, lmax, mmax, x)
     return Λ
 end
 
