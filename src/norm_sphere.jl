@@ -9,7 +9,7 @@ polynomials.
 struct LegendreSphereNorm <: AbstractLegendreNorm end
 
 @inline function
-Plm_00(::LegendreSphereNorm, ::Type{T}) where T
+initcond(::LegendreSphereNorm, ::Type{T}) where T
     # comparing this against
     #   convert(T, inv(sqrt(4*convert(BigFloat, π))))
     # shows that this is exact within Float64 precision
@@ -17,7 +17,7 @@ Plm_00(::LegendreSphereNorm, ::Type{T}) where T
 end
 
 @inline function
-Plm_μ(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
+coeff_μ(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
     # The direct derivation of the normalization constant gives
     #     return sqrt(one(T) + inv(convert(T, 2l)))
     # but when comparing results for T ∈ (Float64,BigFloat), the Float64 results differ by
@@ -46,16 +46,16 @@ Plm_μ(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
 end
 
 @inline function
-Plm_ν(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
+coeff_ν(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
     return @fastmath(sqrt)(convert(T, 2l + 1))
 end
 
 @inline function
-Plm_α(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
+coeff_α(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     lT = convert(T, l)
     mT = convert(T, m)
     # Write factors in two pieces to make compiler's job easier. In the case where
-    # both Plm_α and Plm_β are called and inlined, the next line from both functions
+    # both coeff_α and coeff_β are called and inlined, the next line from both functions
     # should be merged and shared.
     fac1 = (2lT + 1) / ((2lT - 3) * (lT^2 - mT^2))
     fac2 = 4*(lT - 1)^2 - 1
@@ -63,11 +63,11 @@ Plm_α(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
 end
 
 @inline function
-Plm_β(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
+coeff_β(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     lT = convert(T, l)
     mT = convert(T, m)
     # Write factors in two pieces to make compiler's job easier. In the case where
-    # both Plm_α and Plm_β are called and inlined, the next line from both functions
+    # both coeff_α and coeff_β are called and inlined, the next line from both functions
     # should be merged and shared.
     fac1 = (2lT + 1) / ((2lT - 3) * (lT^2 - mT^2))
     fac2 = (lT - 1)^2 - mT^2

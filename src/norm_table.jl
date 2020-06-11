@@ -32,13 +32,13 @@ struct LegendreNormCoeff{N<:AbstractLegendreNorm,T<:Real} <: AbstractLegendreNor
         β = zeros(T, lmax+1, mmax+1)
 
         @inbounds for m in 0:mmax
-            μ[m+1] = m == 0 ? zero(T) : Plm_μ(N(), T, m)
+            μ[m+1] = m == 0 ? zero(T) : coeff_μ(N(), T, m)
             # N.B.: Need access to mmax+1 but will never use m==0 term, so offset storage
-            ν[m+1] = Plm_ν(N(), T, m+1)
+            ν[m+1] = coeff_ν(N(), T, m+1)
 
             for l in (m+1):lmax
-                α[l+1,m+1] = Plm_α(N(), T, l, m)
-                β[l+1,m+1] = Plm_β(N(), T, l, m)
+                α[l+1,m+1] = coeff_α(N(), T, l, m)
+                β[l+1,m+1] = coeff_β(N(), T, l, m)
             end
         end
 
@@ -78,28 +78,28 @@ end
 # Implements the legendre interface for the normalization
 
 @inline function
-Plm_00(::LegendreNormCoeff{N}, ::Type{T}) where {N<:AbstractLegendreNorm, T}
-    return Plm_00(N(), T)
+initcond(::LegendreNormCoeff{N}, ::Type{T}) where {N<:AbstractLegendreNorm, T}
+    return initcond(N(), T)
 end
 
 @propagate_inbounds function
-Plm_μ(norm::LegendreNormCoeff, ::Type{T}, l::Integer) where T
+coeff_μ(norm::LegendreNormCoeff, ::Type{T}, l::Integer) where T
     return norm.μ[l+1]
 end
 
 @propagate_inbounds function
-Plm_ν(norm::LegendreNormCoeff, ::Type{T}, l::Integer) where T
+coeff_ν(norm::LegendreNormCoeff, ::Type{T}, l::Integer) where T
     # N.B.: Storage is offset by 1 compared to other arrays. See constructor.
     return norm.ν[l]
 end
 
 @propagate_inbounds function
-Plm_α(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer) where T
+coeff_α(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer) where T
     return norm.α[l+1,m+1]
 end
 
 @propagate_inbounds function
-Plm_β(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer) where T
+coeff_β(norm::LegendreNormCoeff, ::Type{T}, l::Integer, m::Integer) where T
     return norm.β[l+1,m+1]
 end
 

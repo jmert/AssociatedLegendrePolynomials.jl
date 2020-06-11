@@ -23,17 +23,17 @@ implement.
 
 ### Normalization Interface
 
-| Interfaces to extend/implement          | Brief description                                                                               |
-|:--------------------------------------- |:----------------------------------------------------------------------------------------------- |
-| [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                                          |
-| [`Legendre.Plm_00()`](@ref)             | Value of ``N_0^0 P_0^0(x)`` for the given normalization                                         |
-| [`Legendre.Plm_μ()`](@ref)              | Coefficient ``μ_ℓ`` for the 1-term r.r. boosting ``ℓ-1 → ℓ`` and ``m-1 → m`` where ``m = \ell`` |
-| [`Legendre.Plm_ν()`](@ref)              | Coefficient ``ν_ℓ`` for the 1-term r.r. boosting ``ℓ-1 → ℓ``                                    |
-| [`Legendre.Plm_α()`](@ref)              | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term                          |
-| [`Legendre.Plm_β()`](@ref)              | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-2,m)`` term                        |
+| Interfaces to extend/implement          | Brief description                                                                            |
+|:--------------------------------------- |:-------------------------------------------------------------------------------------------- |
+| [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                                       |
+| [`Legendre.initcond()`](@ref)           | Value of ``N_0^0 P_0^0(x)`` for the given normalization                                      |
+| [`Legendre.coeff_μ()`](@ref)            | Coefficient ``μ_ℓ`` for the 1-term r.r. boosting ``ℓ-1 → ℓ`` and ``m-1 → m`` where ``m = ℓ`` |
+| [`Legendre.coeff_ν()`](@ref)            | Coefficient ``ν_ℓ`` for the 1-term r.r. boosting ``ℓ-1 → ℓ``                                 |
+| [`Legendre.coeff_α()`](@ref)            | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term                     |
+| [`Legendre.coeff_β()`](@ref)            | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-2,m)`` term                     |
 
-| Optional interfaces                 | Brief description                      |
-|:----------------------------------- |:-------------------------------------- |
+| Optional interfaces                   | Brief description                      |
+|:------------------------------------- |:-------------------------------------- |
 | [`Legendre.boundscheck_hook()`](@ref) | Hook to participate in bounds checking |
 
 
@@ -140,42 +140,42 @@ Begin by importing the types and methods which will need to be extended:
 ```jldoctest λNorm
 julia> using Legendre
 
-julia> import Legendre: AbstractLegendreNorm, Plm_00, Plm_μ, Plm_ν, Plm_α, Plm_β
+julia> import Legendre: AbstractLegendreNorm, initcond, coeff_μ, coeff_ν, coeff_α, coeff_β
 ```
 We'll call our new normalization `λNorm`, which must be a subclass of
 `AbstractLegendreNorm`.
 ```jldoctest λNorm
 julia> struct λNorm <: AbstractLegendreNorm end
 ```
-The initial condition is specified by providing a method of `Plm_00` which takes our
+The initial condition is specified by providing a method of `initcond` which takes our
 normalization trait type as the first argument.
 (The second argument can be useful if some extra type information is required to set
 up a type-stable algorithm, which we'll ignore here for the sake of simplicity.)
 ```jldoctest λNorm
-julia> Plm_00(::λNorm, T::Type) = sqrt(1 / 4π)
-Plm_00 (generic function with 4 methods)
+julia> initcond(::λNorm, T::Type) = sqrt(1 / 4π)
+initcond (generic function with 4 methods)
 ```
 Finally, we provide methods which encode the cofficients as well:
 ```jldoctest λNorm
-julia> function Plm_α(::λNorm, T::Type, l::Integer, m::Integer)
+julia> function coeff_α(::λNorm, T::Type, l::Integer, m::Integer)
            fac1 = (2l + 1) / ((2l - 3) * (l^2 - m^2))
            fac2 = 4*(l-1)^2 - 1
            return sqrt(fac1 * fac2)
        end
-Plm_α (generic function with 4 methods)
+coeff_α (generic function with 4 methods)
 
-julia> function Plm_β(::λNorm, T::Type, l::Integer, m::Integer)
+julia> function coeff_β(::λNorm, T::Type, l::Integer, m::Integer)
            fac1 = (2l + 1) / ((2l - 3) * (l^2 - m^2))
            fac2 = (l-1)^2 - m^2
            return sqrt(fac1 * fac2)
        end
-Plm_β (generic function with 4 methods)
+coeff_β (generic function with 4 methods)
 
-julia> Plm_μ(::λNorm, T::Type, l::Integer) = sqrt(1 + 1 / 2l)
-Plm_μ (generic function with 4 methods)
+julia> coeff_μ(::λNorm, T::Type, l::Integer) = sqrt(1 + 1 / 2l)
+coeff_μ (generic function with 4 methods)
 
-julia> Plm_ν(::λNorm, T::Type, l::Integer) = sqrt(1 + 2l)
-Plm_ν (generic function with 4 methods)
+julia> coeff_ν(::λNorm, T::Type, l::Integer) = sqrt(1 + 2l)
+coeff_ν (generic function with 4 methods)
 ```
 
 With just those 5 methods provided, the full Legendre framework is available,

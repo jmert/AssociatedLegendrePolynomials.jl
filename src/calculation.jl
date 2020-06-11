@@ -115,7 +115,7 @@ _fma(x, y, z) = Base.fma(x, y, z)
         y¹[ii] = sqrt(y²[ii])
     end
 
-    fill!(pm, Plm_00(norm, T))
+    fill!(pm, initcond(norm, T))
     for m in 0:mmax
         @simd for ii in I
             if N == 2
@@ -131,7 +131,7 @@ _fma(x, y, z) = Base.fma(x, y, z)
         if N == 2 || m == mmax
             # 1-term recurrence relation taking (l-1,l-1) -> (l,l-1) where l == m == m
             l = m + 1
-            ν = Plm_ν(norm, real(T), l)
+            ν = coeff_ν(norm, real(T), l)
             @simd for ii in I
                 plm1[ii] = pm[ii]
                 pl[ii]   = ν * z[ii] * plm1[ii]
@@ -149,8 +149,8 @@ _fma(x, y, z) = Base.fma(x, y, z)
             for l in m+2:lmax
                 plm2, plm1, pl = plm1, pl, plm2
                 # 2-term recurrence relation taking (l-1,m) -> (l, m)
-                α = Plm_α(norm, real(T), l, m)
-                β = Plm_β(norm, real(T), l, m)
+                α = coeff_α(norm, real(T), l, m)
+                β = coeff_β(norm, real(T), l, m)
                 @simd for ii in I
                     pl[ii] = α * z[ii] * plm1[ii] - β * plm2[ii]
                     if N == 2
@@ -169,13 +169,13 @@ _fma(x, y, z) = Base.fma(x, y, z)
         if iseven(m)
             pmm2, pm = pm, pmm2
             # Takes even m-2 to odd m-1 for following iteration where m will be odd
-            μ₁ = Plm_μ(norm, real(T), m+1)
+            μ₁ = coeff_μ(norm, real(T), m+1)
             @simd for ii in I
                 pm[ii] = -μ₁ * y¹[ii] * pmm2[ii]
             end
         else
             # Takes even m-2 to even m for following iteration where m will be even again
-            μ₂ = Plm_μ(norm, real(T), m+1)
+            μ₂ = coeff_μ(norm, real(T), m+1)
             @simd for ii in I
                 pm[ii] = μ₁ * μ₂ * y²[ii] * pmm2[ii]
             end

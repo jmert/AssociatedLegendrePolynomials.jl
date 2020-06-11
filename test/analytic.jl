@@ -133,8 +133,8 @@ end
     #   Also test ν, and both already equivalent for unit norm.
     @testset "coeffs μ, ν ($norm)" for norm in (LegendreSphereNorm(), LegendreUnitNorm())
         lrng = 1:30_000
-        μ(T, l) = Legendre.Plm_μ(norm, T, l)
-        ν(T, l) = Legendre.Plm_ν(norm, T, l)
+        μ(T, l) = Legendre.coeff_μ(norm, T, l)
+        ν(T, l) = Legendre.coeff_ν(norm, T, l)
         @test μ.(Float64, lrng) == Float64.(μ.(BigFloat, lrng))
         @test ν.(Float64, lrng) == Float64.(ν.(BigFloat, lrng))
     end

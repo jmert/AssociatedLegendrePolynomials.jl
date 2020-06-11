@@ -15,13 +15,13 @@ module TestSuite
         @testset "Legendre Interface" begin
             @test norm isa AbstractLegendreNorm
             # Initial condition
-            @test isfinite(Legendre.Plm_00(norm, Float64))
+            @test isfinite(Legendre.initcond(norm, Float64))
             # 1-term recurrence coefficients
-            @test isfinite(Legendre.Plm_μ(norm, Float64, 1))
-            @test isfinite(Legendre.Plm_ν(norm, Float64, 1))
+            @test isfinite(Legendre.coeff_μ(norm, Float64, 1))
+            @test isfinite(Legendre.coeff_ν(norm, Float64, 1))
             # 2-term recurrence coefficients
-            @test isfinite(Legendre.Plm_α(norm, Float64, 1, 0))
-            @test isfinite(Legendre.Plm_β(norm, Float64, 1, 0))
+            @test isfinite(Legendre.coeff_α(norm, Float64, 1, 0))
+            @test isfinite(Legendre.coeff_β(norm, Float64, 1, 0))
 
             # Check that the boundscheck_hook() returns `nothing`
             @test @inferred(Legendre.boundscheck_hook(norm, 0, 0)) === nothing
