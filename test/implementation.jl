@@ -124,4 +124,6 @@ end
     @test λlm!(Λ′, LMAX, LMAX, X) isa typeof(Λ′) # Just verify no errors
     @test parent(Λ′) == Λ                        # Equality of values
     @test_throws DimensionMismatch λlm(Λ, LMAX, LMAX, X) # Mismatched axes
+
+    @test axes(Λ′) == axes(λlm.(0:LMAX, 0:LMAX, X))
 end

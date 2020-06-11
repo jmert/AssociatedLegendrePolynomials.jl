@@ -22,7 +22,7 @@ function broadcasted(::typeof(legendre),
     end
 
     z = Broadcast.materialize(x)
-    Λ = fill(zero(eltype(z)), size(z)..., size(l)..., size(m)...)
+    Λ = fill(zero(eltype(z)), axes(z)..., size(l)..., size(m)...)
     lmax = last(l)
     mmax = m isa UnitRange ? last(m) : m
     _chkdomain(lmax, mmax)
