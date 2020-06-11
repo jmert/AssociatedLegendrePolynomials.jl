@@ -28,7 +28,7 @@ makedocs(
             "Private" => "lib/private.md"
         ]
     ],
-    repo = "https://github.com/jmert/Legendre.jl.git/blob/{commit}{path}#L{line}",
+    repo = "https://github.com/jmert/Legendre.jl/blob/{commit}{path}#L{line}",
 )
 
 deploydocs(
