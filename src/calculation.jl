@@ -1,4 +1,4 @@
-import Base: checkindex, checkbounds_indices, OneTo, Slice
+import Base: checkindex, checkbounds_indices, DimOrInd, OneTo, Slice
 
 function _chkdomain(lmax, mmax)
     @noinline _chkdomain_throw_lmax(l) = throw(DomainError(l, "degree lmax must be non-negative"))
@@ -42,10 +42,7 @@ function _chkbounds(Λ, lmax, mmax, x)
     nothing
 end
 
-@propagate_inbounds function _legendre!(norm, Λ, lmax, mmax, x)
-    @boundscheck _chkdomain(lmax, mmax)
-    @boundscheck _chkbounds(Λ, lmax, mmax, x)
-    @boundscheck boundscheck_hook(norm, lmax, mmax)
+function _legendre!(norm, Λ, lmax, mmax, x)
     if ndims(x) > 1
         M = ndims(Λ)
         N = ndims(x)
@@ -186,39 +183,10 @@ _fma(x, y, z) = Base.fma(x, y, z)
 end
 
 """
-    p = legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
-    P = legendre.(norm::AbstractLegendreNorm, l, m, x)
-
-Computes the associated Legendre polynomial ``N_ℓ^m P_ℓ^m(x)`` of degree `l` and
-order `m` at `x` for the normalization scheme `norm`.
-
-With broadcasting syntax, the polynomials can be computed over any iterable `x`.
-Furthermore,
-- If `l isa Integer && m isa Integer`, then the output `P` has the same shape as `x` and
-  is filled with the polynomial values of order `l` and degree `m`.
-- If `l isa UnitRange && m isa Integer`, then `l` is interpreted as `lmax`, and the output
-  `P` has one more dimension than `x` with the trailing dimension spanning the degrees
-  `0 ≤ l ≤ lmax`.
-- If `l isa UnitRange && m isa UnitRange`, then `l` is interpreted as `lmax` and `m` as
-  `mmax`, and the output `P` has two more dimensions than `x` with the trailing dimensions
-  spanning the degrees `0 ≤ l ≤ lmax` and orders `0 ≤ m ≤ mmax`, respectively.
-
-Note that in second and third case, the `UnitRange`s must satisify `first(l) == 0` and
-`first(m) == 0`.
-"""
-function legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
-    Λ = _similar(x)
-    _chkdomain(l, m)
-    boundscheck_hook(norm, l, m)
-    @inbounds _legendre!(norm, Λ, l, m, x)
-    return Λ[]
-end
-
-"""
     legendre!(norm::AbstractLegendreNorm, Λ, l::Integer, m::Integer, x)
 
 Fills the array `Λ` with the Legendre polynomial values ``N_ℓ^m P_ℓ^m(x)``
-up to/of degree `l` and order `m` for the normalization scheme `norm`.
+up to/of degree(s) `l` and order(s) `m` for the normalization scheme `norm`.
 `Λ` must be an array with between 0 and 2 more dimensions than `x`, with the leading
 dimensions having the same shape as `x`.
 
@@ -230,10 +198,56 @@ dimensions having the same shape as `x`.
   and `Λ` is filled with polynomial values for all degrees `0 ≤ l ≤ lmax` and orders
   `0 ≤ m ≤ min(mmax, l)`.
 """
-function legendre!(
-        norm::AbstractLegendreNorm,
-        Λ, l::Integer, m::Integer, x)
+function legendre!(norm::AbstractLegendreNorm, Λ, l::Integer, m::Integer, x)
+    _chkdomain(l, m)
+    boundscheck_hook(norm, l, m)
+    _chkbounds(Λ, l, m, x)
     return _legendre!(norm, Λ, l, m, x)
+end
+
+"""
+    p = legendre(norm::AbstractLegendreNorm, l::DimOrInd, m::DimOrInd, x)
+
+Computes the associated Legendre polynomials ``N_ℓ^m P_ℓ^m(x)`` of degree(s) `l` and
+order(s) `m` at `x` for the normalization scheme `norm`.
+
+- If `l` and `m` are integers, returns a single value.
+- If `l` is a range `0:lmax` and `m` an integer, returns the vector of values for order
+  `m` and all degrees `0 ≤ l ≤ lmax`.
+- If `l` is a range `0:lmax` and `m` is a range `0:mmax`, returns the matrix of values
+  for all degrees `0 ≤ l ≤ lmax` and orders `0 ≤ m ≤ mmax`.
+
+Note that in both the second and third cases, the ranges must have a first index of 0.
+"""
+function legendre end
+
+# Scalar argument, scalar output case handled separately.
+function legendre(norm::AbstractLegendreNorm, l::Integer, m::Integer, x::Number)
+    _chkdomain(l, m)
+    boundscheck_hook(norm, l, m)
+    Λ = _similar(x)
+    _legendre!(norm, Λ, l, m, x)
+    return Λ[]
+end
+
+function legendre(norm::AbstractLegendreNorm, l::DimOrInd, m::DimOrInd, x)
+    if l isa AbstractUnitRange
+        first(l) == 0 || throw(ArgumentError("Range of degrees l must start at 0"))
+    end
+    if m isa AbstractUnitRange
+        if !(l isa AbstractUnitRange)
+            throw(ArgumentError("Range of orders m requires range of degrees l"))
+        end
+        first(m) == 0 || throw(ArgumentError("Range of orders m must start at 0"))
+    end
+    lmax = l isa AbstractUnitRange ? last(l) : l
+    mmax = m isa AbstractUnitRange ? last(m) : m
+    _chkdomain(lmax, mmax)
+    boundscheck_hook(norm, lmax, mmax)
+
+    Λ = zeros(eltype(x), axes(x)..., size(l)..., size(m)...)
+    _legendre!(norm, Λ, lmax, mmax, x)
+    return Λ
 end
 
 # Make normalizations callable with similar syntax as the legendre[!] functions
@@ -242,7 +256,7 @@ end
     # Provide for just the defined normalization types.
     for N in (LegendreUnitNorm,LegendreSphereNorm,LegendreNormCoeff)
         @eval begin
-            @inline function (norm::$N)(l::Integer, m::Integer, x)
+            @inline function (norm::$N)(l, m, x)
                 return legendre(norm, l, m, x)
             end
             @inline function (norm::$N)(Λ, l::Integer, m::Integer, x)
@@ -251,7 +265,7 @@ end
         end
     end
 else
-    @inline function (norm::AbstractLegendreNorm)(l::Integer, m::Integer, x)
+    @inline function (norm::AbstractLegendreNorm)(l, m, x)
         return legendre(norm, l, m, x)
     end
     @inline function (norm::AbstractLegendreNorm)(Λ, l::Integer, m::Integer, x)
