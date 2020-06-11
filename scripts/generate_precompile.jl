@@ -1,5 +1,5 @@
 using SnoopCompile, Legendre
-inf_timing = @snoopi tmin=0.01 begin
+inf_timing = @snoopi tmin=0.005 begin
     # Invoking aliased wrappers forces inference of underlying implmentation
     for T in (Float64, Float32), I in (Int,)
         s = T(0.5)
@@ -11,6 +11,17 @@ inf_timing = @snoopi tmin=0.01 begin
         Ptab(I(2), I(2), s)
         λlm(I(2), I(2), s)
         Λtab(I(2), I(2), s)
+        # Scalar argument, vector ℓ, fixed m
+        Plm(I(0):I(2), I(2), s)
+        Ptab(I(0):I(2), I(2), s)
+        λlm(I(0):I(2), I(2), s)
+        Λtab(I(0):I(2), I(2), s)
+        # Scalar argument, matrix over all ℓ, m
+        Plm(I(0):I(2), I(0):I(2), s)
+        Ptab(I(0):I(2), I(0):I(2), s)
+        λlm(I(0):I(2), I(0):I(2), s)
+        Λtab(I(0):I(2), I(0):I(2), s)
+
         # Broadcasted operations:
         #  Scalar argument, vector output
         Plm.(I(0):I(2), I(2), s)
