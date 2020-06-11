@@ -15,15 +15,15 @@ Base.broadcastable(x::AbstractLegendreNorm) = Ref(x)
 ## interface.
 
 """
-    Plm_00(::N, ::Type{T}) where {N<:AbstractLegendreNorm, T}
+    initcond(::N, ::Type{T}) where {N<:AbstractLegendreNorm, T}
 
 Returns the initial condition ``P_0^0(x)`` for the associated Legendre recursions based
 on the normalization choice `N` for numeric type `T`.
 """
-function Plm_00 end
+function initcond end
 
 """
-    Plm_μ(norm::N, ::Type{T}, l::Integer) where {N<:AbstractLegendreNorm, T}
+    coeff_μ(norm::N, ::Type{T}, l::Integer) where {N<:AbstractLegendreNorm, T}
 
 Returns the coefficient ``μ_ℓ`` for the single-term recursion relation
 ```math
@@ -31,10 +31,10 @@ Returns the coefficient ``μ_ℓ`` for the single-term recursion relation
 ```
 where ``μ_ℓ`` is appropriate for the choice of normalization `N`.
 """
-function Plm_μ end
+function coeff_μ end
 
 """
-    Plm_ν(norm::N, ::Type{T}, l::Integer) where {N<:AbstractLegendreNorm, T}
+    coeff_ν(norm::N, ::Type{T}, l::Integer) where {N<:AbstractLegendreNorm, T}
 
 Returns the coefficient ``ν_ℓ`` for the single-term recursion relation
 ```math
@@ -42,10 +42,10 @@ Returns the coefficient ``ν_ℓ`` for the single-term recursion relation
 ```
 where ``ν_ℓ`` is appropriate for the choice of normalization `N`.
 """
-function Plm_ν end
+function coeff_ν end
 
 """
-    Plm_α(norm::N, ::Type{T}, l::Integer, m::Integer) where {N<:AbstractLegendreNorm, T}
+    coeff_α(norm::N, ::Type{T}, l::Integer, m::Integer) where {N<:AbstractLegendreNorm, T}
 
 Returns the coefficient ``α_ℓ^m`` for the two-term recursion relation
 ```math
@@ -53,10 +53,10 @@ Returns the coefficient ``α_ℓ^m`` for the two-term recursion relation
 ```
 where ``α_ℓ^m`` is appropriate for the choice of normalization `N`.
 """
-function Plm_α end
+function coeff_α end
 
 """
-    Plm_β(norm::N, ::Type{T}, l::Integer, m::Integer) where {N<:AbstractLegendreNorm, T}
+    coeff_β(norm::N, ::Type{T}, l::Integer, m::Integer) where {N<:AbstractLegendreNorm, T}
 
 Returns the coefficient ``β_ℓ^m`` for the two-term recursion relation
 ```math
@@ -64,7 +64,7 @@ Returns the coefficient ``β_ℓ^m`` for the two-term recursion relation
 ```
 where ``β_ℓ^m`` is appropriate for the choice of normalization `N`.
 """
-function Plm_β end
+function coeff_β end
 
 """
     boundscheck_hook(norm::AbstractLegendreNorm, lmax, mmax)
