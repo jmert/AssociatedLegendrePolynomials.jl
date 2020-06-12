@@ -13,10 +13,10 @@ build:
 	$(JULIA) --startup-file=no --project=docs/ \
 		docs/make.jl ${DOCARGS}
 
-test: DOCARGS+=" --test"
+test: DOCARGS+= --test
 test: build
 	@true
 
-fix: DOCARGS+=" --fix"
+fix: DOCARGS+= --fix
 fix: build
 	@true

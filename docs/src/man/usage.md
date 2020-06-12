@@ -92,105 +92,106 @@ julia> λlm(157, 150, 0.5)
     information on implementing custom Legendre normalizations, see the [Custom
     normalizations](@ref customnorm) section.
 
-## Calculating all values up to a given ``ℓ_\mathrm{max}``
+## Calculating multiple degrees/orders
 
 Because calculating a particular Legendre polynomial value is the end result of running
 a recurrence relation, looping evaluation of ``P_ℓ^m(x)`` for all ``ℓ`` is inefficient and
 redoes a lot of work:
 ```jldoctest PlmUsage
-julia> λ = zeros(701);
-
-julia> @time λ[3:701] = [λlm(l, 2, 0.5) for l in 2:700];
-  0.063346 seconds (56.42 k allocations: 2.539 MiB)
+julia> @time [l < 2 ? 0.0 : λlm(l, 2, 0.5) for l in 2:700];
+  0.039210 seconds (71.21 k allocations: 3.285 MiB)
 ```
 It's far more efficient to accumulate the intermediate terms while running the recurrence
 relations.
-Both of `Plm` and `λlm` have modifying counterparts,
-[`Plm!`](@ref Plm!(::Any, ::Integer, ::Integer, ::Any)) and
-[`λlm!`](@ref λlm!(::Any, ::Integer, ::Integer, ::Any)) respectively,
-which fill an appropriately sized vector for a specified ``ℓ_\mathrm{max}``.
+Using a `UnitRange` as the input degree causes the functions to allocate and fill the
+vector with all polynomials values:
 ```jldoctest PlmUsage
-julia> @time λlm!(λ, 700, 2, 0.5);
-  0.000162 seconds (14 allocations: 320 bytes)
+julia> λ = @time λlm(0:700, 2, 0.5);
+  0.000012 seconds (6 allocations: 5.703 KiB)
 ```
-On my machine, this ends up being roughly 400 times faster!
+On my machine, this is roughly 3000 times faster!
 
-If all Legendre polynomial values for some ``x`` over all
-``ℓ ∈ [0,ℓ_\mathrm{max}]`` and ``m ∈ [0,ℓ]`` are required, instead supply an output
-matrix into which the lower triangle of values is filled:
+Likewise, calculating the [lower triangular] matrix of values for some ``x`` over all
+degrees ``ℓ ∈ [0,ℓ_\mathrm{max}]`` and all orders ``m ∈ [0,ℓ]`` is done by also specifying
+the orders as a `UnitRange`.
 ```jldoctest PlmUsage
-julia> Λ = zeros(701, 701);
+julia> Λ = @time λlm(0:700, 0:700, 0.5);
+  0.002980 seconds (7 allocations: 3.749 MiB)
 
-julia> λlm!(Λ, 700, 700, 0.5);
-
-julia> Λ[701,3] == λlm(700, 2, 0.5)   # N.B. 1-based indexing of the array!
+julia> Λ[:,3] == λ   # N.B. 1-based indexing of the array!
 true
 ```
 
-## Broadcasting over multiple arguments
+!!! note
+    There are two things in particular to remember with the range-based calls:
+    1. The ranges must start at 0, otherwise an `ArgumentError` will be thrown.
+    2. Calculating a range of orders ``m`` for a fixed degree ``\ell`` is not supported;
+       to calculate multiple orders requires the output matrix be at least square (but
+       may "tall and skinny" with ``\ell_\mathrm{max} > m_\mathrm{max}`` if desired).
 
-The Legendre polynomials can be evaluated over multiple arguments ``x`` as well by
-using Julia's standard broadcasting syntax:
+It is also more efficient to operate upon an array of arguments ``x`` than to loop over
+them one-by-one, so the functions also accept the input argument `x` as an array of
+any shape.
+
+For a specific degree and order, the output array will have the same shape as the
+argument:
 ```jldoctest PlmUsage
-julia> λlm.(2, 0, range(-1.0, 1.0, length=5))
-5-element Array{Float64,1}:
-  0.63078313050504
- -0.07884789131313
- -0.31539156525252
- -0.07884789131313
-  0.63078313050504
+julia> λlm(2, 0, reshape(range(0, 1, length=4), 2, 2))
+2×2 Array{Float64,2}:
+ -0.315392  0.105131
+ -0.210261  0.630783
 ```
-Broadcasting has been specialized for calls to `Pl`, `Plm`, and `λlm` to avoid the
-overhead inherent in calling the scalar functions multiple times:
+Then adding a range of degrees increases the dimensionality by 1, with the trailing
+dimension being over ``\ell``,
 ```jldoctest PlmUsage
-julia> z = range(-1.0, 1.0, length=500);
-
-julia> @time [λlm(2, 0, i) for i in z];
-  0.054037 seconds (54.23 k allocations: 2.447 MiB)
-
-julia> @time λlm.(2, 0, z);
-  0.000032 seconds (13 allocations: 36.719 KiB)
-```
-In fact, the shape of `z` is preserved, so any matrix shape can be used:
-```jldoctest PlmUsage; setup=(using Random; Random.seed!(0))
-julia> λlm.(2, 0, rand(3,3,3))
-3×3×3 Array{Float64,3}:
+julia> λlm(0:2, 0, reshape(range(0, 1, length=4), 2, 2))
+2×2×3 Array{Float64,3}:
 [:, :, 1] =
-  0.326489  -0.285639  -0.313698
-  0.46875   -0.241804  -0.310982
- -0.289767  -0.276217  -0.191519
+ 0.282095  0.282095
+ 0.282095  0.282095
 
 [:, :, 2] =
-  0.580778   -0.251413   0.091097
-  0.0093121   0.468216  -0.00159624
- -0.0402128  -0.288992   0.397937
+ 0.0       0.325735
+ 0.162868  0.488603
 
 [:, :, 3] =
-  0.57083   -0.311711  -0.313631
-  0.242235  -0.197404  -0.247441
- -0.107      0.242107  -0.311164
+ -0.315392  0.105131
+ -0.210261  0.630783
+```
+and a further extra dimension is added for a range over orders ``m``.
+
+## In-place calculations
+
+Both of `Plm` and `λlm` also have in-place modifying counterparts,
+[`Plm!`](@ref Plm!(::Any, ::Integer, ::Integer, ::Any)) and
+[`λlm!`](@ref λlm!(::Any, ::Integer, ::Integer, ::Any)) respectively,
+which fill an appropriately sized vector for a specified ``ℓ_\mathrm{max}`` and
+``m_\mathrm{max}``.
+Instead of using integer or range arguments, whether to calculate a value for a
+single degree/order, a range of degrees for fixed order, or for all degrees and orders
+is inferred based on the dimensionality of the output array.
+
+For example, to calculate the single value ``\lambda_{700}^{200}(0.5)``, provide a
+0-dimensional output array (to match the 0-dimensionality of the scalar `0.5`)
+```jldoctest PlmUsage
+julia> λlm!(fill(NaN), 700, 2, 0.5)
+0-dimensional Array{Float64,0}:
+0.24148976866924293
+```
+and filling a vector or matrix instead calculates all degrees up to the given maximum
+degree/order as appropriate:
+```jldoctest PlmUsage
+julia> λlm!(λ, 700, 2, 0.5) == λlm(0:700, 2, 0.5)
+true
+
+julia> λlm!(Λ, 700, 700, 0.5) == λlm(0:700, 0:700, 0.5)
+true
 ```
 
-Obtaining the Legendre polynomials over multiple ``\ell`` and/or ``m`` values for many
-arguments can be done via broadcasting as well.
-The degree `l` must be a `UnitRange` starting at zero, and `m` may be either a
-scalar integer (to calculate all ``\ell`` for a fixed ``m``) or a `UnitRange`
-starting at zero as well.
-For example, to compute the ``P_\ell^0(z)`` and ``P_\ell^2(z)`` coefficients to an
-``\ell_{\mathrm{max}} = 700``, one could execute
-```jldoctest PlmUsage
-julia> summary(Plm.(0:700, 0:2, z))
-"500×701×3 Array{Float64,3}"
-```
-The output array will have between 0 and 2 more dimensions more than the dimensionality
-of the input arguments depending on the calling convention.
-For scalar values of `l` and `m`, the output will be the same shape as `z` with no
-extra trailing dimensions.
-If instead `l` is a `UnitRange`, the output dimensionality increases by one, and the
-trailing dimension runs over the degrees ``\ell``;
-switching to `m` a `UnitRange` as well, the output dimensionality is two greater than
-`z`, with the penultimate and final dimensions running over ``\ell`` and ``m``,
-respectively.
+The in-place interface accepts input arguments `x` of any shape as well, with the output
+array `Λ` having to have between 0 and 2 more dimensions than `x`, where the leading
+dimensions of the input and output arrays have the same axes, and the trailing dimensions
+are sized appropriate for the number of degrees/orders to be calculated.
 
 ## Precomputed recursion factors
 
