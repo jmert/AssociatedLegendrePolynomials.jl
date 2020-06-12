@@ -56,13 +56,12 @@ end
     Λ₀ = fill(0.0)
     Λ₁ = zeros(LMAX+1)
     Λ₂ = zeros(LMAX+1, LMAX+1)
-    # 7 cases in recursion to handle:
+    # 4 cases in recursion to handle:
     #   1. Initial condition
-    #   2. Boost along diagonal from (even,even) -> (odd,odd)
-    #      2a. Boost in ℓ from (m,m) -> (m+1, m)
-    #      2b. Boost again in ℓ from (m+1,m) -> (m+2, m)
-    #   3. Repeat (2) but for step along diagonal from (odd,odd) -> (even,even)
-    cases = ((0,0), (1,1), (2,1), (3,1), (2,2), (3,2), (4,2))
+    #   2. Boost along diagonal
+    #   3. Boost in ℓ from (m,m) -> (m+1, m)
+    #   4. Boost again in ℓ from (m+1,m) -> (m+2, m) [and further]
+    cases = ((0,0), (1,1), (2,1), (3,1))
     @testset "(ℓ,m) == ($ℓ, $m)" for (ℓ, m) in cases
         # Return type matches that of the argument, even though internal calculation
         # will promote.
