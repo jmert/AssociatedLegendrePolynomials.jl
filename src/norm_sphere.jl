@@ -59,7 +59,7 @@ coeff_α(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     # should be merged and shared.
     fac1 = (2lT + 1) / ((2lT - 3) * (lT^2 - mT^2))
     fac2 = 4*(lT - 1)^2 - 1
-    @fastmath return sqrt(fac1 * fac2)
+    return @fastmath(sqrt)(fac1 * fac2)
 end
 
 @inline function
@@ -71,7 +71,7 @@ coeff_β(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     # should be merged and shared.
     fac1 = (2lT + 1) / ((2lT - 3) * (lT^2 - mT^2))
     fac2 = (lT - 1)^2 - mT^2
-    @fastmath return sqrt(fac1 * fac2)
+    return @fastmath(sqrt)(fac1 * fac2)
 end
 
 # Extra functions
