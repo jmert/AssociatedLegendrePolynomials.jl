@@ -23,10 +23,7 @@ makedocs(
             "Developer Documentation" => "man/devdocs.md",
             "Literature/References" => "man/references.md"
         ],
-        "API Reference" => [
-            "Public" => "lib/public.md",
-            "Private" => "lib/private.md"
-        ]
+        "API Reference" => "lib/public.md",
     ],
     repo = "https://github.com/jmert/Legendre.jl/blob/{commit}{path}#L{line}",
 )

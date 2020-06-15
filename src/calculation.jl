@@ -57,18 +57,14 @@ function unsafe_legendre!(norm, Λ, lmax, mmax, x)
     return Λ
 end
 
-"""
-    _fma(x, y, z)
-
-Similar to `Base.fma` but defined for `Complex` arguments such that if all arguments are
-on the real axis, the result of `_fma(x, y, z) === _fma(real(x), real(y), real(z)) + 0im`.
-
-!!! note
-    The total operation for generic complex arguments is not fused but rather
-    proceeds via a series of FMA instructions (which include intermediate
-    rounding) --- the fusing is only strictly true for the all-real-axis case.
-"""
-function _fma end
+# Similar to `Base.fma` but defined for `Complex` arguments such that if all arguments are
+# on the real axis, the result of `_fma(x, y, z) === _fma(real(x), real(y), real(z)) + 0im`.
+#
+# !!! note
+#     The total operation for generic complex arguments is not fused but rather
+#     proceeds via a series of FMA instructions (which include intermediate
+#     rounding) --- the fusing is only strictly true for the all-real-axis case.
+#
 # Following definitions should be complete, but we comment out most of them since they
 # are unused.
 #_fma(z::Complex, w::Complex, x::Complex) =

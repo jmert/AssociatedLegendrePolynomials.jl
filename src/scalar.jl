@@ -1,11 +1,11 @@
 import Base.Broadcast: Broadcasted, AbstractArrayStyle, dotview, materialize
 
-"""
-    mutable struct Scalar{T} <: AbstractArray{T,0}
-
-A 0-dimensional (scalar) object, much like a `RefValue{T}`, but one which is an
-abstract array and assignable under broadcasting operations.
-"""
+# """
+#     mutable struct Scalar{T} <: AbstractArray{T,0}
+#
+# A 0-dimensional (scalar) object, much like a `RefValue{T}`, but one which is an
+# abstract array and assignable under broadcasting operations.
+# """
 mutable struct Scalar{T} <: AbstractArray{T,0}
     x::T
     Scalar{T}()  where {T} = new()
