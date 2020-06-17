@@ -2,7 +2,7 @@
 
 | **Documentation**                                                         | **Build Status**                                             |
 |:-------------------------------------------------------------------------:|:------------------------------------------------------------:|
-| <!--[![][docs-stable-img]][docs-stable-url]--> [![][docs-dev-img]][docs-dev-url] | [![][travis-img]][travis-url][![][codecov-img]][codecov-url] |
+| [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![][travis-img]][travis-url][![][codecov-img]][codecov-url] |
 
 Legendre.jl is a library for computing the Associated Legendre Polynomials.
 
