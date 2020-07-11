@@ -1,5 +1,32 @@
 import Base: checkindex, checkbounds_indices, DimOrInd, OneTo, Slice
 
+@inline _similar(A::AbstractArray, ::Type{T}=eltype(A)) where {T} = similar(A, T, axes(A))
+@inline _similar(A::Number, ::Type{T}=typeof(A)) where {T}        = Scalar{T}()
+
+struct Work{T,N<:AbstractLegendreNorm,V<:AbstractArray{T}}
+    norm::N
+    z::V
+    y¹::V
+    y²::V
+    pmm2::V
+    pm::V
+    plm2::V
+    plm1::V
+    pl::V
+end
+function Work(norm::AbstractLegendreNorm, Λ, x)
+    T = promote_type(eltype(norm), eltype(Λ), eltype(x))
+    z    = _similar(x, T)
+    y¹   = _similar(x, T)
+    y²   = _similar(x, T)
+    pmm2 = _similar(x, T)
+    pm   = _similar(x, T)
+    plm2 = _similar(x, T)
+    plm1 = _similar(x, T)
+    pl   = _similar(x, T)
+    return Work(norm, z, y¹, y², pmm2, pm, plm2, plm1, pl)
+end
+
 function _chkdomain(lmax, mmax)
     @noinline _chkdomain_throw_lmax(l) = throw(DomainError(l, "degree lmax must be non-negative"))
     @noinline _chkdomain_throw_mmax(m) = throw(DomainError(m, "order mmax must be non-negative and less than or equal to lmax"))
@@ -42,7 +69,7 @@ function _chkbounds(Λ, lmax, mmax, x)
     nothing
 end
 
-function unsafe_legendre!(norm, Λ, lmax, mmax, x)
+function unsafe_legendre!(workornorm::Union{AbstractLegendreNorm,Work}, Λ, lmax, mmax, x)
     if ndims(x) > 1
         M = ndims(Λ)
         N = ndims(x)
@@ -53,7 +80,13 @@ function unsafe_legendre!(norm, Λ, lmax, mmax, x)
         x′ = x
         Λ′ = Λ
     end
-    @inbounds _legendre_impl!(norm, Λ′, lmax, mmax, x′)
+
+    if workornorm isa AbstractLegendreNorm
+        work = Work(workornorm, Λ′, x′)
+        @inbounds _legendre_impl!(work, Λ′, lmax, mmax, x′)
+    else
+        @inbounds _legendre_impl!(workornorm, Λ′, lmax, mmax, x′)
+    end
     return Λ
 end
 
@@ -81,23 +114,19 @@ _fma(z::Complex, w::Complex, x::Real) =
 # Then cascade back to Base.fma
 _fma(x, y, z) = Base.fma(x, y, z)
 
-@inline _similar(A::AbstractArray, ::Type{T}=eltype(A)) where {T} = similar(A, T, axes(A))
-@inline _similar(A::Number, ::Type{T}=typeof(A)) where {T}        = Scalar{T}()
-@propagate_inbounds function _legendre_impl!(norm::AbstractLegendreNorm, Λ, lmax, mmax, x)
-    TΛ = eltype(Λ)
-    TV = eltype(x)
-    T = promote_type(eltype(norm), TΛ, TV)
-
-    z    = _similar(x, T)
-    y¹   = _similar(x, T)
-    y²   = _similar(x, T)
-    pmm2 = _similar(x, T)
-    pm   = _similar(x, T)
-    plm2 = _similar(x, T)
-    plm1 = _similar(x, T)
-    pl   = _similar(x, T)
+@propagate_inbounds function _legendre_impl!(work::Work, Λ, lmax, mmax, x)
+    norm = work.norm
+    z    = work.z
+    y¹   = work.y¹
+    y²   = work.y²
+    pmm2 = work.pmm2
+    pm   = work.pm
+    plm2 = work.plm2
+    plm1 = work.plm1
+    pl   = work.pl
 
     local μ₁, μ₂
+    T = eltype(z)
     M = ndims(x)
     N = ndims(Λ) - M
     I = CartesianIndices(map(Slice, axes(x)))

@@ -162,3 +162,15 @@ end
     @test parent(Λ′) == Λ # Equality of values
     @test_throws DimensionMismatch λlm!(Λ, LMAX, LMAX, X) # Mismatched axes
 end
+
+@testset "Preallocated work space" begin
+    using Legendre: unsafe_legendre!
+    x = range(-1, 1, length=10)
+    Λ = zeros(length(x), LMAX+1, LMAX+1)
+    norm = LegendreUnitNorm()
+    work = Legendre.Work(norm, Λ, x)
+    # Check equality before allocations to ensure the methods have been compiled.
+    @test unsafe_legendre!(norm, copy(Λ), LMAX, LMAX, x) == unsafe_legendre!(work, copy(Λ), LMAX, LMAX, x)
+    @test 0 < @allocated unsafe_legendre!(norm, Λ, LMAX, LMAX, x)
+    @test 0 == @allocated unsafe_legendre!(work, Λ, LMAX, LMAX, x)
+end
