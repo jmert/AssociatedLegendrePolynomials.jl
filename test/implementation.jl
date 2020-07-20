@@ -165,12 +165,22 @@ end
 
 @testset "Preallocated work space" begin
     using Legendre: unsafe_legendre!
-    x = range(-1, 1, length=10)
-    Λ = zeros(length(x), LMAX+1, LMAX+1)
+    x1 = 0.5
+    xN = range(-1, 1, length=10)
+    Λ1 = zeros(LMAX+1, LMAX+1)
+    ΛN = zeros(length(xN), LMAX+1, LMAX+1)
     norm = LegendreUnitNorm()
-    work = Legendre.Work(norm, Λ, x)
+    work1 = Legendre.Work(norm, Λ1, x1)
+    workN = Legendre.Work(norm, ΛN, xN)
     # Check equality before allocations to ensure the methods have been compiled.
-    @test unsafe_legendre!(norm, copy(Λ), LMAX, LMAX, x) == unsafe_legendre!(work, copy(Λ), LMAX, LMAX, x)
-    @test 0 < @allocated unsafe_legendre!(norm, Λ, LMAX, LMAX, x)
-    @test 0 == @allocated unsafe_legendre!(work, Λ, LMAX, LMAX, x)
+    @test unsafe_legendre!(norm, copy(Λ1), LMAX, LMAX, x1) ==
+            unsafe_legendre!(work1, Λ1, LMAX, LMAX, x1)
+    @test unsafe_legendre!(norm, copy(ΛN), LMAX, LMAX, xN) ==
+            unsafe_legendre!(workN, ΛN, LMAX, LMAX, xN)
+    # Normal version should allocate at least as much space as 8 working buffers
+    @test 8sizeof(work1.z) ≤ @allocated unsafe_legendre!(norm, Λ1, LMAX, LMAX, x1)
+    @test 8sizeof(workN.z) ≤ @allocated unsafe_legendre!(norm, ΛN, LMAX, LMAX, xN)
+    # The pre-allocated buffer space should then permit zero allocation calls
+    @test 0 == @allocated unsafe_legendre!(work1, Λ1, LMAX, LMAX, x1)
+    @test 0 == @allocated unsafe_legendre!(workN, ΛN, LMAX, LMAX, xN)
 end
