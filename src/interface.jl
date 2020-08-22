@@ -25,44 +25,44 @@ function initcond end
 """
     coeff_μ(norm::N, ::Type{T}, l::Integer) where {N<:AbstractLegendreNorm, T}
 
-Returns the coefficient ``μ_ℓ`` for the single-term recursion relation
+Returns the coefficient ``\\mu_\\ell`` for the single-term recursion relation
 ```math
-    P_ℓ^ℓ(x) = -μ_ℓ \\sqrt{1-x^2} P_{ℓ-1}^{ℓ-1}(x)
+    P_\\ell^\\ell(x) = -\\mu_\\ell \\sqrt{1-x^2} P_{\\ell-1}^{\\ell-1}(x)
 ```
-where ``μ_ℓ`` is appropriate for the choice of normalization `N`.
+where ``\\mu_\\ell`` is appropriate for the choice of normalization `N`.
 """
 function coeff_μ end
 
 """
     coeff_ν(norm::N, ::Type{T}, l::Integer) where {N<:AbstractLegendreNorm, T}
 
-Returns the coefficient ``ν_ℓ`` for the single-term recursion relation
+Returns the coefficient ``\\nu_\\ell`` for the single-term recursion relation
 ```math
-    P_ℓ^{ℓ-1}(x) = ν_ℓ x P_{ℓ-1}^{ℓ-1}(x)
+    P_\\ell^{\\ell-1}(x) = \\nu_\\ell x P_{\\ell-1}^{\\ell-1}(x)
 ```
-where ``ν_ℓ`` is appropriate for the choice of normalization `N`.
+where ``\\nu_\\ell`` is appropriate for the choice of normalization `N`.
 """
 function coeff_ν end
 
 """
     coeff_α(norm::N, ::Type{T}, l::Integer, m::Integer) where {N<:AbstractLegendreNorm, T}
 
-Returns the coefficient ``α_ℓ^m`` for the two-term recursion relation
+Returns the coefficient ``\\alpha_\\ell^m`` for the two-term recursion relation
 ```math
-    P_ℓ^m(x) = α_ℓ^m x P_{ℓ-1}^m(x) - β_ℓ^m P_{ℓ-2}^m(x)
+    P_\\ell^m(x) = \\alpha_\\ell^m x P_{\\ell-1}^m(x) - \\beta_\\ell^m P_{\\ell-2}^m(x)
 ```
-where ``α_ℓ^m`` is appropriate for the choice of normalization `N`.
+where ``\\alpha_\\ell^m`` is appropriate for the choice of normalization `N`.
 """
 function coeff_α end
 
 """
     coeff_β(norm::N, ::Type{T}, l::Integer, m::Integer) where {N<:AbstractLegendreNorm, T}
 
-Returns the coefficient ``β_ℓ^m`` for the two-term recursion relation
+Returns the coefficient ``\\beta_\\ell^m`` for the two-term recursion relation
 ```math
-    P_ℓ^m(x) = α_ℓ^m x P_{ℓ-1}^m(x) - β_ℓ^m P_{ℓ-2}^m(x)
+    P_\\ell^m(x) = \\alpha_\\ell^m x P_{\\ell-1}^m(x) - \\beta_\\ell^m P_{\\ell-2}^m(x)
 ```
-where ``β_ℓ^m`` is appropriate for the choice of normalization `N`.
+where ``\\beta_\\ell^m`` is appropriate for the choice of normalization `N`.
 """
 function coeff_β end
 
@@ -70,9 +70,10 @@ function coeff_β end
     boundscheck_hook(norm::AbstractLegendreNorm, lmax, mmax)
 
 A bounds-checking hook executed at the beginning of each [`legendre!`](@ref) call to
-permit a normalization `norm` to validate that the given maximum ``(ℓ,m)`` will be within
-the ability to satisfy. The default case always returns `nothing`. A custom normalization
-should throw an error if `lmax` or `mmax` is out of bounds or return `nothing` otherwise.
+permit a normalization `norm` to validate that the given maximum ``(\\ell,m)`` will be
+within the ability to satisfy. The default case always returns `nothing`. A custom
+normalization should throw an error if `lmax` or `mmax` is out of bounds or return `nothing`
+otherwise.
 
 For example, the precomputed coefficients of [`LegendreNormCoeff`](@ref) are limited to
 a given domain at time of construction and cannot be used to calculate terms to arbitrary

@@ -81,12 +81,12 @@ end
 
 Computes the normalization constant
 ```math
-    N_ℓ^m ≡ \\sqrt{\\frac{2ℓ+1}{4π} \\frac{(ℓ-m)!}{(ℓ+m)!}}
+    N_\\ell^m \\equiv \\sqrt{\\frac{2\\ell+1}{4\\pi} \\frac{(\\ell-m)!}{(\\ell+m)!}}
 ```
-which defines the Spherical Harmonic normalized functions ``λ_ℓ^m(x)`` in
-terms of the standard unit normalized ``P_ℓ^m(x)``
+which defines the Spherical Harmonic normalized functions ``\\lambda_\\ell^m(x)`` in
+terms of the standard unit normalized ``P_\\ell^m(x)``
 ```math
-    λ_ℓ^m(x) ≡ N_ℓ^m P_ℓ^m(x)
+    \\lambda_\\ell^m(x) \\equiv N_\\ell^m P_\\ell^m(x)
 ```
 using numbers of type `T`.
 

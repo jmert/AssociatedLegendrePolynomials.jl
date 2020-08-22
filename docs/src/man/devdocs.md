@@ -23,14 +23,14 @@ implement.
 
 ### Normalization Interface
 
-| Interfaces to extend/implement          | Brief description                                                                            |
-|:--------------------------------------- |:-------------------------------------------------------------------------------------------- |
-| [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                                       |
-| [`Legendre.initcond()`](@ref)           | Value of ``N_0^0 P_0^0(x)`` for the given normalization                                      |
-| [`Legendre.coeff_μ()`](@ref)            | Coefficient ``μ_ℓ`` for the 1-term r.r. boosting ``ℓ-1 → ℓ`` and ``m-1 → m`` where ``m = ℓ`` |
-| [`Legendre.coeff_ν()`](@ref)            | Coefficient ``ν_ℓ`` for the 1-term r.r. boosting ``ℓ-1 → ℓ``                                 |
-| [`Legendre.coeff_α()`](@ref)            | Coefficient ``α_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-1,m)`` term                     |
-| [`Legendre.coeff_β()`](@ref)            | Coefficient ``β_ℓ^m`` for the 2-term r.r. acting on the ``(ℓ-2,m)`` term                     |
+| Interfaces to extend/implement          | Brief description                                                                                                              |
+|:--------------------------------------- |:------------------------------------------------------------------------------------------------------------------------------ |
+| [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                                                                         |
+| [`Legendre.initcond()`](@ref)           | Value of ``N_0^0 P_0^0(x)`` for the given normalization                                                                        |
+| [`Legendre.coeff_μ()`](@ref)            | Coefficient ``\mu_\ell`` for the 1-term r.r. boosting ``\ell-1 \rightarrow \ell`` and ``m-1 \rightarrow m`` where ``m = \ell`` |
+| [`Legendre.coeff_ν()`](@ref)            | Coefficient ``\nu_\ell`` for the 1-term r.r. boosting ``\ell-1 \rightarrow \ell``                                              |
+| [`Legendre.coeff_α()`](@ref)            | Coefficient ``\alpha_\ell^m`` for the 2-term r.r. acting on the ``(\ell-1,m)`` term                                            |
+| [`Legendre.coeff_β()`](@ref)            | Coefficient ``\beta_\ell^m`` for the 2-term r.r. acting on the ``(\ell-2,m)`` term                                             |
 
 | Optional interfaces                   | Brief description                      |
 |:------------------------------------- |:-------------------------------------- |
@@ -39,99 +39,99 @@ implement.
 
 ### Example implementation
 
-As a concrete example, we'll walk through how ``λ_ℓ^m(x)`` is defined to have the
+As a concrete example, we'll walk through how ``\lambda_\ell^m(x)`` is defined to have the
 spherical harmonic normalization baked in.
 
 ```math
 \begin{align}
-    λ_ℓ^m(x) &≡ N_ℓ^m P_ℓ^m(x)
+    \lambda_\ell^m(x) &\equiv N_\ell^m P_\ell^m(x)
     \\
-    N_ℓ^m &= \sqrt{\frac{2ℓ+1}{4π} \frac{(ℓ-m)!}{(ℓ+m)!}}
+    N_\ell^m &= \sqrt{\frac{2\ell+1}{4\pi} \frac{(\ell-m)!}{(\ell+m)!}}
 \end{align}
 ```
 
 [^1]:
     Note that here we have shifted the indices by 1 compared to the definitions
     in the introduction such that the left-hand side is always written in terms
-    of degree ``ℓ`` rather than ``ℓ+1``.
+    of degree ``\ell`` rather than ``\ell+1``.
 
 Baking in the normalization happens by changing the coefficients in the recursion
 relations given in the [Definitions and Properties](@ref legendre_defn) section[^1].
 For our purposes, they take on the form:
 ```math
 \begin{align}
-    P_ℓ^ℓ(x) &= \mu_ℓ \sqrt{1-x^2} P_{ℓ-1}^{ℓ-1}(x)
+    P_\ell^\ell(x) &= \mu_\ell \sqrt{1-x^2} P_{\ell-1}^{\ell-1}(x)
         \label{eqn:cus_rr_1term_lm}
     \\
-    P_ℓ^{ℓ-1}(x) &= \nu_ℓ x P_{ℓ-1}^{ℓ-1}(x)
+    P_\ell^{\ell-1}(x) &= \nu_\ell x P_{\ell-1}^{\ell-1}(x)
         \label{eqn:cus_rr_1term_l}
     \\
-    P_ℓ^m(x) &= \alpha_ℓ^m x P_{ℓ-1}^m(x)
-        - \beta_ℓ^m P_{ℓ-2}^m(x)
+    P_\ell^m(x) &= \alpha_\ell^m x P_{\ell-1}^m(x)
+        - \beta_\ell^m P_{\ell-2}^m(x)
         \label{eqn:cus_rr_2term}
 \end{align}
 ```
-The normalization is encoded in the coefficients ``μ_ℓ``, ``ν_ℓ``, ``α_ℓ^m``,
-``β_ℓ^m``.
+The normalization is encoded in the coefficients ``\mu_\ell``, ``\nu_\ell``,
+``\alpha_\ell^m``, ``\beta_\ell^m``.
 For the standard (unity) normalization, these take on the values
 ```math
 \begin{align}
-    μ_ℓ &= 2ℓ - 1 \\
-    ν_ℓ &= 2ℓ - 1 \\
-    α_ℓ^m &= \frac{2ℓ - 1}{ℓ - m} \\
-    β_ℓ^m &= \frac{ℓ + m - 1}{ℓ - m}
+    \mu_\ell &= 2\ell - 1 \\
+    \nu_\ell &= 2\ell - 1 \\
+    \alpha_\ell^m &= \frac{2\ell - 1}{\ell - m} \\
+    \beta_\ell^m &= \frac{\ell + m - 1}{\ell - m}
 \end{align}
 ```
 by simply identifying the coefficients from Eqns.
-``\ref{eqn:cus_rr_2term}``–``\ref{eqn:cus_rr_1term_l}`` on each of the ``P_ℓ^m(x)`` terms
+``\ref{eqn:cus_rr_2term}``–``\ref{eqn:cus_rr_1term_l}`` on each of the ``P_\ell^m(x)`` terms
 on the right hand side.
 
 For other normalizations, we multiply through by the normalization factor
 appropriate for the left-hand side of the equations, rearrange terms to
 correctly normalize the terms on the right, and identify the coefficients left
 over.
-For example, ``α_ℓ^m`` and ``β_ℓ^m`` for ``λ_ℓ^m(x)`` are determined by starting with
-Eq. ``\ref{eqn:cus_rr_2term}`` and multiply through by ``N_ℓ^m``.
-The left-hand side by definition is ``λ_ℓ^m``, leaving us with
+For example, ``\alpha_\ell^m`` and ``\beta_\ell^m`` for ``\lambda_\ell^m(x)`` are determined
+by starting with Eq. ``\ref{eqn:cus_rr_2term}`` and multiply through by ``N_\ell^m``.
+The left-hand side by definition is ``\lambda_\ell^m``, leaving us with
 ```math
 \begin{align}
     \begin{split}
-        λ_ℓ^m &= \frac{2ℓ-1}{ℓ-m} x
-            \sqrt{\frac{2ℓ+1}{4π} \frac{(ℓ-m)!}{(ℓ+m)!}} P_{ℓ-1}^m(x) -
+        \lambda_\ell^m &= \frac{2\ell-1}{\ell-m} x
+            \sqrt{\frac{2\ell+1}{4\pi} \frac{(\ell-m)!}{(\ell+m)!}} P_{\ell-1}^m(x) -
             \\
-            &\quad\quad \frac{ℓ+m-1}{ℓ-m} \sqrt{\frac{2ℓ+1}{4π}
-            \frac{(ℓ-m)!}{(ℓ+m)!}} P_{ℓ-2}^m(x)
+            &\quad\quad \frac{\ell+m-1}{\ell-m} \sqrt{\frac{2\ell+1}{4\pi}
+            \frac{(\ell-m)!}{(\ell+m)!}} P_{\ell-2}^m(x)
     \end{split}
 \end{align}
 ```
 Through judicious use of algebra, the terms on the right-hand side can be manipulated
-to gather terms of the form ``N_{ℓ-1}^m P_{ℓ-1}^m(x)`` and
-``N_{ℓ-2}^m P_{ℓ-2}^m(x)``, leaving us with
+to gather terms of the form ``N_{\ell-1}^m P_{\ell-1}^m(x)`` and
+``N_{\ell-2}^m P_{\ell-2}^m(x)``, leaving us with
 ```math
 \begin{align}
-    λ_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{4(ℓ-1)^2 - 1}{ℓ^2 - m^2}} x
-        λ_{ℓ-1}^m(x) -
-        \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{(ℓ-1)^2 - m^2}{ℓ^2 - m^2}}
-        λ_{ℓ-2}^m(x)
+    \lambda_\ell^m &= \sqrt{\frac{2\ell+1}{2\ell-3} \frac{4(\ell-1)^2 - 1}{\ell^2 - m^2}} x
+        \lambda_{\ell-1}^m(x) -
+        \sqrt{\frac{2\ell+1}{2\ell-3} \frac{(\ell-1)^2 - m^2}{\ell^2 - m^2}}
+        \lambda_{\ell-2}^m(x)
 \end{align}
 ```
-We identify each of the two square root terms as ``α_ℓ^m`` and ``β_ℓ^m`` since
-they are the cofficients appropriate for generating ``λ_ℓ^m(x)``.
+We identify each of the two square root terms as ``α_\ell^m`` and ``β_\ell^m`` since
+they are the cofficients appropriate for generating ``\lambda_\ell^m(x)``.
 Doing so with the other two recurrence relation equations, we obtain:
 ```math
 \begin{align}
-    μ_ℓ &= \sqrt{1 + \frac{1}{2ℓ}} \\
-    ν_ℓ &= \sqrt{2ℓ + 1} \\
-    α_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{4(ℓ-1)^2 - 1}{ℓ^2 - m^2}} \\
-    β_ℓ^m &= \sqrt{\frac{2ℓ+1}{2ℓ-3} \frac{(ℓ-1)^2 - m^2}{ℓ^2 - m^2}}
+    \mu_\ell &= \sqrt{1 + \frac{1}{2\ell}} \\
+    \nu_\ell &= \sqrt{2\ell + 1} \\
+    \alpha_\ell^m &= \sqrt{\frac{2\ell+1}{2\ell-3} \frac{4(\ell-1)^2 - 1}{\ell^2 - m^2}} \\
+    \beta_\ell^m &= \sqrt{\frac{2\ell+1}{2\ell-3} \frac{(\ell-1)^2 - m^2}{\ell^2 - m^2}}
 \end{align}
 ```
-The final math required is to define the initial condition ``λ_0^0(x)``.
+The final math required is to define the initial condition ``\lambda_0^0(x)``.
 This is straight forward given the definition:
 ```math
 \begin{align}
-    λ_0^0(x) &= N_0^0 P_0^0(x) = \sqrt{\frac{1}{4π}} × 1 \\
-    λ_0^0(x) &= \sqrt{\frac{1}{4π}}
+    \lambda_0^0(x) &= N_0^0 P_0^0(x) = \sqrt{\frac{1}{4\pi}} \times 1 \\
+    \lambda_0^0(x) &= \sqrt{\frac{1}{4\pi}}
 \end{align}
 ```
 

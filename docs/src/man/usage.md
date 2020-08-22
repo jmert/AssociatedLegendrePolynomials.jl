@@ -13,7 +13,7 @@ Depth = 2
 
 ## Calculating scalar values
 
-At its simplest, the associated Legendre polynomial ``P_ℓ^m(x)`` is computed by calling
+At its simplest, the associated Legendre polynomial ``P_\ell^m(x)`` is computed by calling
 [`Legendre.Plm`](@ref). For example, to compute ``P_2^1(0.5)``,
 ```jldoctest PlmUsage
 julia> using Legendre
@@ -22,16 +22,16 @@ julia> Plm(2, 1, 0.5)
 -1.299038105676658
 ```
 In the context of CMB analysis, a common use of the associated Legendre polynomials is to
-compute the spherical harmonics ``Y_{ℓm}(θ,ϕ)``:
+compute the spherical harmonics ``Y_{\ell m}(\theta,\phi)``:
 ```math
 \begin{align}
     \begin{aligned}
-    Y_{ℓm}(θ,ϕ) &≡ N_ℓ^m P_ℓ^m(\cos θ) e^{imϕ} \\
-    &\text{where } N_ℓ^m ≡ \sqrt{\frac{2ℓ+1}{4π} \frac{(ℓ-m)!}{(ℓ+m)!}}
+    Y_{\ell m}(\theta,\phi) &\equiv N_\ell^m P_\ell^m(\cos \theta) e^{im\phi} \\
+    &\text{where } N_\ell^m \equiv \sqrt{\frac{2\ell+1}{4\pi} \frac{(\ell-m)!}{(\ell+m)!}}
     \end{aligned}
 \end{align}
 ```
-The function [`Legendre.Nlm`](@ref) calculates the normalization factor ``N_ℓ^m``:
+The function [`Legendre.Nlm`](@ref) calculates the normalization factor ``N_\ell^m``:
 ```jldoctest PlmUsage
 julia> Nlm(2, 0)
 0.6307831305050401
@@ -41,8 +41,8 @@ julia> Nlm(2, 0) * Plm(2, 0, 0.5)
 ```
 
 An important fact about the associated Legendre polynomials is that for
-``m > 0``, ``P_ℓ^m(x)`` diverges to ``∞`` as ``ℓ → ∞`` [^1].
-For even moderately large pairs of ``(ℓ,m)``, numerical underflow and overflow make
+``m > 0``, ``P_\ell^m(x)`` diverges to ``\infty`` as ``\ell \rightarrow \infty`` [^1].
+For even moderately large pairs of ``(\ell,m)``, numerical underflow and overflow make
 computing the spherical harmonics impossible this way:
 ```jldoctest PlmUsage
 julia> n = Nlm(157, 150)      # Underflows
@@ -69,13 +69,13 @@ julia> Float64(n * p)
 but at the expense of much more computationally expensive calculations.
 
 An alternative way forward is to directly calculate the spherical harmonic normalized
-associated Legendre polynomials ``λ_ℓ^m(x)`` so that the spherical harmonics are
+associated Legendre polynomials ``\lambda_\ell^m(x)`` so that the spherical harmonics are
 defined as
 ```math
 \begin{align}
     \begin{aligned}
-    Y_{ℓm}(θ,ϕ) &= λ_ℓ^m(\cos θ) e^{imϕ} \\
-    & \text{where } λ_ℓ^m(x) ≡ N_ℓ^m P_ℓ^m(x)
+    Y_{\ell m}(\theta,\phi) &= \lambda_\ell^m(\cos \theta) e^{im\phi} \\
+    & \text{where } \lambda_\ell^m(x) \equiv N_\ell^m P_\ell^m(x)
     \end{aligned}
 \end{align}
 ```
@@ -88,14 +88,14 @@ julia> λlm(157, 150, 0.5)
 
 !!! note
     We are not just limited to efficient and numerically stable computation of
-    ``λ_ℓ^m(x)``; the package supports arbitrary normalizations.  For further
+    ``\lambda_\ell^m(x)``; the package supports arbitrary normalizations.  For further
     information on implementing custom Legendre normalizations, see the [Custom
     normalizations](@ref customnorm) section.
 
 ## Calculating multiple degrees/orders
 
 Because calculating a particular Legendre polynomial value is the end result of running
-a recurrence relation, looping evaluation of ``P_ℓ^m(x)`` for all ``ℓ`` is inefficient and
+a recurrence relation, looping evaluation of ``P_\ell^m(x)`` for all ``\ell`` is inefficient and
 redoes a lot of work:
 ```jldoctest PlmUsage
 julia> @time [l < 2 ? 0.0 : λlm(l, 2, 0.5) for l in 2:700];
@@ -112,8 +112,8 @@ julia> λ = @time λlm(0:700, 2, 0.5);
 On my machine, this is roughly 3000 times faster!
 
 Likewise, calculating the [lower triangular] matrix of values for some ``x`` over all
-degrees ``ℓ ∈ [0,ℓ_\mathrm{max}]`` and all orders ``m ∈ [0,ℓ]`` is done by also specifying
-the orders as a `UnitRange`.
+degrees ``\ell \in [0,\ell_\mathrm{max}]`` and all orders ``m \in [0,\ell]`` is done by also
+specifying the orders as a `UnitRange`.
 ```jldoctest PlmUsage
 julia> Λ = @time λlm(0:700, 0:700, 0.5);
   0.002980 seconds (7 allocations: 3.749 MiB)
@@ -165,7 +165,7 @@ and a further extra dimension is added for a range over orders ``m``.
 Both of `Plm` and `λlm` also have in-place modifying counterparts,
 [`Plm!`](@ref Plm!(::Any, ::Integer, ::Integer, ::Any)) and
 [`λlm!`](@ref λlm!(::Any, ::Integer, ::Integer, ::Any)) respectively,
-which fill an appropriately sized vector for a specified ``ℓ_\mathrm{max}`` and
+which fill an appropriately sized vector for a specified ``\ell_\mathrm{max}`` and
 ``m_\mathrm{max}``.
 Instead of using integer or range arguments, whether to calculate a value for a
 single degree/order, a range of degrees for fixed order, or for all degrees and orders
@@ -201,12 +201,12 @@ Legendre polynomials is to pre-compute the appropriate recursion relation coeffi
 At a low level, `Plm`/`Plm!` and `λlm`/`λlm!` are simple wrappers around the general
 [`legendre`](@ref)/[`legendre!`](@ref) functions.
 The trait type [`LegendreUnitNorm`](@ref) dispatches internal functions to compute
-``P_ℓ^m(x)``:
+``P_\ell^m(x)``:
 ```jldoctest PlmUsage
 julia> legendre(LegendreUnitNorm(), 5, 2, 0.5) == Plm(5, 2, 0.5)
 true
 ```
- and [`LegendreSphereNorm`](@ref) does the same for ``λ_ℓ^m(x)``:
+ and [`LegendreSphereNorm`](@ref) does the same for ``\lambda_ℓ^m(x)``:
 ```jldoctest PlmUsage
 julia> legendre(LegendreSphereNorm(), 5, 2, 0.5) == λlm(5, 2, 0.5)
 true
@@ -259,25 +259,27 @@ julia> Λ[1:5, 1:5]
 ## Footnotes
 
 [^1]:
-    Specifically, the envelope of ``P_ℓ^m(x)`` which bounds the local extrema
+    Specifically, the envelope of ``P_\ell^m(x)`` which bounds the local extrema
     for all values of ``x`` can be shown to be
     ```math
-        \left| P_ℓ^m(\cos θ) \right| ≤ \frac{Γ(ℓ+m+1)}{Γ(ℓ+\frac{3}{2})}
-            \left( \frac{2}{π \sin θ} \right)^{1/2}
+        \left| P_\ell^m(\cos \theta) \right| \le
+            \frac{\Gamma(\ell+m+1)}{\Gamma(\ell+\frac{3}{2})}
+            \left( \frac{2}{\pi \sin \theta} \right)^{1/2}
     ```
     (see Eq. 8.10.7 (p336) of Abramowitz and Stegun, “Handbook of Mathematical
     Functions” 10th printing (1972)).
-    For fixed ``m`` and any ``x``, we take the asymptotic limit as ``ℓ → ∞`` and simplify
-    ``Γ(z)`` via Stirling's approximation to get the scaling of the associated Legendre
-    polynomial envelope
+    For fixed ``m`` and any ``x``, we take the asymptotic limit as
+    ``\ell \rightarrow \infty`` and simplify ``\Gamma(z)`` via Stirling's approximation to
+    get the scaling of the associated Legendre polynomial envelope
     ```math
         \DeclareMathOperator*{\env}{env}
-        \env_{ℓ→∞}\left( P_ℓ^m \right) ∝ ℓ^{m - 1/2} \text{ .}
+        \env_{\ell\rightarrow\infty}\left( P_\ell^m \right) \propto \ell^{m - 1/2} \text{ .}
     ```
-    In contrast, the normalization factor ``N_ℓ^m`` scales as ``ℓ^{1/2 - m}``,
-    exactly canceling the scaling of ``\env\left(P_ℓ^m\right)``, so overall the spherical
-    harmonic normalized Legendre polynomials ``λ_ℓ^m(x)`` asymptote to some constant
-    envelope:
+    In contrast, the normalization factor ``N_\ell^m`` scales as ``\ell^{1/2 - m}``,
+    exactly canceling the scaling of ``\env\left(P_\ell^m\right)``, so overall the spherical
+    harmonic normalized Legendre polynomials ``\lambda_\ell^m(x)`` asymptote to some
+    constant envelope:
     ```math
-        \env_{ℓ→∞} \left( λ_ℓ^m \right) ∝ ℓ^0 = \text{constant .}
+        \env_{\ell\rightarrow\infty} \left( \lambda_\ell^m \right) \propto
+            \ell^0 = \text{constant .}
     ```

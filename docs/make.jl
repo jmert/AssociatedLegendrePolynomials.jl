@@ -6,7 +6,7 @@ doctest = "--fix"  in ARGS ? :fix :
 DocMeta.setdocmeta!(Legendre, :DocTestSetup, :(using Legendre); recursive=true)
 
 makedocs(
-    format = Documenter.HTML(mathengine=MathJax()),
+    format = Documenter.HTML(mathengine = Documenter.MathJax3()),
     sitename = "Legendre Polynomials",
     authors = "Justin Willmert",
     modules = [Legendre],
