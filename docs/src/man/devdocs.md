@@ -60,7 +60,7 @@ relations given in the [Definitions and Properties](@ref legendre_defn) section[
 For our purposes, they take on the form:
 ```math
 \begin{align}
-    P_\ell^\ell(x) &= \mu_\ell \sqrt{1-x^2} P_{\ell-1}^{\ell-1}(x)
+    P_\ell^\ell(x) &= -\mu_\ell \sqrt{1-x^2} P_{\ell-1}^{\ell-1}(x)
         \label{eqn:cus_rr_1term_lm}
     \\
     P_\ell^{\ell-1}(x) &= \nu_\ell x P_{\ell-1}^{\ell-1}(x)
