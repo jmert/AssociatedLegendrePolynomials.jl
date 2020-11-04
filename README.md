@@ -2,7 +2,7 @@
 
 | **Documentation**                                                         | **Build Status**                                             |
 |:-------------------------------------------------------------------------:|:------------------------------------------------------------:|
-| [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![][travis-img]][travis-url][![][codecov-img]][codecov-url] |
+| [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![][ci-img]][ci-url][![][codecov-img]][codecov-url] |
 
 Legendre.jl is a library for computing the Associated Legendre Polynomials.
 
@@ -41,8 +41,8 @@ julia> using Legendre
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
 [docs-dev-url]: https://jmert.github.io/Legendre.jl/dev
 
-[travis-img]: https://travis-ci.com/jmert/Legendre.jl.svg?branch=master
-[travis-url]: https://travis-ci.com/jmert/Legendre.jl
+[ci-img]: https://github.com/jmert/Legendre.jl/actions
+[ci-url]: https://github.com/jmert/Legendre.jl/workflows/CI/badge.svg
 
 [codecov-img]: https://codecov.io/gh/jmert/Legendre.jl/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/jmert/Legendre.jl
