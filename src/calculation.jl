@@ -279,7 +279,7 @@ end
 @static if VERSION < v"1.3.0-alpha"
     # Prior to julia-1.3.0, abstract types could not have methods attached to them.
     # Provide for just the defined normalization types.
-    for N in (LegendreUnitNorm,LegendreSphereNorm,LegendreNormCoeff)
+    for N in (LegendreUnitNorm,LegendreSphereNorm,LegendreOrthoNorm,LegendreNormCoeff)
         @eval begin
             @inline function (norm::$N)(l, m, x)
                 return legendre(norm, l, m, x)
