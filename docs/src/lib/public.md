@@ -16,6 +16,7 @@ Nlm
 ```@docs
 AbstractLegendreNorm
 LegendreUnitNorm
+LegendreOrthoNorm
 LegendreSphereNorm
 LegendreNormCoeff
 ```
@@ -35,6 +36,7 @@ Plm!
 There are also aliases for pre-computed coefficients of the provided normalizations.
 ```@docs
 LegendreUnitCoeff
+LegendreOrthoCoeff
 LegendreSphereCoeff
 ```
 

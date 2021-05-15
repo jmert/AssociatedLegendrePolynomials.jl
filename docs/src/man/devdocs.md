@@ -153,7 +153,7 @@ normalization trait type as the first argument.
 up a type-stable algorithm, which we'll ignore here for the sake of simplicity.)
 ```jldoctest λNorm
 julia> initcond(::λNorm, T::Type) = sqrt(1 / 4π)
-initcond (generic function with 4 methods)
+initcond (generic function with 5 methods)
 ```
 Finally, we provide methods which encode the cofficients as well:
 ```jldoctest λNorm

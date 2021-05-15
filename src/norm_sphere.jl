@@ -1,23 +1,53 @@
 # Implements the legendre interface for the unit normalization case
 
 """
+    struct LegendreOrthoNorm <: AbstractLegendreNorm end
+
+Trait type denoting the orthonormal (full) normalization of the associated Legendre
+functions ``O_\\ell^m(x)``.
+The orthonormal normalization is defined such that
+```math
+    \\int_{-1}^{1} \\left[ O_\\ell^m(x) \\right]^2 \\,dx = 1
+```
+The normalization factor with respect to the standard (unnormalized) Legendre
+functions ``P_\\ell^m(x)`` ([`LegendreUnitNorm`](@ref)) is given by
+```math
+    O_\\ell^m(x) \\equiv \\sqrt{\\frac{2\\ell+1}{2} \\frac{(\\ell-m)!}{(\\ell+m)!}} P_\\ell^m(x)
+```
+"""
+struct LegendreOrthoNorm <: AbstractLegendreNorm end
+
+"""
     struct LegendreSphereNorm <: AbstractLegendreNorm end
 
 Trait type denoting the spherical-harmonic normalization of the associated Legendre
-polynomials.
+functions ``\\lambda_\\ell^m(x)``.
+The spherical-harmonic normalization is defined such that
+```math
+    \\int_{-1}^{1} \\left[ \\lambda_\\ell^m(x) \\right]^2 \\,dx = \\frac{1}{2\\pi}
+```
+The normalization factor with respect to the standard (unnormalized) Legendre
+functions ``P_\\ell^m(x)`` ([`LegendreUnitNorm`](@ref)) is given by
+```math
+    \\lambda_\\ell^m(x) \\equiv \\sqrt{\\frac{2\\ell+1}{4\\pi} \\frac{(\\ell-m)!}{(\\ell+m)!}} P_\\ell^m(x)
+```
 """
 struct LegendreSphereNorm <: AbstractLegendreNorm end
 
-@inline function
-initcond(::LegendreSphereNorm, ::Type{T}) where T
+@inline function initcond(::LegendreOrthoNorm, ::Type{T}) where T
+    return sqrt(inv(T(2)))
+end
+@inline function initcond(::LegendreSphereNorm, ::Type{T}) where T
     # comparing this against
     #   convert(T, inv(sqrt(4*convert(BigFloat, π))))
     # shows that this is exact within Float64 precision
     return inv(sqrt(4 * convert(T, π)))
 end
 
+const OrthoOrSphereNorm = Union{LegendreOrthoNorm,LegendreSphereNorm}
+
 @inline function
-coeff_μ(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
+coeff_μ(::OrthoOrSphereNorm, ::Type{T}, l::Integer) where T
     # The direct derivation of the normalization constant gives
     #     return sqrt(one(T) + inv(convert(T, 2l)))
     # but when comparing results for T ∈ (Float64,BigFloat), the Float64 results differ by
@@ -46,12 +76,12 @@ coeff_μ(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
 end
 
 @inline function
-coeff_ν(::LegendreSphereNorm, ::Type{T}, l::Integer) where T
+coeff_ν(::OrthoOrSphereNorm, ::Type{T}, l::Integer) where T
     return @fastmath(sqrt)(convert(T, 2l + 1))
 end
 
 @inline function
-coeff_α(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
+coeff_α(::OrthoOrSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     lT = convert(T, l)
     mT = convert(T, m)
     # Write factors in two pieces to make compiler's job easier. In the case where
@@ -63,7 +93,7 @@ coeff_α(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
 end
 
 @inline function
-coeff_β(::LegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
+coeff_β(::OrthoOrSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     lT = convert(T, l)
     mT = convert(T, m)
     # Write factors in two pieces to make compiler's job easier. In the case where

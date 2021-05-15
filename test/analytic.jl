@@ -1,8 +1,8 @@
 using LinearAlgebra
 
-################################
-# ASSOCIATED LEGENDRE FUNCTIONS
-################################
+##################################
+# UNNORMALIZED LEGENDRE FUNCTIONS
+##################################
 
 # P_0^0 is constant. Verify the output is invariant for several inputs.
 @testset "Constant P_0^0 ($T)" for T in NumTypes
@@ -28,13 +28,16 @@ end
     @test plm[10,1] ≈  827sqrt(T(2))/4096
 end
 
-##############################################################
-# SPHERICAL HARMONIC NORMALIZED ASSOCIATED LEGENDRE FUNCTIONS
-##############################################################
+#################################################
+# ORTHONORMAL & SPHERICAL HARMONIC NORMALIZATION
+#################################################
 
 # P_0^0 is constant. Verify the output is invariant for several inputs.
 @testset "Constant P_0^0 ($T)" for T in NumTypes
+    @test @inferred(legendre(LegendreOrthoNorm(), 0, 0, T(0.1))) isa T
     @test @inferred(legendre(LegendreSphereNorm(), 0, 0, T(0.1))) isa T
+    @test all(legendre(LegendreOrthoNorm(), 0, 0, z) == sqrt(T(0.5))
+              for z in range(-one(T), one(T), length=10))
     @test all(legendre(LegendreSphereNorm(), 0, 0, z) == sqrt(inv(4T(π)))
               for z in range(-one(T), one(T), length=10))
 end
@@ -98,6 +101,21 @@ end
         legendre!(LegendreUnitNorm(), plm_norm, LMAX, LMAX, x)
         legendre!(LegendreSphereNorm(), plm_sphr, LMAX, LMAX, x)
         @test all(isapprox.(nlm.*plm_norm, plm_sphr, atol=atol))
+    end
+end
+
+# The normal P_ℓ^m should be equal to the spherical harmonic normalized
+# λ_ℓ^m if we manually normalize them.
+@testset "Equality of (2π)^(-1/2) O_ℓ^m and λ_ℓ^m ($T)" for T in NumTypes
+    LMAX = 5
+    atol = max(eps(T(100)), eps(100.0)) # maximum(plm_norm) is of order 10²
+    plm_orth = zeros(T, LMAX+1, LMAX+1)
+    plm_sphr = zeros(T, LMAX+1, LMAX+1)
+    for ii in 1:10
+        x = 2*T(rand()) - 1
+        legendre!(LegendreOrthoNorm(), plm_orth, LMAX, LMAX, x)
+        legendre!(LegendreSphereNorm(), plm_sphr, LMAX, LMAX, x)
+        @test all(isapprox.(plm_orth./sqrt(2T(π)), plm_sphr, atol=atol))
     end
 end
 

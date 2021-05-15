@@ -1,7 +1,7 @@
 """
     abstract type AbstractLegendreNorm end
 
-Abstract trait supertype for normalization conditions of the Associated Legendre polynomials.
+Abstract trait supertype for normalization conditions of the associated Legendre functions.
 """
 abstract type AbstractLegendreNorm end
 
