@@ -137,7 +137,7 @@ For a specific degree and order, the output array will have the same shape as th
 argument:
 ```jldoctest PlmUsage
 julia> λlm(2, 0, reshape(range(0, 1, length=4), 2, 2))
-2×2 Array{Float64,2}:
+2×2 Matrix{Float64}:
  -0.315392  0.105131
  -0.210261  0.630783
 ```
@@ -145,7 +145,7 @@ Then adding a range of degrees increases the dimensionality by 1, with the trail
 dimension being over ``\ell``,
 ```jldoctest PlmUsage
 julia> λlm(0:2, 0, reshape(range(0, 1, length=4), 2, 2))
-2×2×3 Array{Float64,3}:
+2×2×3 Array{Float64, 3}:
 [:, :, 1] =
  0.282095  0.282095
  0.282095  0.282095
@@ -175,7 +175,7 @@ For example, to calculate the single value ``\lambda_{700}^{200}(0.5)``, provide
 0-dimensional output array (to match the 0-dimensionality of the scalar `0.5`)
 ```jldoctest PlmUsage
 julia> λlm!(fill(NaN), 700, 2, 0.5)
-0-dimensional Array{Float64,0}:
+0-dimensional Array{Float64, 0}:
 0.24148976866924293
 ```
 and filling a vector or matrix instead calculates all degrees up to the given maximum
@@ -246,7 +246,7 @@ julia> fill!(Λ, 0);
 julia> legendre!(coeff, Λ, 2, 2, 0.5);
 
 julia> Λ[1:5, 1:5]
-5×5 Array{Float64,2}:
+5×5 Matrix{Float64}:
   0.282095    0.0       0.0       0.0  0.0
   0.244301   -0.299207  0.0       0.0  0.0
  -0.0788479  -0.334523  0.289706  0.0  0.0
