@@ -1,5 +1,7 @@
 using LinearAlgebra
 
+xrange(::Type{T}, len=11) where {T} = range(-one(T), one(T), length = len)
+
 ##################################
 # UNNORMALIZED LEGENDRE FUNCTIONS
 ##################################
@@ -7,8 +9,7 @@ using LinearAlgebra
 # P_0^0 is constant. Verify the output is invariant for several inputs.
 @testset "Constant P_0^0 ($T)" for T in NumTypes
     @test @inferred(legendre(LegendreUnitNorm(), 0, 0, T(0.1))) isa T
-    @test all(legendre(LegendreUnitNorm(), 0, 0, z) == one(T)
-              for z in range(-one(T), one(T), length=10))
+    @test all(legendre(LegendreUnitNorm(), 0, 0, x) == one(T) for x in xrange(T))
 end
 
 # Match P_ℓ^{m=0} terms for ℓ=1...9 where the analytical expressions
@@ -34,12 +35,10 @@ end
 
 # P_0^0 is constant. Verify the output is invariant for several inputs.
 @testset "Constant P_0^0 ($T)" for T in NumTypes
-    @test @inferred(legendre(LegendreOrthoNorm(), 0, 0, T(0.1))) isa T
+    @test @inferred(legendre(LegendreOrthoNorm(),  0, 0, T(0.1))) isa T
     @test @inferred(legendre(LegendreSphereNorm(), 0, 0, T(0.1))) isa T
-    @test all(legendre(LegendreOrthoNorm(), 0, 0, z) == sqrt(T(0.5))
-              for z in range(-one(T), one(T), length=10))
-    @test all(legendre(LegendreSphereNorm(), 0, 0, z) == sqrt(inv(4T(π)))
-              for z in range(-one(T), one(T), length=10))
+    @test all(legendre(LegendreOrthoNorm(),  0, 0, x) == sqrt(T(0.5))     for x in xrange(T))
+    @test all(legendre(LegendreSphereNorm(), 0, 0, x) == sqrt(inv(4T(π))) for x in xrange(T))
 end
 
 # The initialization condition
@@ -96,9 +95,8 @@ end
     lmat = tril(repeat(collect(0:LMAX), 1, LMAX+1))
     mmat = tril(repeat(collect(0:LMAX)', LMAX+1, 1))
     nlm = tril(Nlm.(T, lmat, mmat))
-    for ii in 1:10
-        x = 2*T(rand()) - 1
-        legendre!(LegendreUnitNorm(), plm_norm, LMAX, LMAX, x)
+    for x in xrange(T)
+        legendre!(LegendreUnitNorm(),   plm_norm, LMAX, LMAX, x)
         legendre!(LegendreSphereNorm(), plm_sphr, LMAX, LMAX, x)
         @test all(isapprox.(nlm.*plm_norm, plm_sphr, atol=atol))
     end
@@ -111,9 +109,8 @@ end
     atol = max(eps(T(100)), eps(100.0)) # maximum(plm_norm) is of order 10²
     plm_orth = zeros(T, LMAX+1, LMAX+1)
     plm_sphr = zeros(T, LMAX+1, LMAX+1)
-    for ii in 1:10
-        x = 2*T(rand()) - 1
-        legendre!(LegendreOrthoNorm(), plm_orth, LMAX, LMAX, x)
+    for x in xrange(T)
+        legendre!(LegendreOrthoNorm(),  plm_orth, LMAX, LMAX, x)
         legendre!(LegendreSphereNorm(), plm_sphr, LMAX, LMAX, x)
         @test all(isapprox.(plm_orth./sqrt(2T(π)), plm_sphr, atol=atol))
     end
@@ -126,7 +123,7 @@ end
 # Trivial case: real-only complex arguments should be identical to the real case
 @testset "Complex arguments, real axis ($T)" for T in NumTypes
     LMAX = 10
-    x = collect(range(-one(T), one(T), length=100))
+    x = xrange(T, 100)
     z = complex(x)
     @test Plm.(0:LMAX, 0:LMAX, x) == real.(Plm.(0:LMAX, 0:LMAX, z))
     @test λlm.(0:LMAX, 0:LMAX, x) == real.(λlm.(0:LMAX, 0:LMAX, z))
