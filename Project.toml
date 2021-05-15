@@ -1,7 +1,7 @@
 name = "Legendre"
 uuid = "7642852e-7f09-11e9-134e-0940411082b6"
 authors = ["Justin Willmert <justin@willmert.me>"]
-version = "0.2.1"
+version = "0.2.2"
 
 [compat]
 julia = "1.2"
