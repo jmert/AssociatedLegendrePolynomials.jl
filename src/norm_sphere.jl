@@ -46,6 +46,13 @@ end
 
 const OrthoOrSphereNorm = Union{LegendreOrthoNorm,LegendreSphereNorm}
 
+# Version of sqrt() which skips the domain (x < 0) check for the IEEE floating point types.
+# For nonstandard number types, just fall back to a regular sqrt() since eliminating the
+# domain check is probably no longer the dominant contributor to not vectorizing.
+unchecked_sqrt(x::T) where {T <: Base.IEEEFloat} = Base.sqrt_llvm(x)
+unchecked_sqrt(x::T) where {T <: Integer} = unchecked_sqrt(float(x))
+unchecked_sqrt(x) = Base.sqrt(x)
+
 @inline function
 coeff_μ(::OrthoOrSphereNorm, ::Type{T}, l::Integer) where T
     # The direct derivation of the normalization constant gives
@@ -72,12 +79,12 @@ coeff_μ(::OrthoOrSphereNorm, ::Type{T}, l::Integer) where T
     # allows Float64 calculations to be correctly rounded values when compared to BigFloat
     # to very high ℓ.
     xT = convert(T, 2l)
-    return one(T) + inv(xT + @fastmath(sqrt)(muladd(xT, xT, xT)))
+    return one(T) + inv(xT + unchecked_sqrt(muladd(xT, xT, xT)))
 end
 
 @inline function
 coeff_ν(::OrthoOrSphereNorm, ::Type{T}, l::Integer) where T
-    return @fastmath(sqrt)(convert(T, 2l + 1))
+    return unchecked_sqrt(convert(T, 2l + 1))
 end
 
 @inline function
@@ -89,7 +96,7 @@ coeff_α(::OrthoOrSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     # should be merged and shared.
     fac1 = (2lT + 1) / ((2lT - 3) * (lT^2 - mT^2))
     fac2 = 4*(lT - 1)^2 - 1
-    return @fastmath(sqrt)(fac1 * fac2)
+    return unchecked_sqrt(fac1 * fac2)
 end
 
 @inline function
@@ -101,7 +108,7 @@ coeff_β(::OrthoOrSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     # should be merged and shared.
     fac1 = (2lT + 1) / ((2lT - 3) * (lT^2 - mT^2))
     fac2 = (lT - 1)^2 - mT^2
-    return @fastmath(sqrt)(fac1 * fac2)
+    return unchecked_sqrt(fac1 * fac2)
 end
 
 # Extra functions
