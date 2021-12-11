@@ -65,5 +65,3 @@ mechanics and obeys the following properties:
       \label{eqn:std_rr_2term}
   \end{align}
   ```
-
-

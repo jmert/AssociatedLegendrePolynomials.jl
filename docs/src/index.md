@@ -1,4 +1,4 @@
-# Legendre.jl Documentation
+# AssociatedLegendrePolynomials.jl Documentation
 
 A library for calculating the Associated Legendre polynomials.
 Design goals of this package include:

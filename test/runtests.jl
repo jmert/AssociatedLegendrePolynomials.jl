@@ -1,5 +1,5 @@
 using Test, TestSetExtensions
-using Legendre # For doctests, include Legendre as a binding in Main
+using AssociatedLegendrePolynomials # For doctests, include AssociatedLegendrePolynomials as a binding in Main
 
 include("testsuite.jl")
 using .TestSuite: LMAX, NumTypes
@@ -19,7 +19,7 @@ macro include(file, desc)
         t0 = time_ns()
         @testset $desc begin
             @eval module $mod
-                using Test, Legendre
+                using Test, AssociatedLegendrePolynomials
                 import ..NumTypes
                 include($file)
             end
@@ -28,7 +28,7 @@ macro include(file, desc)
     end
 end
 
-@testset ExtendedTestSet "Legendre" begin
+@testset ExtendedTestSet "AssociatedLegendrePolynomials" begin
     @include "norms.jl" "Normalizations"
     @include "coeffs.jl" "Precomputed coefficients"
     @include "implementation.jl" "Implementation details"

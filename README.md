@@ -1,10 +1,10 @@
-# Legendre.jl — Calculating Associated Legendre Polynomials
+# AssociatedLegendrePolynomials.jl — Calculating Associated Legendre Polynomials
 
 | **Documentation**                                                         | **Build Status**                                             |
 |:-------------------------------------------------------------------------:|:------------------------------------------------------------:|
 | [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![][ci-img]][ci-url][![][codecov-img]][codecov-url] |
 
-Legendre.jl is a library for computing the Associated Legendre Polynomials.
+AssociatedLegendrePolynomials.jl is a library for computing the Associated Legendre Polynomials.
 
 Design goals of this package include:
 
@@ -16,36 +16,27 @@ Design goals of this package include:
 
 ### Installation and usage
 
-This library is **not** registered in Julia's [General registry][General.jl],
-so the package must be installed either by cloning it directly:
+Installation and loading is as easy as:
 
 ```
-(@v1.4) pkg> add https://github.com/jmert/Legendre.jl
-```
+pkg> add AssociatedLegendrePolynomials
 
-or by making use of my [personal registry][Registry.jl]:
+julia> using AssociatedLegendrePolynomials
 
-```
-(@v1.4) pkg> registry add https://github.com/jmert/Registry.jl
-(@v1.4) pkg> add Legendre
-```
+# or on julia >= v1.6, importing to a shorter name is possible:
 
-After installing, just load like any other Julia package:
+julia> import AssociatedLegendrePolynomials as Legendre
 
-```
-julia> using Legendre
+julia> using .Legendre
 ```
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-stable-url]: https://jmert.github.io/Legendre.jl/stable
+[docs-stable-url]: https://jmert.github.io/AssociatedLegendrePolynomials.jl/stable
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
-[docs-dev-url]: https://jmert.github.io/Legendre.jl/dev
+[docs-dev-url]: https://jmert.github.io/AssociatedLegendrePolynomials.jl/dev
 
-[ci-img]: https://github.com/jmert/Legendre.jl/actions
-[ci-url]: https://github.com/jmert/Legendre.jl/workflows/CI/badge.svg
+[ci-img]: https://github.com/jmert/AssociatedLegendrePolynomials.jl/actions
+[ci-url]: https://github.com/jmert/AssociatedLegendrePolynomials.jl/workflows/CI/badge.svg
 
-[codecov-img]: https://codecov.io/gh/jmert/Legendre.jl/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/jmert/Legendre.jl
-
-[General.jl]: https://github.com/JuliaRegistries/General
-[Registry.jl]: https://github.com/jmert/Registry.jl
+[codecov-img]: https://codecov.io/gh/jmert/AssociatedLegendrePolynomials.jl/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/jmert/AssociatedLegendrePolynomials.jl

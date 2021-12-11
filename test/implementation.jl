@@ -164,14 +164,14 @@ end
 end
 
 @testset "Preallocated work space" begin
-    using Legendre: unsafe_legendre!
+    using AssociatedLegendrePolynomials: unsafe_legendre!
     x1 = 0.5
     xN = range(-1, 1, length=10)
     Λ1 = zeros(LMAX+1, LMAX+1)
     ΛN = zeros(length(xN), LMAX+1, LMAX+1)
     norm = LegendreUnitNorm()
-    work1 = Legendre.Work(norm, Λ1, x1)
-    workN = Legendre.Work(norm, ΛN, xN)
+    work1 = AssociatedLegendrePolynomials.Work(norm, Λ1, x1)
+    workN = AssociatedLegendrePolynomials.Work(norm, ΛN, xN)
     # Check equality before allocations to ensure the methods have been compiled.
     @test unsafe_legendre!(norm, copy(Λ1), LMAX, LMAX, x1) ==
             unsafe_legendre!(work1, Λ1, LMAX, LMAX, x1)

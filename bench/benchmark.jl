@@ -1,4 +1,4 @@
-using BenchmarkTools, Legendre, Markdown
+using BenchmarkTools, AssociatedLegendrePolynomials, Markdown
 
 dotune  = "--tune" in ARGS
 saveres = "--save" in ARGS

@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = Legendre
+CurrentModule = AssociatedLegendrePolynomials
 ```
 # API Reference
 
