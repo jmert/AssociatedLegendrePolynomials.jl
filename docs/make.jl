@@ -1,22 +1,22 @@
-using Documenter, Legendre
+using Documenter, AssociatedLegendrePolynomials
 
 doctest = "--fix"  in ARGS ? :fix :
           "--test" in ARGS ? true : false
 
-DocMeta.setdocmeta!(Legendre, :DocTestSetup, :(using Legendre); recursive=true)
+DocMeta.setdocmeta!(AssociatedLegendrePolynomials, :DocTestSetup, :(using AssociatedLegendrePolynomials); recursive=true)
 
 makedocs(
     format = Documenter.HTML(mathengine = Documenter.MathJax3()),
-    sitename = "Legendre Polynomials",
+    sitename = "Associated Legendre Polynomials",
     authors = "Justin Willmert",
-    modules = [Legendre],
+    modules = [AssociatedLegendrePolynomials],
     doctest = doctest,
     doctestfilters = Regex[
         r"Ptr{0x[0-9a-f]+}",
         r"[0-9\.]+ seconds \(.*\)"
     ],
     pages = [
-        "Legendre.jl Documentation" => "index.md",
+        "AssociatedLegendrePolynomials.jl Documentation" => "index.md",
         "Associated Legendre Functions" => [
             "Introduction" => "man/intro.md",
             "Usage" => "man/usage.md",
@@ -25,10 +25,9 @@ makedocs(
         ],
         "API Reference" => "lib/public.md",
     ],
-    repo = "https://github.com/jmert/Legendre.jl/blob/{commit}{path}#L{line}",
 )
 
 deploydocs(
-    repo = "github.com/jmert/Legendre.jl.git",
-    target = "build",
+    repo = "github.com/jmert/AssociatedLegendrePolynomials.jl.git",
+    push_preview = true
 )

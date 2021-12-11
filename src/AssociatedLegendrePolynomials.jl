@@ -1,4 +1,4 @@
-module Legendre
+module AssociatedLegendrePolynomials
 
 import Base: @boundscheck, @propagate_inbounds
 
@@ -28,4 +28,4 @@ include("broadcasting.jl")
 
 include("precompile.jl")
 _precompile_()
-end # module Legendre
+end # module AssociatedLegendrePolynomials

@@ -1,6 +1,7 @@
 # Developer Documentation
 
 ```@meta
+CurrentModule = AssociatedLegendrePolynomials
 DocTestFilters = Regex[
         r"Ptr{0x[0-9a-f]+}",
         r"[0-9\.]+ seconds( \(.*\))?",
@@ -13,8 +14,8 @@ Depth = 2
 ```
 
 ## [Custom normalizations](@id customnorm)
-`Legendre` provides the standard and spherical harmonic normalizations by default, but
-arbitrary normalizations are also supported.
+`AssociatedLegendrePolynomials` provides the standard and spherical harmonic normalizations by
+default, but arbitrary normalizations are also supported.
 The mile-high overview is that the initial condition and recurrence relation (r.r.)
 coefficients are all methods which dispatch on a normalization trait type, so a new
 normalization is added by simply extending appropriate types and methods.
@@ -23,18 +24,18 @@ implement.
 
 ### Normalization Interface
 
-| Interfaces to extend/implement          | Brief description                                                                                                              |
-|:--------------------------------------- |:------------------------------------------------------------------------------------------------------------------------------ |
-| [`Legendre.AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                                                                         |
-| [`Legendre.initcond()`](@ref)           | Value of ``N_0^0 P_0^0(x)`` for the given normalization                                                                        |
-| [`Legendre.coeff_μ()`](@ref)            | Coefficient ``\mu_\ell`` for the 1-term r.r. boosting ``\ell-1 \rightarrow \ell`` and ``m-1 \rightarrow m`` where ``m = \ell`` |
-| [`Legendre.coeff_ν()`](@ref)            | Coefficient ``\nu_\ell`` for the 1-term r.r. boosting ``\ell-1 \rightarrow \ell``                                              |
-| [`Legendre.coeff_α()`](@ref)            | Coefficient ``\alpha_\ell^m`` for the 2-term r.r. acting on the ``(\ell-1,m)`` term                                            |
-| [`Legendre.coeff_β()`](@ref)            | Coefficient ``\beta_\ell^m`` for the 2-term r.r. acting on the ``(\ell-2,m)`` term                                             |
+| Interfaces to extend/implement | Brief description                                                                                                              |
+|:------------------------------ |:------------------------------------------------------------------------------------------------------------------------------ |
+| [`AbstractLegendreNorm`](@ref) | Supertype of normalization trait types                                                                                         |
+| [`initcond()`](@ref)           | Value of ``N_0^0 P_0^0(x)`` for the given normalization                                                                        |
+| [`coeff_μ()`](@ref)            | Coefficient ``\mu_\ell`` for the 1-term r.r. boosting ``\ell-1 \rightarrow \ell`` and ``m-1 \rightarrow m`` where ``m = \ell`` |
+| [`coeff_ν()`](@ref)            | Coefficient ``\nu_\ell`` for the 1-term r.r. boosting ``\ell-1 \rightarrow \ell``                                              |
+| [`coeff_α()`](@ref)            | Coefficient ``\alpha_\ell^m`` for the 2-term r.r. acting on the ``(\ell-1,m)`` term                                            |
+| [`coeff_β()`](@ref)            | Coefficient ``\beta_\ell^m`` for the 2-term r.r. acting on the ``(\ell-2,m)`` term                                             |
 
-| Optional interfaces                   | Brief description                      |
-|:------------------------------------- |:-------------------------------------- |
-| [`Legendre.boundscheck_hook()`](@ref) | Hook to participate in bounds checking |
+| Optional interface           | Brief description                      |
+|:---------------------------- |:-------------------------------------- |
+| [`boundscheck_hook()`](@ref) | Hook to participate in bounds checking |
 
 
 ### Example implementation
@@ -115,8 +116,8 @@ to gather terms of the form ``N_{\ell-1}^m P_{\ell-1}^m(x)`` and
         \lambda_{\ell-2}^m(x)
 \end{align}
 ```
-We identify each of the two square root terms as ``α_\ell^m`` and ``β_\ell^m`` since
-they are the cofficients appropriate for generating ``\lambda_\ell^m(x)``.
+We identify each of the two square root terms as ``\alpha_\ell^m`` and ``\beta_\ell^m``
+since they are the cofficients appropriate for generating ``\lambda_\ell^m(x)``.
 Doing so with the other two recurrence relation equations, we obtain:
 ```math
 \begin{align}
@@ -138,9 +139,9 @@ This is straight forward given the definition:
 We now have all the information required to define a custom Legendre normalization.
 Begin by importing the types and methods which will need to be extended:
 ```jldoctest λNorm
-julia> using Legendre
+julia> using AssociatedLegendrePolynomials
 
-julia> import Legendre: AbstractLegendreNorm, initcond, coeff_μ, coeff_ν, coeff_α, coeff_β
+julia> import AssociatedLegendrePolynomials: AbstractLegendreNorm, initcond, coeff_μ, coeff_ν, coeff_α, coeff_β
 ```
 We'll call our new normalization `λNorm`, which must be a subclass of
 `AbstractLegendreNorm`.

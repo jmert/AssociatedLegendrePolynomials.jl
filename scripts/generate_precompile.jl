@@ -1,4 +1,4 @@
-using SnoopCompile, Legendre
+using SnoopCompile, AssociatedLegendrePolynomials
 inf_timing = @snoopi tmin=0.005 begin
     # Invoking aliased wrappers forces inference of underlying implmentation
     for T in (Float64, Float32), I in (Int,)
@@ -51,8 +51,8 @@ inf_timing = @snoopi tmin=0.005 begin
 end
 
 pc = SnoopCompile.parcel(inf_timing)
-pc = filter!(p -> p.first === :Legendre, pc)
-sort!(pc[:Legendre])
+pc = filter!(p -> p.first === :AssociatedLegendrePolynomials, pc)
+sort!(pc[:AssociatedLegendrePolynomials])
 
 outfile = joinpath(tempdir(), "precompile")
 println("Saving precompile scripts to $outfile")

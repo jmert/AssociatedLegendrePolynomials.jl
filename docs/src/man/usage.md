@@ -14,9 +14,9 @@ Depth = 2
 ## Calculating scalar values
 
 At its simplest, the associated Legendre polynomial ``P_\ell^m(x)`` is computed by calling
-[`Legendre.Plm`](@ref). For example, to compute ``P_2^1(0.5)``,
+[`Plm`](@ref). For example, to compute ``P_2^1(0.5)``,
 ```jldoctest PlmUsage
-julia> using Legendre
+julia> using AssociatedLegendrePolynomials
 
 julia> Plm(2, 1, 0.5)
 -1.299038105676658
@@ -31,7 +31,7 @@ compute the spherical harmonics ``Y_{\ell m}(\theta,\phi)``:
     \end{aligned}
 \end{align}
 ```
-The function [`Legendre.Nlm`](@ref) calculates the normalization factor ``N_\ell^m``:
+The function [`Nlm`](@ref) calculates the normalization factor ``N_\ell^m``:
 ```jldoctest PlmUsage
 julia> Nlm(2, 0)
 0.6307831305050401
@@ -79,8 +79,8 @@ defined as
     \end{aligned}
 \end{align}
 ```
-[`Legendre.λlm`](@ref) implements this scheme and avoids the under/overflow of
-computing the normalization separately from the function:
+[`λlm`](@ref) implements this scheme and avoids the under/overflow of computing the
+normalization separately from the function:
 ```jldoctest PlmUsage
 julia> λlm(157, 150, 0.5)
 1.977888411320263e-5
@@ -88,15 +88,15 @@ julia> λlm(157, 150, 0.5)
 
 !!! note
     We are not just limited to efficient and numerically stable computation of
-    ``\lambda_\ell^m(x)``; the package supports arbitrary normalizations.  For further
-    information on implementing custom Legendre normalizations, see the [Custom
-    normalizations](@ref customnorm) section.
+    ``\lambda_\ell^m(x)``; the package supports arbitrary normalizations.
+    For further information on implementing custom Legendre normalizations, see the
+    [Custom normalizations](@ref customnorm) section.
 
 ## Calculating multiple degrees/orders
 
 Because calculating a particular Legendre polynomial value is the end result of running
-a recurrence relation, looping evaluation of ``P_\ell^m(x)`` for all ``\ell`` is inefficient and
-redoes a lot of work:
+a recurrence relation, looping evaluation of ``P_\ell^m(x)`` for all ``\ell`` is inefficient
+and redoes a lot of work:
 ```jldoctest PlmUsage
 julia> @time [l < 2 ? 0.0 : λlm(l, 2, 0.5) for l in 2:700];
   0.039210 seconds (71.21 k allocations: 3.285 MiB)

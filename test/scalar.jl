@@ -1,4 +1,4 @@
-using Legendre: Scalar
+using AssociatedLegendrePolynomials: Scalar
 
 @test Scalar{Float64}() isa Scalar{Float64}
 @test Scalar(1.0) isa Scalar{Float64}

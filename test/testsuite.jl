@@ -1,5 +1,5 @@
 module TestSuite
-    using Test, Legendre
+    using Test, AssociatedLegendrePolynomials
     const LMAX = 5
     const NumTypes = (Float32, Float64, BigFloat)
 
@@ -15,16 +15,16 @@ module TestSuite
         @testset "Legendre Interface" begin
             @test norm isa AbstractLegendreNorm
             # Initial condition
-            @test isfinite(Legendre.initcond(norm, Float64))
+            @test isfinite(AssociatedLegendrePolynomials.initcond(norm, Float64))
             # 1-term recurrence coefficients
-            @test isfinite(Legendre.coeff_μ(norm, Float64, 1))
-            @test isfinite(Legendre.coeff_ν(norm, Float64, 1))
+            @test isfinite(AssociatedLegendrePolynomials.coeff_μ(norm, Float64, 1))
+            @test isfinite(AssociatedLegendrePolynomials.coeff_ν(norm, Float64, 1))
             # 2-term recurrence coefficients
-            @test isfinite(Legendre.coeff_α(norm, Float64, 1, 0))
-            @test isfinite(Legendre.coeff_β(norm, Float64, 1, 0))
+            @test isfinite(AssociatedLegendrePolynomials.coeff_α(norm, Float64, 1, 0))
+            @test isfinite(AssociatedLegendrePolynomials.coeff_β(norm, Float64, 1, 0))
 
             # Check that the boundscheck_hook() returns `nothing`
-            @test @inferred(Legendre.boundscheck_hook(norm, 0, 0)) === nothing
+            @test @inferred(AssociatedLegendrePolynomials.boundscheck_hook(norm, 0, 0)) === nothing
 
             # Make sure object calls have not been shadowed
             Λ₁ = zeros(LMAX+1, LMAX+1)
