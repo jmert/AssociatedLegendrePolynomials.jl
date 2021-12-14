@@ -1,5 +1,24 @@
 # Implements the legendre interface for the unit normalization case
 
+abstract type AbstractLegendreSphereNorm <: AbstractLegendreNorm end
+
+"""
+    struct LegendreFourPiNorm <: AbstractLegendreNorm end
+
+Trait type denoting the ``4\\pi`` (geodesy) normalization of the associated Legendre
+functions ``F_\\ell^m(x)``.
+The orthonormal normalization is defined such that
+```math
+    \\int_{-1}^{1} \\left[ F_\\ell^m(x) \\right]^2 \\,dx = 2
+```
+The normalization factor with respect to the standard (unnormalized) Legendre
+functions ``P_\\ell^m(x)`` ([`LegendreUnitNorm`](@ref)) is given by
+```math
+    F_\\ell^m(x) \\equiv \\sqrt{2\\pi(2\\ell+1) \\frac{(\\ell-m)!}{(\\ell+m)!}} P_\\ell^m(x)
+```
+"""
+struct LegendreFourPiNorm <: AbstractLegendreSphereNorm end
+
 """
     struct LegendreOrthoNorm <: AbstractLegendreNorm end
 
@@ -15,7 +34,7 @@ functions ``P_\\ell^m(x)`` ([`LegendreUnitNorm`](@ref)) is given by
     O_\\ell^m(x) \\equiv \\sqrt{\\frac{2\\ell+1}{2} \\frac{(\\ell-m)!}{(\\ell+m)!}} P_\\ell^m(x)
 ```
 """
-struct LegendreOrthoNorm <: AbstractLegendreNorm end
+struct LegendreOrthoNorm <: AbstractLegendreSphereNorm end
 
 """
     struct LegendreSphereNorm <: AbstractLegendreNorm end
@@ -32,8 +51,11 @@ functions ``P_\\ell^m(x)`` ([`LegendreUnitNorm`](@ref)) is given by
     \\lambda_\\ell^m(x) \\equiv \\sqrt{\\frac{2\\ell+1}{4\\pi} \\frac{(\\ell-m)!}{(\\ell+m)!}} P_\\ell^m(x)
 ```
 """
-struct LegendreSphereNorm <: AbstractLegendreNorm end
+struct LegendreSphereNorm <: AbstractLegendreSphereNorm end
 
+@inline function initcond(::LegendreFourPiNorm, ::Type{T}) where T
+    return one(T)
+end
 @inline function initcond(::LegendreOrthoNorm, ::Type{T}) where T
     return sqrt(inv(T(2)))
 end
@@ -44,8 +66,6 @@ end
     return inv(sqrt(4 * convert(T, π)))
 end
 
-const OrthoOrSphereNorm = Union{LegendreOrthoNorm,LegendreSphereNorm}
-
 # Version of sqrt() which skips the domain (x < 0) check for the IEEE floating point types.
 # For nonstandard number types, just fall back to a regular sqrt() since eliminating the
 # domain check is probably no longer the dominant contributor to not vectorizing.
@@ -54,7 +74,7 @@ unchecked_sqrt(x::T) where {T <: Integer} = unchecked_sqrt(float(x))
 unchecked_sqrt(x) = Base.sqrt(x)
 
 @inline function
-coeff_μ(::OrthoOrSphereNorm, ::Type{T}, l::Integer) where T
+coeff_μ(::AbstractLegendreSphereNorm, ::Type{T}, l::Integer) where T
     # The direct derivation of the normalization constant gives
     #     return sqrt(one(T) + inv(convert(T, 2l)))
     # but when comparing results for T ∈ (Float64,BigFloat), the Float64 results differ by
@@ -83,12 +103,12 @@ coeff_μ(::OrthoOrSphereNorm, ::Type{T}, l::Integer) where T
 end
 
 @inline function
-coeff_ν(::OrthoOrSphereNorm, ::Type{T}, l::Integer) where T
+coeff_ν(::AbstractLegendreSphereNorm, ::Type{T}, l::Integer) where T
     return unchecked_sqrt(convert(T, 2l + 1))
 end
 
 @inline function
-coeff_α(::OrthoOrSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
+coeff_α(::AbstractLegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     lT = convert(T, l)
     mT = convert(T, m)
     # Write factors in two pieces to make compiler's job easier. In the case where
@@ -100,7 +120,7 @@ coeff_α(::OrthoOrSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
 end
 
 @inline function
-coeff_β(::OrthoOrSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
+coeff_β(::AbstractLegendreSphereNorm, ::Type{T}, l::Integer, m::Integer) where T
     lT = convert(T, l)
     mT = convert(T, m)
     # Write factors in two pieces to make compiler's job easier. In the case where

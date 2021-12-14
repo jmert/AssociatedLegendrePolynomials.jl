@@ -7,6 +7,14 @@ normalization. Alias for `LegendreNormCoeff{LegendreUnitNorm,T}`.
 LegendreUnitCoeff{T} = LegendreNormCoeff{LegendreUnitNorm,T}
 
 """
+    LegendreFourPiCoeff{T}
+
+Table type of precomputed recursion relation coefficients for the ``4\\pi`` spherical
+harmonic normalization. Alias for `LegendreNormCoeff{LegendreFourPiNorm,T}`.
+"""
+LegendreFourPiCoeff{T} = LegendreNormCoeff{LegendreFourPiNorm,T}
+
+"""
     LegendreOrthoCoeff{T}
 
 Table type of precomputed recursion relation coefficients for the orthonormal
