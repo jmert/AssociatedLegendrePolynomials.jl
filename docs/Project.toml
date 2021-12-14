@@ -3,4 +3,4 @@ Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Legendre = "7642852e-7f09-11e9-134e-0940411082b6"
 
 [compat]
-Documenter = "0.25.2"
+Documenter = "0.25.2, 0.26, 0.27"
