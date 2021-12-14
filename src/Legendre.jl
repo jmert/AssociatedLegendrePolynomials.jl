@@ -9,8 +9,11 @@ export AbstractLegendreNorm
 include("interface.jl")
 
 # Specific normalizations
-export LegendreUnitNorm,  LegendreOrthoNorm,  LegendreSphereNorm,  LegendreNormCoeff,
-       LegendreUnitCoeff, LegendreOrthoCoeff, LegendreSphereCoeff
+export LegendreNormCoeff,
+       LegendreUnitNorm, LegendreUnitCoeff,
+       LegendreFourPiNorm, LegendreFourPiCoeff,
+       LegendreOrthoNorm, LegendreOrthoCoeff,
+       LegendreSphereNorm, LegendreSphereCoeff
 include("norm_unit.jl")
 include("norm_sphere.jl")
 include("norm_table.jl")

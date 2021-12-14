@@ -35,8 +35,10 @@ end
 
 # P_0^0 is constant. Verify the output is invariant for several inputs.
 @testset "Constant P_0^0 ($T)" for T in NumTypes
+    @test @inferred(legendre(LegendreFourPiNorm(), 0, 0, T(0.1))) isa T
     @test @inferred(legendre(LegendreOrthoNorm(),  0, 0, T(0.1))) isa T
     @test @inferred(legendre(LegendreSphereNorm(), 0, 0, T(0.1))) isa T
+    @test all(legendre(LegendreFourPiNorm(), 0, 0, x) == one(T)           for x in xrange(T))
     @test all(legendre(LegendreOrthoNorm(),  0, 0, x) == sqrt(T(0.5))     for x in xrange(T))
     @test all(legendre(LegendreSphereNorm(), 0, 0, x) == sqrt(inv(4T(π))) for x in xrange(T))
 end
@@ -102,7 +104,7 @@ end
     end
 end
 
-# The normal P_ℓ^m should be equal to the spherical harmonic normalized
+# The orthonormal O_ℓ^m should be equal to the spherical harmonic normalized
 # λ_ℓ^m if we manually normalize them.
 @testset "Equality of (2π)^(-1/2) O_ℓ^m and λ_ℓ^m ($T)" for T in NumTypes
     LMAX = 5
@@ -113,6 +115,20 @@ end
         legendre!(LegendreOrthoNorm(),  plm_orth, LMAX, LMAX, x)
         legendre!(LegendreSphereNorm(), plm_sphr, LMAX, LMAX, x)
         @test all(isapprox.(plm_orth./sqrt(2T(π)), plm_sphr, atol=atol))
+    end
+end
+
+# The spherical and 4π-normalized functions should be the same up to the
+# differing factor of 1/√4π
+@testset "Equality of (4π)^(-1/2) F_ℓ^m and λ_ℓ^m ($T)" for T in NumTypes
+    LMAX = 5
+    atol = max(eps(4T(π)), eps(4.0π))
+    plm_4pi  = zeros(T, LMAX+1, LMAX+1)
+    plm_sphr = zeros(T, LMAX+1, LMAX+1)
+    for x in xrange(T)
+        legendre!(LegendreFourPiNorm(), plm_4pi,  LMAX, LMAX, x)
+        legendre!(LegendreSphereNorm(), plm_sphr, LMAX, LMAX, x)
+        @test all(isapprox.(plm_4pi./sqrt(4T(π)), plm_sphr, atol=atol))
     end
 end
 
