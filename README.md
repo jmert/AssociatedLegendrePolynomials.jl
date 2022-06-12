@@ -1,8 +1,8 @@
 # AssociatedLegendrePolynomials.jl — Calculating Associated Legendre Polynomials
 
-| **Documentation**                                                         | **Build Status**                                             |
-|:-------------------------------------------------------------------------:|:------------------------------------------------------------:|
-| [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![][ci-img]][ci-url][![][codecov-img]][codecov-url] |
+| **Documentation**                                                         | **Build Status**                                     | **DOI**                 |
+|:-------------------------------------------------------------------------:|:----------------------------------------------------:|:-----------------------:|
+| [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![][ci-img]][ci-url][![][codecov-img]][codecov-url] | [![][doi-img]][doi-url] |
 
 AssociatedLegendrePolynomials.jl is a library for computing the Associated Legendre Polynomials.
 
@@ -37,6 +37,9 @@ julia> using .Legendre
 
 [ci-img]: https://github.com/jmert/AssociatedLegendrePolynomials.jl/actions
 [ci-url]: https://github.com/jmert/AssociatedLegendrePolynomials.jl/workflows/CI/badge.svg
+
+[doi-img]: https://zenodo.org/badge/256818644.svg
+[doi-url]: https://zenodo.org/badge/latestdoi/256818644
 
 [codecov-img]: https://codecov.io/gh/jmert/AssociatedLegendrePolynomials.jl/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/jmert/AssociatedLegendrePolynomials.jl
