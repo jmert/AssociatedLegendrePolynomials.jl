@@ -137,7 +137,7 @@ _fma(x, y, z) = Base.fma(x, y, z)
         y¹[ii] = sqrt(y²[ii])
     end
 
-    fill!(pm, initcond(norm, T))
+    fill!(pm, initcond(norm, real(T)))
     for m in 0:mmax
         @simd for ii in I
             if N == 2
