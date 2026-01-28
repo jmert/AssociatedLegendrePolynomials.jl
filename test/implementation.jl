@@ -184,3 +184,7 @@ end
     @test 0 == @allocated unsafe_legendre!(work1, Λ1, LMAX, LMAX, x1)
     @test 0 == @allocated unsafe_legendre!(workN, ΛN, LMAX, LMAX, xN)
 end
+
+if isdefined(Test, :detect_closure_boxes)
+    @test length(Test.detect_closure_boxes(AssociatedLegendrePolynomials)) == 0
+end
